@@ -1,0 +1,23 @@
+{
+  "name": "Nexus Ops Watchdog — Billing Security Errors",
+  "nodes": [
+    {"parameters":{"httpMethod":"POST","path":"nexus-ops","responseMode":"responseNode","options":{}},"type":"n8n-nodes-base.webhook","typeVersion":2,"position":[0,0],"id":"ops-webhook","name":"Webhook Ops"},
+    {"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"conditions":[{"id":"secret","leftValue":"={{ ($json.headers?.[\"x-nexus-webhook-secret\"] || '') }}","rightValue":"={{ $env.N8N_CHAT_WEBHOOK_SECRET || '' }}","operator":{"type":"string","operation":"equals"}}],"combinator":"and"}},"type":"n8n-nodes-base.if","typeVersion":2,"position":[220,0],"id":"ops-auth","name":"Validar segredo"},
+    {"parameters":{"respondWith":"json","responseBody":"={\"error\":\"unauthorized\"}","options":{"responseCode":401}},"type":"n8n-nodes-base.respondToWebhook","typeVersion":1.4,"position":[440,180],"id":"ops-deny","name":"Rejeitar"},
+    {"parameters":{"jsCode":"const b=$json.body??{}; return [{json:{eventType:String(b.event_type||'UNKNOWN'),severity:String(b.severity||'info'),userId:b.user_id||null,companyId:b.company_id||null,payload:b.payload||{}}}];"},"type":"n8n-nodes-base.code","typeVersion":2,"position":[440,-20],"id":"ops-normalize","name":"Normalizar evento"},
+    {"parameters":{"method":"POST","url":"={{ (($env.NEXUS_BASE_URL || 'https://intelligent-ai-router.lovable.app/api/public/v1').replace(/\\/$/,'')) + '/chat/completions' }}","sendHeaders":true,"headerParameters":{"parameters":[{"name":"Authorization","value":"={{ 'Bearer ' + ($env.NEXUS_API_KEY || '') }}"},{"name":"Content-Type","value":"application/json"}]},"sendBody":true,"contentType":"raw","rawContentType":"application/json","body":"={{ JSON.stringify({model:($env.NEXUS_MODEL||'nexus-auto'),messages:[{role:'system',content:'Você é o Nexus Watchdog interno. Analise eventos operacionais de cobrança, segurança, n8n e erros. Não altere regras de acesso. Dê diagnóstico curto, risco, ação segura recomendada e diga se está normalizado.'},{role:'user',content:JSON.stringify($json)}],temperature:0.1,max_tokens:700}) }}","options":{}},"type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[680,-20],"id":"ops-ai","name":"Nexus Watchdog"},
+    {"parameters":{"jsCode":"const b=$json; const out=b?.choices?.[0]?.message?.content||b?.error?.message||'Sem diagnóstico'; return [{json:{diagnosis:String(out),eventType:$('Normalizar evento').item.json.eventType,severity:$('Normalizar evento').item.json.severity,userId:$('Normalizar evento').item.json.userId,companyId:$('Normalizar evento').item.json.companyId,payload:$('Normalizar evento').item.json.payload}}];"},"type":"n8n-nodes-base.code","typeVersion":2,"position":[900,-20],"id":"ops-extract","name":"Extrair diagnóstico"},
+    {"parameters":{"method":"POST","url":"={{ $env.EVOLUTION_API_URL + '/message/sendText/' + $env.EVOLUTION_INSTANCE }}","sendHeaders":true,"headerParameters":{"parameters":[{"name":"apikey","value":"={{ $env.EVOLUTION_API_KEY }}"},{"name":"Content-Type","value":"application/json"}]},"sendBody":true,"contentType":"json","jsonBody":"={{ JSON.stringify({number:$env.OPS_ADMIN_WHATSAPP,text:'🔔 Nexus\nEvento: '+$json.eventType+'\nSeveridade: '+$json.severity+'\n\n'+$json.diagnosis+'\n\nStatus: análise registrada.'}) }}","options":{}},"type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[1120,-20],"id":"ops-whatsapp","name":"WhatsApp Admin"},
+    {"parameters":{"respondWith":"json","responseBody":"={\"ok\":true,\"event\":$json.eventType}","options":{"responseCode":200}},"type":"n8n-nodes-base.respondToWebhook","typeVersion":1.4,"position":[1340,-20],"id":"ops-response","name":"Responder"}
+  ],
+  "connections":{
+    "Webhook Ops":{"main":[[{"node":"Validar segredo","type":"main","index":0}]]},
+    "Validar segredo":{"main":[[{"node":"Normalizar evento","type":"main","index":0}],[{"node":"Rejeitar","type":"main","index":0}]]},
+    "Normalizar evento":{"main":[[{"node":"Nexus Watchdog","type":"main","index":0}]]},
+    "Nexus Watchdog":{"main":[[{"node":"Extrair diagnóstico","type":"main","index":0}]]},
+    "Extrair diagnóstico":{"main":[[{"node":"WhatsApp Admin","type":"main","index":0}]]},
+    "WhatsApp Admin":{"main":[[{"node":"Responder","type":"main","index":0}]]}
+  },
+  "active":false,
+  "settings":{"executionOrder":"v1"}
+}
