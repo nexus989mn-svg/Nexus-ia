@@ -3,7 +3,6 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { emitOperationalEvent } from "./lib/ops.server";
-import { configureSupabaseAdmin } from "./integrations/supabase/client.server";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -43,11 +42,6 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
-    configureSupabaseAdmin(env as {
-      SUPABASE_URL?: string;
-      SUPABASE_SERVICE_ROLE_KEY?: string;
-    });
-
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
