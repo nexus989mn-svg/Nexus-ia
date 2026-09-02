@@ -26,6 +26,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
           <DropdownMenuItem key={l.code} onClick={() => {
             void i18n.changeLanguage(l.code);
             try { localStorage.setItem("lang", l.code); } catch {}
+            window.setTimeout(() => window.location.reload(), 0);
           }}>
             {l.label}
           </DropdownMenuItem>

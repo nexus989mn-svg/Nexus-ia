@@ -260,3 +260,43 @@ export const adminListCompanies = createServerFn({ method: "GET" })
   });
 
 
+
+export const adminListUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await ensureAdmin(context.userId);
+    const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("user_id,email,full_name,company,created_at,updated_at").order("created_at", { ascending: false }),
+      supabaseAdmin.from("user_roles").select("user_id,role,created_at"),
+    ]);
+    if (pErr) throw new Error(pErr.message);
+    if (rErr) throw new Error(rErr.message);
+    const roleByUser = new Map<string, string>((roles ?? []).map((r) => [r.user_id, r.role]));
+    return { users: (profiles ?? []).map((p) => ({ ...p, role: roleByUser.get(p.user_id) ?? "customer" })) };
+  });
+
+export const adminSetUserRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ targetUserId: z.string().uuid(), role: z.enum(["admin", "customer"]) }).parse(d))
+  .handler(async ({ context, data }) => {
+    await ensureAdmin(context.userId);
+    if (data.targetUserId === context.userId && data.role !== "admin") {
+      throw new Error("Você não pode remover sua própria permissão de administrador.");
+    }
+    if (data.role === "customer") {
+      const { count, error } = await supabaseAdmin.from("user_roles").select("user_id", { count: "exact", head: true }).eq("role", "admin");
+      if (error) throw new Error(error.message);
+      if ((count ?? 0) <= 1) throw new Error("O sistema precisa manter pelo menos um administrador.");
+    }
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.targetUserId);
+    const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: data.targetUserId, role: data.role });
+    if (error) throw new Error(error.message);
+    await supabaseAdmin.from("system_logs").insert({
+      user_id: data.targetUserId,
+      source: "admin",
+      event: `user.role.${data.role}`,
+      severity: "info",
+      metadata: { by: context.userId },
+    });
+    return { ok: true };
+  });

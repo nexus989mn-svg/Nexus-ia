@@ -11,9 +11,9 @@ const styles: Record<string, string> = {
 
 export function SubStatusBadge({ status }: { status: string | null | undefined }) {
   const { t } = useTranslation();
-  const key = status ?? "none";
+  const key = status ?? "unknown";
   const cls = styles[key] ?? "bg-muted text-muted-foreground border-border";
-  const label = status ? t(`status.${key}`, { defaultValue: status }) : "Sem assinatura";
+  const label = t(`status.${key}`, { defaultValue: status ?? t("status.unknown") });
   return (
     <span className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium", cls)}>
       {label}

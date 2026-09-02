@@ -13,6 +13,8 @@ import {
   adminUpdatePlan,
   adminListBillingEvents,
   adminListCompanies,
+  adminListUsers,
+  adminSetUserRole,
 } from "@/lib/admin.functions";
 import {
   adminListIntegrations,
@@ -42,7 +44,7 @@ import { toast } from "sonner";
 import {
   Shield, RefreshCw, Users, FileText, DollarSign, Bot, ListOrdered,
   ScrollText, Plug, Settings as SettingsIcon, Lock, TrendingUp, Search,
-  CheckCircle2, XCircle, Plus, Trash2, Pencil, Loader2, Building2,
+  CheckCircle2, XCircle, Plus, Trash2, Pencil, Loader2, Building2, UserCog,
 } from "lucide-react";
 import { getPlanCopy } from "@/lib/i18n";
 
@@ -58,8 +60,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
       .eq("user_id", session.user.id)
       .eq("role", "admin")
       .maybeSingle();
-    const ownerEmail = session.user.email?.trim().toLowerCase() === "nexus989mn@gmail.com";
-    if (!data && !ownerEmail) throw redirect({ to: "/dashboard" });
+    if (!data) throw redirect({ to: "/dashboard" });
   },
   component: AdminPage,
 });
@@ -73,15 +74,16 @@ function AdminPage() {
         </div>
         <h1 className="text-3xl md:text-4xl font-bold mt-1">Centro operacional</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Painel de controle completo — restrito a <span className="text-foreground">nexus989mn@gmail.com</span>.
+          Centro de administração da plataforma — acesso controlado pela função de administrador.
         </p>
       </header>
 
       <Tabs defaultValue="executive" className="w-full">
-        <TabsList className="flex flex-wrap h-auto justify-start gap-1 bg-card-glass p-1">
+        <TabsList className="w-full flex flex-nowrap overflow-x-auto justify-start gap-1 bg-card-glass p-1 scrollbar-thin">
           <TabsTrigger value="executive"><TrendingUp className="h-3.5 w-3.5 mr-1" />Executivo</TabsTrigger>
           <TabsTrigger value="customers"><Users className="h-3.5 w-3.5 mr-1" />Clientes</TabsTrigger>
           <TabsTrigger value="companies"><Building2 className="h-3.5 w-3.5 mr-1" />Empresas</TabsTrigger>
+          <TabsTrigger value="users"><UserCog className="h-3.5 w-3.5 mr-1" />Usuários</TabsTrigger>
           <TabsTrigger value="briefings"><FileText className="h-3.5 w-3.5 mr-1" />Briefings</TabsTrigger>
           <TabsTrigger value="finance"><DollarSign className="h-3.5 w-3.5 mr-1" />Financeiro</TabsTrigger>
           <TabsTrigger value="ai"><Bot className="h-3.5 w-3.5 mr-1" />Módulos de IA</TabsTrigger>
@@ -95,6 +97,7 @@ function AdminPage() {
         <TabsContent value="executive" className="mt-6"><ExecutivePanel /></TabsContent>
         <TabsContent value="customers" className="mt-6"><CustomersPanel /></TabsContent>
         <TabsContent value="companies" className="mt-6"><CompaniesPanel /></TabsContent>
+        <TabsContent value="users" className="mt-6"><UsersPanel /></TabsContent>
         <TabsContent value="briefings" className="mt-6"><BriefingsPanel /></TabsContent>
         <TabsContent value="finance" className="mt-6"><FinancePanel /></TabsContent>
         <TabsContent value="ai" className="mt-6"><AIPanel /></TabsContent>
@@ -329,6 +332,46 @@ function CompaniesPanel() {
             )}
           </tbody>
         </table>
+      </div>
+    </Section>
+  );
+}
+
+/* ---------- USERS / ROLES ---------- */
+function UsersPanel() {
+  const qc = useQueryClient();
+  const fetchUsers = useServerFn(adminListUsers);
+  const setRole = useServerFn(adminSetUserRole);
+  const { data, isLoading } = useQuery({ queryKey: ["admin-users"], queryFn: () => fetchUsers() });
+  const [q, setQ] = useState("");
+  const [saving, setSaving] = useState<string | null>(null);
+  const users = (data?.users ?? []).filter((u) => !q || `${u.email} ${u.full_name ?? ""} ${u.company ?? ""}`.toLowerCase().includes(q.toLowerCase()));
+  const changeRole = async (userId: string, role: "admin" | "customer") => {
+    setSaving(userId);
+    try {
+      await setRole({ data: { targetUserId: userId, role } });
+      toast.success("Permissão atualizada");
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+    } catch (e: any) { toast.error(e?.message ?? "Erro ao atualizar permissão"); }
+    finally { setSaving(null); }
+  };
+  return (
+    <Section title="Usuários e permissões" action={<Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar usuário…" className="h-9 w-48" />}>
+      <div className="space-y-2">
+        {isLoading && <div className="py-8 text-center text-muted-foreground">Carregando usuários…</div>}
+        {users.map((u) => (
+          <div key={u.user_id} className="rounded-xl border border-border p-3 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="font-medium truncate">{u.full_name || u.email}</div>
+              <div className="text-xs text-muted-foreground truncate">{u.email}{u.company ? ` · ${u.company}` : ""}</div>
+            </div>
+            <Select value={u.role} onValueChange={(v) => changeRole(u.user_id, v as "admin" | "customer")} disabled={saving === u.user_id}>
+              <SelectTrigger className="w-full sm:w-36 h-9"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="customer">Cliente</SelectItem><SelectItem value="admin">Administrador</SelectItem></SelectContent>
+            </Select>
+          </div>
+        ))}
+        {!isLoading && users.length === 0 && <div className="py-8 text-center text-muted-foreground">Nenhum usuário encontrado.</div>}
       </div>
     </Section>
   );
@@ -705,7 +748,7 @@ function IntegrationsPanel() {
   const fetchInts = useServerFn(adminListIntegrations);
   const saveInt = useServerFn(adminSaveIntegration);
   const testInt = useServerFn(adminTestIntegration);
-  const { data, error, isLoading } = useQuery({ queryKey: ["admin-integrations"], queryFn: () => fetchInts() });
+  const { data } = useQuery({ queryKey: ["admin-integrations"], queryFn: () => fetchInts() });
   const [drafts, setDrafts] = useState<Record<string, any>>({});
   const [testing, setTesting] = useState<string | null>(null);
 
@@ -750,27 +793,9 @@ function IntegrationsPanel() {
     nexus: "API Key do Nexus IA e URL compatível com OpenAI.",
   };
 
-  const fallbackIntegrations = [
-    { provider: "stripe", label: "Stripe (pagamentos)", base_url: null, config: {}, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
-    { provider: "whatsapp", label: "WhatsApp (UAZAPI / Evolution)", base_url: null, config: {}, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
-    { provider: "n8n", label: "n8n (automações)", base_url: null, config: {}, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
-    { provider: "openrouter", label: "OpenRouter", base_url: null, config: {}, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
-    { provider: "openai", label: "OpenAI", base_url: null, config: {}, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
-    { provider: "nexus", label: "Nexus IA", base_url: "https://intelligent-ai-router.lovable.app/api/public/v1", config: { model: "nexus-auto" }, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
-  ];
-  const integrations = data?.integrations ?? fallbackIntegrations;
-
   return (
     <div className="space-y-3">
-      {error && (
-        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm">
-          <div className="font-semibold">Não foi possível carregar as integrações.</div>
-          <div className="text-muted-foreground mt-1">{error instanceof Error ? error.message : "Erro ao consultar as integrações."}</div>
-          <div className="text-xs text-muted-foreground mt-2">As definições abaixo são apenas o fallback visual; salve/teste após a conexão do backend.</div>
-        </div>
-      )}
-      {isLoading && <div className="p-4 text-sm text-muted-foreground">Carregando integrações…</div>}
-      {integrations.map((i) => {
+      {(data?.integrations ?? []).map((i) => {
         const d = drafts[i.provider] ?? i;
         const needsUrl = i.provider === "whatsapp" || i.provider === "n8n" || i.provider === "nexus";
         return (

@@ -11,6 +11,7 @@ import { SubStatusBadge } from "@/components/sub-status-badge";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { getPlanCopy } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/billing")({
@@ -34,6 +35,12 @@ function BillingPage() {
   const { data: plansData } = useQuery({ queryKey: ["plans"], queryFn: () => fetchPlans() });
   const { data: historyData } = useQuery({ queryKey: ["billing-history"], queryFn: () => fetchHistory(), enabled: !!user });
 
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
+
   const subscribe = async (code: "trial" | "monthly" | "yearly") => {
     try {
       const res = await checkout({ data: { planCode: code } });
@@ -41,11 +48,7 @@ function BillingPage() {
       if (res.url.startsWith("http")) window.location.href = res.url;
       else qc.invalidateQueries({ queryKey: ["my-sub"] });
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Erro";
-      toast.error(message);
-      if (code === "trial" && /WhatsApp|WHATSAPP/i.test(message)) {
-        window.location.href = "/whatsapp";
-      }
+      toast.error(e instanceof Error ? e.message : "Erro");
     }
   };
 
@@ -57,9 +60,6 @@ function BillingPage() {
   };
 
   const sub = subData?.subscription;
-  useEffect(() => {
-    setIsAdmin(subData?.isAdmin === true);
-  }, [subData?.isAdmin]);
   const currentPlan = subData?.isAdmin ? "Acesso administrativo" : sub?.plan ? getPlanCopy(sub.plan).name : "—";
 
   return (

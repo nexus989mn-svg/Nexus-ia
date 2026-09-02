@@ -12,22 +12,10 @@ function stripeKey() {
 function appUrl() {
   return (process.env.APP_URL || process.env.PUBLIC_APP_URL || "http://localhost:8080").replace(/\/$/, "");
 }
-const ADMIN_EMAIL = "nexus989mn@gmail.com";
 function normalizeEmail(email: string | null | undefined) { return (email ?? "").trim().toLowerCase(); }
 async function isAdminUser(userId: string) {
-  const { data: role } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-  if (role) return true;
-
-  // Recovery path for the platform owner: the admin account must not depend
-  // on having a customer subscription row. The database role remains the
-  // primary authorization mechanism; the fixed owner email is only a
-  // resilience fallback for deployments where the role seed is missing.
-  try {
-    const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
-    return !error && normalizeEmail(data.user?.email) === ADMIN_EMAIL;
-  } catch {
-    return false;
-  }
+  const { data } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+  return !!data;
 }
 async function getTrialEligibility(userId: string) {
   const { data: authUser, error } = await supabaseAdmin.auth.admin.getUserById(userId);
@@ -42,19 +30,29 @@ async function getTrialEligibility(userId: string) {
 
 export const getMySubscription = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context;
+  await supabaseAdmin.from("subscriptions").update({ status: "expired", blocked_reason: "Subscription period ended" }).eq("user_id", userId).in("status", ["trial","active"]).lt("current_period_end", new Date().toISOString());
+  const { data: sub } = await supabaseAdmin.from("subscriptions").select("*, plan:plans(*)").eq("user_id", userId).maybeSingle();
   const admin = await isAdminUser(userId);
 
   // The administrative account is a platform operator, not a paying customer.
-  // Resolve this BEFORE touching the customer subscription table so a billing
-  // schema/state problem can never make the admin appear as "Desconhecido".
+  // It must never be blocked by customer subscription state or show a red
+  // subscription warning just because it has no customer subscription row.
   if (admin) {
-    return {
-      subscription: {
-        status: "active" as const,
-        current_period_end: null,
-        blocked_reason: null,
-        plan: { code: "admin", name: "Acesso administrativo", interval: null, features: [] },
+    const adminSubscription = {
+      ...(sub ?? {}),
+      status: "active" as const,
+      current_period_end: null,
+      blocked_reason: null,
+      plan: {
+        ...(sub?.plan ?? {}),
+        code: "admin",
+        name: "Acesso administrativo",
+        interval: null,
+        features: [],
       },
+    };
+    return {
+      subscription: adminSubscription,
       hasAccess: true,
       isAdmin: true,
       mockMode: false,
@@ -63,24 +61,9 @@ export const getMySubscription = createServerFn({ method: "GET" }).middleware([r
     };
   }
 
-  const { error: expireError } = await supabaseAdmin
-    .from("subscriptions")
-    .update({ status: "expired", blocked_reason: "Subscription period ended" })
-    .eq("user_id", userId)
-    .in("status", ["trial", "active"])
-    .lt("current_period_end", new Date().toISOString());
-  if (expireError) throw new Error(`Não foi possível atualizar a assinatura: ${expireError.message}`);
-
-  const { data: sub, error: subError } = await supabaseAdmin
-    .from("subscriptions")
-    .select("*, plan:plans(*)")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (subError) throw new Error(`Não foi possível carregar a assinatura: ${subError.message}`);
   const hasAccess = !!sub?.plan && ["trial","active"].includes(sub.status) && (!sub.current_period_end || new Date(sub.current_period_end).getTime() > Date.now());
   const trial = await getTrialEligibility(userId);
-  const trialAvailable = !sub && !trial.emailClaim;
-  return { subscription: sub, hasAccess, isAdmin: false, mockMode: false, trialAvailable, trialBlockedReason: trial.reason };
+  return { subscription: sub, hasAccess, isAdmin: false, mockMode: false, trialAvailable: !sub && trial.eligible, trialBlockedReason: trial.reason };
 });
 
 export const listPlans = createServerFn({ method: "GET" }).handler(async () => {

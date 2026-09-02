@@ -8,10 +8,6 @@ const connectInput = z.object({
   display_name: z.string().min(1).max(120),
 });
 
-function normalizeEmail(email: string | null | undefined) {
-  return (email ?? "").trim().toLowerCase();
-}
-
 async function isAdminUser(userId: string) {
   const { data } = await supabaseAdmin
     .from("user_roles")
@@ -25,38 +21,18 @@ async function isAdminUser(userId: string) {
 async function hasWhatsappAccess(userId: string) {
   if (await isAdminUser(userId)) return { hasAccess: true, isAdmin: true };
 
-  const { data: sub, error: subError } = await supabaseAdmin
+  const { data: sub } = await supabaseAdmin
     .from("subscriptions")
-    .select("status,current_period_end,trial_ends_at")
+    .select("status,current_period_end")
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (subError) throw new Error(`Não foi possível validar a assinatura: ${subError.message}`);
-
-  const now = Date.now();
   const hasAccess = !!sub && ["trial", "active"].includes(sub.status) &&
-    (!sub.current_period_end || new Date(sub.current_period_end).getTime() > now) &&
-    (sub.status !== "trial" || !sub.trial_ends_at || new Date(sub.trial_ends_at).getTime() > now);
+    (!sub.current_period_end || new Date(sub.current_period_end).getTime() > Date.now());
 
-  if (hasAccess) return { hasAccess: true, isAdmin: false };
-
-  // Trial requires a connected WhatsApp number, so a new customer without
-  // a subscription must be allowed to start the WhatsApp setup first.
-  if (!sub) {
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
-    if (authError || !authUser.user) throw new Error("Usuário não encontrado.");
-    const email = normalizeEmail(authUser.user.email);
-    const { data: claim, error: claimError } = await supabaseAdmin
-      .from("trial_claims")
-      .select("id")
-      .eq("email_normalized", email)
-      .maybeSingle();
-    if (claimError) throw new Error(`Não foi possível validar o Trial: ${claimError.message}`);
-    if (!claim) return { hasAccess: true, isAdmin: false };
-  }
-
-  return { hasAccess: false, isAdmin: false };
+  return { hasAccess, isAdmin: false };
 }
+
 function normalizePhone(raw: string) {
   const digits = raw.replace(/[^0-9]/g, "");
   return `+${digits}`;
@@ -179,6 +155,31 @@ export const getMyWhatsapp = createServerFn({ method: "GET" })
       .maybeSingle();
 
     if (error) throw new Error(error.message);
+
+    // Uma tentativa de QR não pode ficar presa indefinidamente.
+    // Após 2 minutos, encerra a tentativa e libera a tela para outro número.
+    if (data?.status === "pending") {
+      const startedAt = data.metadata?.pending_started_at;
+      const age = startedAt ? Date.now() - new Date(startedAt).getTime() : 0;
+      if (startedAt && age >= 2 * 60 * 1000) {
+        if (data.instance_name) {
+          try {
+            await evolutionRequest(
+              `/instance/logout/${encodeURIComponent(data.instance_name)}`,
+              { method: "DELETE" },
+            );
+          } catch {}
+        }
+        const { data: expired, error: expireError } = await supabaseAdmin
+          .from("whatsapp_connections")
+          .update({ status: "disconnected", qr_code: null, connected_at: null, metadata: {} })
+          .eq("user_id", userId)
+          .select()
+          .maybeSingle();
+        if (expireError) throw new Error(expireError.message);
+        return { connection: expired };
+      }
+    }
 
     return { connection: data };
   });
@@ -313,6 +314,9 @@ export const requestWhatsappConnection = createServerFn({ method: "POST" })
             status === "connected"
               ? new Date().toISOString()
               : null,
+          metadata: status === "pending"
+            ? { pending_started_at: new Date().toISOString() }
+            : {},
         },
         { onConflict: "user_id" },
       )
@@ -354,7 +358,6 @@ export const refreshWhatsappConnection = createServerFn({ method: "POST" })
         .update({
           status: "connected",
           connected_at: connection.connected_at ?? now,
-          last_seen_at: now,
           qr_code: null,
         })
         .eq("user_id", userId)
@@ -383,7 +386,6 @@ export const refreshWhatsappConnection = createServerFn({ method: "POST" })
         status: isConnected ? "connected" : "pending",
         qr_code: isConnected ? null : qr,
         connected_at: isConnected ? (connection.connected_at ?? new Date().toISOString()) : null,
-        last_seen_at: isConnected ? new Date().toISOString() : connection.last_seen_at,
       })
       .eq("user_id", userId)
       .select()
@@ -429,7 +431,6 @@ export const confirmWhatsappConnected = createServerFn({ method: "POST" })
       .update({
         status: "connected",
         connected_at: connection.connected_at ?? now,
-        last_seen_at: now,
         qr_code: null,
       })
       .eq("user_id", userId)
@@ -442,6 +443,47 @@ export const confirmWhatsappConnected = createServerFn({ method: "POST" })
       connection: data,
       evolution_status: state,
     };
+  });
+
+export const cancelWhatsappConnection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+    const { data: connection, error } = await supabaseAdmin
+      .from("whatsapp_connections")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+
+    if (connection?.instance_name) {
+      try {
+        await evolutionRequest(
+          `/instance/logout/${encodeURIComponent(connection.instance_name)}`,
+          { method: "DELETE" },
+        );
+      } catch {
+        // A tentativa que já não existe na Evolution também pode ser cancelada localmente.
+      }
+    }
+
+    const { data, error: updateError } = await supabaseAdmin
+      .from("whatsapp_connections")
+      .update({
+        status: "disconnected",
+        phone_e164: null,
+        display_name: null,
+        qr_code: null,
+        connected_at: null,
+        metadata: {},
+      })
+      .eq("user_id", userId)
+      .select()
+      .maybeSingle();
+
+    if (updateError) throw new Error(updateError.message);
+    return { connection: data };
   });
 
 export const disconnectWhatsapp = createServerFn({ method: "POST" })
@@ -472,7 +514,6 @@ export const disconnectWhatsapp = createServerFn({ method: "POST" })
         status: "disconnected",
         qr_code: null,
         connected_at: null,
-        last_seen_at: null,
       })
       .eq("user_id", userId)
       .select()

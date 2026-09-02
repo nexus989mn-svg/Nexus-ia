@@ -28,6 +28,7 @@ import {
   refreshWhatsappConnection,
   confirmWhatsappConnected,
   disconnectWhatsapp,
+  cancelWhatsappConnection,
 } from "@/lib/whatsapp.functions";
 
 export const Route = createFileRoute("/_authenticated/whatsapp")({
@@ -43,6 +44,7 @@ function WhatsappPage() {
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pendingSeconds, setPendingSeconds] = useState<number | null>(null);
   const fetchSub = useServerFn(getMySubscription);
   const { data: subData, isLoading: subLoading } = useQuery({
     queryKey: ["my-sub"],
@@ -55,6 +57,7 @@ function WhatsappPage() {
   const refreshConn = useServerFn(refreshWhatsappConnection);
   const confirmConn = useServerFn(confirmWhatsappConnected);
   const disconnectConn = useServerFn(disconnectWhatsapp);
+  const cancelConn = useServerFn(cancelWhatsappConnection);
 
   const {
     data,
@@ -102,6 +105,26 @@ function WhatsappPage() {
    * em "Já escaneei" para o sistema descobrir
    * que o WhatsApp conectou.
    */
+  useEffect(() => {
+    if (status !== "pending") {
+      setPendingSeconds(null);
+      return;
+    }
+    const started = conn?.metadata?.pending_started_at;
+    if (!started) {
+      setPendingSeconds(120);
+      return;
+    }
+    const update = () => {
+      const left = Math.max(0, 120 - Math.floor((Date.now() - new Date(started).getTime()) / 1000));
+      setPendingSeconds(left);
+      if (left === 0) void handleCancel();
+    };
+    update();
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [status, conn?.metadata?.pending_started_at]);
+
   useEffect(() => {
     if (status !== "pending" || !conn?.instance_name) return;
 
@@ -230,6 +253,20 @@ function WhatsappPage() {
       setBusy(false);
     }
   };
+
+  async function handleCancel() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await cancelConn();
+      await qc.invalidateQueries({ queryKey: ["whatsapp"] });
+      toast.success("Tentativa de conexão cancelada.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível cancelar a conexão");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const handleDisconnect = async () => {
     if (!window.confirm("Desconectar este WhatsApp?")) return;
@@ -464,17 +501,15 @@ function WhatsappPage() {
 
               <div className="mt-5 flex flex-col items-center">
 
-                <div className="rounded-xl border border-border bg-white p-4">
+                <div className="auri-qr rounded-xl border border-border bg-white p-2 sm:p-3">
                   <img
                     src={conn.qr_code}
                     alt="QR code real de conexão do WhatsApp"
-                    width={280}
-                    height={280}
-                    className="block w-[280px] h-[280px] object-contain"
+                    className="block w-full h-full object-contain"
                   />
                 </div>
 
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex w-full flex-wrap items-center justify-center gap-2">
                   <Button
                     variant="outline"
                     onClick={handleRefresh}
@@ -491,8 +526,22 @@ function WhatsappPage() {
                     <CheckCircle2 className="h-4 w-4 mr-2" />
                     Verificar conexão
                   </Button>
+
+                  <Button
+                    variant="ghost"
+                    onClick={handleCancel}
+                    disabled={busy}
+                  >
+                    Cancelar / trocar número
+                  </Button>
                 </div>
 
+              </div>
+
+              <div className="mt-4 text-center text-xs text-muted-foreground">
+                {pendingSeconds !== null
+                  ? `Esta tentativa expira automaticamente em ${Math.floor(pendingSeconds / 60)}:${String(pendingSeconds % 60).padStart(2, "0")}.`
+                  : "A tentativa será encerrada automaticamente se não houver conexão."}
               </div>
 
               <div className="mt-5 rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm">
@@ -517,15 +566,19 @@ function WhatsappPage() {
                 A Evolution está preparando o QR.
               </p>
 
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={handleRefresh}
-                disabled={busy}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Atualizar
-              </Button>
+              <div className="mt-4 flex justify-center gap-2 flex-wrap">
+                <Button
+                  variant="outline"
+                  onClick={handleRefresh}
+                  disabled={busy}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Atualizar
+                </Button>
+                <Button variant="ghost" onClick={handleCancel} disabled={busy}>
+                  Cancelar / trocar número
+                </Button>
+              </div>
 
             </div>
           )}

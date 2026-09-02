@@ -22,6 +22,7 @@ import {
   Package,
   Sparkles,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { getPlanCopy } from "@/lib/i18n";
 
@@ -49,24 +50,27 @@ function Dashboard() {
   });
   const { data: statsData } = useQuery({ queryKey: ["dashboard-stats"], queryFn: () => fetchStats(), enabled: !!user });
 
-  const sub = data?.subscription;
-  const adminUi = data?.isAdmin === true;
   useEffect(() => {
-    setIsAdmin(adminUi);
-  }, [adminUi]);
-  const blocked = !!data?.subscription && !data.hasAccess && !data.isAdmin;
+    if (!user) return;
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
+
+  const sub = data?.subscription;
+  const blocked = data && !data.hasAccess && !data.isAdmin;
   const daysLeft = sub?.current_period_end
     ? Math.max(0, Math.ceil((new Date(sub.current_period_end).getTime() - Date.now()) / 86400000))
     : 0;
   const renewDate = sub?.current_period_end
     ? new Date(sub.current_period_end).toLocaleDateString(i18n.language)
     : null;
-  const statusLabel = adminUi
-    ? t("status.active", { defaultValue: "Ativo" })
-    : sub?.status
-      ? t(`status.${sub.status}`, { defaultValue: sub.status })
-      : "Sem assinatura";
-  const planName = adminUi ? "Acesso administrativo" : sub?.plan ? getPlanCopy(sub.plan).name : "—";
+  const statusLabel = sub?.status ? t(`status.${sub.status}`, { defaultValue: sub.status }) : t("status.unknown");
+  const planName = data?.isAdmin ? "Acesso administrativo" : sub?.plan ? getPlanCopy(sub.plan).name : "—";
 
   const wa = waData?.connection;
   const waConnected = wa?.status === "connected";
@@ -180,10 +184,10 @@ function Dashboard() {
       )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
-        <Card title={t("dashboard.cards.subscription")} value={<SubStatusBadge status={adminUi ? "active" : sub?.status} />} hint={planName} />
+        <Card title={t("dashboard.cards.subscription")} value={<SubStatusBadge status={sub?.status} />} hint={planName} />
         <Card
           title={t("dashboard.cards.daysRemaining")}
-          value={adminUi ? "∞" : String(daysLeft)}
+          value={String(daysLeft)}
           hint={renewDate ? t("dashboard.renews", { date: renewDate }) : "—"}
         />
         <Card

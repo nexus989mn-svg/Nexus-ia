@@ -3,8 +3,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const ADMIN_EMAIL = "nexus989mn@gmail.com";
-
 async function ensureAdmin(supabase: any, userId: string) {
   const { data } = await supabase
     .from("user_roles")
@@ -12,13 +10,7 @@ async function ensureAdmin(supabase: any, userId: string) {
     .eq("user_id", userId)
     .eq("role", "admin")
     .maybeSingle();
-  if (data) return;
-
-  // Resilience fallback for the platform-owner account. The role is still
-  // preferred and remains the normal authorization path.
-  const { data: authUser, error } = await supabase.auth.admin.getUserById(userId);
-  if (!error && (authUser.user?.email ?? "").trim().toLowerCase() === ADMIN_EMAIL) return;
-  throw new Error("Forbidden");
+  if (!data) throw new Error("Forbidden");
 }
 
 /* ============ INTEGRATIONS ============ */
@@ -295,8 +287,8 @@ export const adminTestIntegration = createServerFn({ method: "POST" })
 export const adminListAIModules = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await ensureAdmin(supabaseAdmin, context.userId);
-    const { data, error } = await supabaseAdmin
+    await ensureAdmin(context.supabase, context.userId);
+    const { data, error } = await context.supabase
       .from("ai_modules")
       .select("*")
       .order("name");
@@ -317,9 +309,9 @@ export const adminSaveAIModule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => aiInput.parse(d))
   .handler(async ({ context, data }) => {
-    await ensureAdmin(supabaseAdmin, context.userId);
+    await ensureAdmin(context.supabase, context.userId);
     const { id, ...patch } = data;
-    const { error } = await supabaseAdmin.from("ai_modules").update(patch).eq("id", id);
+    const { error } = await context.supabase.from("ai_modules").update(patch).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -329,8 +321,8 @@ export const adminSaveAIModule = createServerFn({ method: "POST" })
 export const adminListBriefings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await ensureAdmin(supabaseAdmin, context.userId);
-    const { data, error } = await supabaseAdmin
+    await ensureAdmin(context.supabase, context.userId);
+    const { data, error } = await context.supabase
       .from("briefings")
       .select("*")
       .order("created_at", { ascending: false })
@@ -352,9 +344,9 @@ export const adminSaveBriefing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => briefInput.parse(d))
   .handler(async ({ context, data }) => {
-    await ensureAdmin(supabaseAdmin, context.userId);
+    await ensureAdmin(context.supabase, context.userId);
     if (data.id) {
-      const { error } = await supabaseAdmin
+      const { error } = await context.supabase
         .from("briefings")
         .update({
           customer_name: data.customer_name,
@@ -366,10 +358,10 @@ export const adminSaveBriefing = createServerFn({ method: "POST" })
         .eq("id", data.id);
       if (error) throw new Error(error.message);
     } else {
-      const { data: company } = await supabaseAdmin
+      const { data: company } = await context.supabase
         .from("companies").select("id").eq("owner_user_id", context.userId).maybeSingle();
       if (!company) throw new Error("Empresa do administrador não encontrada");
-      const { error } = await supabaseAdmin.from("briefings").insert({
+      const { error } = await context.supabase.from("briefings").insert({
         user_id: context.userId,
         company_id: company.id,
         customer_name: data.customer_name,
@@ -387,8 +379,8 @@ export const adminDeleteBriefing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    await ensureAdmin(supabaseAdmin, context.userId);
-    const { error } = await supabaseAdmin.from("briefings").delete().eq("id", data.id);
+    await ensureAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.from("briefings").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -398,8 +390,8 @@ export const adminDeleteBriefing = createServerFn({ method: "POST" })
 export const adminGetSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await ensureAdmin(supabaseAdmin, context.userId);
-    const { data, error } = await supabaseAdmin.from("platform_settings").select("*");
+    await ensureAdmin(context.supabase, context.userId);
+    const { data, error } = await context.supabase.from("platform_settings").select("*");
     if (error) throw new Error(error.message);
     const map: Record<string, any> = {};
     for (const r of data ?? []) map[r.key] = r.value;
@@ -415,8 +407,8 @@ export const adminSaveSetting = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ context, data }) => {
-    await ensureAdmin(supabaseAdmin, context.userId);
-    const { error } = await supabaseAdmin
+    await ensureAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase
       .from("platform_settings")
       .upsert({ key: data.key, value: data.value, updated_at: new Date().toISOString() });
     if (error) throw new Error(error.message);
@@ -428,9 +420,9 @@ export const adminSaveSetting = createServerFn({ method: "POST" })
 export const adminQueueStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await ensureAdmin(supabaseAdmin, context.userId);
+    await ensureAdmin(context.supabase, context.userId);
     const [{ data: briefs }, { data: waConns }] = await Promise.all([
-      supabaseAdmin.from("briefings").select("status"),
+      context.supabase.from("briefings").select("status"),
       supabaseAdmin.from("whatsapp_connections").select("status"),
     ]);
     const byStatus: Record<string, number> = {};
