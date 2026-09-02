@@ -288,7 +288,7 @@ export const adminListAIModules = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await ensureAdmin(context.supabase, context.userId);
-    const { data, error } = await context.supabase
+    const { data, error } = await supabaseAdmin
       .from("ai_modules")
       .select("*")
       .order("name");
