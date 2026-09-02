@@ -28,5 +28,5 @@ export async function requireActiveSubscription(userId: string) {
     throw new Error(subscription?.blocked_reason || "Assinatura inativa ou expirada.");
   }
 
-  return { admin: false, status: subscription.status as "trial" | "active" };
+  return { admin: false, status: subscription!.status as "trial" | "active" };
 }

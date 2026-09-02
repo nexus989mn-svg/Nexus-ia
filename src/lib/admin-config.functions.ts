@@ -3,6 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+const ADMIN_EMAIL = "nexus989mn@gmail.com";
+
 async function ensureAdmin(supabase: any, userId: string) {
   const { data } = await supabase
     .from("user_roles")
@@ -10,7 +12,13 @@ async function ensureAdmin(supabase: any, userId: string) {
     .eq("user_id", userId)
     .eq("role", "admin")
     .maybeSingle();
-  if (!data) throw new Error("Forbidden");
+  if (data) return;
+
+  // Resilience fallback for the platform-owner account. The role is still
+  // preferred and remains the normal authorization path.
+  const { data: authUser, error } = await supabase.auth.admin.getUserById(userId);
+  if (!error && (authUser.user?.email ?? "").trim().toLowerCase() === ADMIN_EMAIL) return;
+  throw new Error("Forbidden");
 }
 
 /* ============ INTEGRATIONS ============ */
@@ -24,8 +32,27 @@ export const adminListIntegrations = createServerFn({ method: "GET" })
       .select("id,provider,label,base_url,config,is_enabled,last_test_at,last_test_status,last_test_message,created_at,updated_at,api_key")
       .order("label");
     if (error) throw new Error(error.message);
+
+    let rows = data ?? [];
+    if (rows.length === 0) {
+      await supabaseAdmin.from("integration_credentials").upsert([
+        { provider: "stripe", label: "Stripe (pagamentos)", config: {}, is_enabled: false },
+        { provider: "whatsapp", label: "WhatsApp (UAZAPI / Evolution)", config: {}, is_enabled: false },
+        { provider: "n8n", label: "n8n (automações)", config: {}, is_enabled: false },
+        { provider: "openrouter", label: "OpenRouter", config: {}, is_enabled: false },
+        { provider: "openai", label: "OpenAI", config: {}, is_enabled: false },
+        { provider: "nexus", label: "Nexus IA", base_url: "https://intelligent-ai-router.lovable.app/api/public/v1", config: { model: "nexus-auto" }, is_enabled: false },
+      ], { onConflict: "provider" });
+      const seeded = await supabaseAdmin
+        .from("integration_credentials")
+        .select("id,provider,label,base_url,config,is_enabled,last_test_at,last_test_status,last_test_message,created_at,updated_at,api_key")
+        .order("label");
+      if (seeded.error) throw new Error(seeded.error.message);
+      rows = seeded.data ?? [];
+    }
+
     return {
-      integrations: (data ?? []).map(({ api_key, ...row }) => {
+      integrations: rows.map(({ api_key, ...row }) => {
         const envKey =
           row.provider === "whatsapp" ? process.env.EVOLUTION_API_KEY :
           row.provider === "n8n" ? process.env.N8N_API_KEY :
@@ -268,8 +295,8 @@ export const adminTestIntegration = createServerFn({ method: "POST" })
 export const adminListAIModules = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await ensureAdmin(context.supabase, context.userId);
-    const { data, error } = await context.supabase
+    await ensureAdmin(supabaseAdmin, context.userId);
+    const { data, error } = await supabaseAdmin
       .from("ai_modules")
       .select("*")
       .order("name");
@@ -290,9 +317,9 @@ export const adminSaveAIModule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => aiInput.parse(d))
   .handler(async ({ context, data }) => {
-    await ensureAdmin(context.supabase, context.userId);
+    await ensureAdmin(supabaseAdmin, context.userId);
     const { id, ...patch } = data;
-    const { error } = await context.supabase.from("ai_modules").update(patch).eq("id", id);
+    const { error } = await supabaseAdmin.from("ai_modules").update(patch).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -302,8 +329,8 @@ export const adminSaveAIModule = createServerFn({ method: "POST" })
 export const adminListBriefings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await ensureAdmin(context.supabase, context.userId);
-    const { data, error } = await context.supabase
+    await ensureAdmin(supabaseAdmin, context.userId);
+    const { data, error } = await supabaseAdmin
       .from("briefings")
       .select("*")
       .order("created_at", { ascending: false })
@@ -325,9 +352,9 @@ export const adminSaveBriefing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => briefInput.parse(d))
   .handler(async ({ context, data }) => {
-    await ensureAdmin(context.supabase, context.userId);
+    await ensureAdmin(supabaseAdmin, context.userId);
     if (data.id) {
-      const { error } = await context.supabase
+      const { error } = await supabaseAdmin
         .from("briefings")
         .update({
           customer_name: data.customer_name,
@@ -339,10 +366,10 @@ export const adminSaveBriefing = createServerFn({ method: "POST" })
         .eq("id", data.id);
       if (error) throw new Error(error.message);
     } else {
-      const { data: company } = await context.supabase
+      const { data: company } = await supabaseAdmin
         .from("companies").select("id").eq("owner_user_id", context.userId).maybeSingle();
       if (!company) throw new Error("Empresa do administrador não encontrada");
-      const { error } = await context.supabase.from("briefings").insert({
+      const { error } = await supabaseAdmin.from("briefings").insert({
         user_id: context.userId,
         company_id: company.id,
         customer_name: data.customer_name,
@@ -360,8 +387,8 @@ export const adminDeleteBriefing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    await ensureAdmin(context.supabase, context.userId);
-    const { error } = await context.supabase.from("briefings").delete().eq("id", data.id);
+    await ensureAdmin(supabaseAdmin, context.userId);
+    const { error } = await supabaseAdmin.from("briefings").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -371,8 +398,8 @@ export const adminDeleteBriefing = createServerFn({ method: "POST" })
 export const adminGetSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await ensureAdmin(context.supabase, context.userId);
-    const { data, error } = await context.supabase.from("platform_settings").select("*");
+    await ensureAdmin(supabaseAdmin, context.userId);
+    const { data, error } = await supabaseAdmin.from("platform_settings").select("*");
     if (error) throw new Error(error.message);
     const map: Record<string, any> = {};
     for (const r of data ?? []) map[r.key] = r.value;
@@ -388,8 +415,8 @@ export const adminSaveSetting = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ context, data }) => {
-    await ensureAdmin(context.supabase, context.userId);
-    const { error } = await context.supabase
+    await ensureAdmin(supabaseAdmin, context.userId);
+    const { error } = await supabaseAdmin
       .from("platform_settings")
       .upsert({ key: data.key, value: data.value, updated_at: new Date().toISOString() });
     if (error) throw new Error(error.message);
@@ -401,9 +428,9 @@ export const adminSaveSetting = createServerFn({ method: "POST" })
 export const adminQueueStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await ensureAdmin(context.supabase, context.userId);
+    await ensureAdmin(supabaseAdmin, context.userId);
     const [{ data: briefs }, { data: waConns }] = await Promise.all([
-      context.supabase.from("briefings").select("status"),
+      supabaseAdmin.from("briefings").select("status"),
       supabaseAdmin.from("whatsapp_connections").select("status"),
     ]);
     const byStatus: Record<string, number> = {};

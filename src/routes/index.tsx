@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Check, MessageCircle, Sparkles, Zap, Bot, Shield, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeCustomizer } from "@/components/theme-customizer";
 import { listPlans } from "@/lib/billing.functions";
 import { getPlanCopy } from "@/lib/i18n";
 
@@ -43,6 +44,7 @@ function Landing() {
             <span className="hidden sm:inline">{t("nav.brand")}</span>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2">
+            <ThemeCustomizer />
             <LanguageSwitcher />
             <Link to="/login"><Button variant="ghost" size="sm">{t("common.signIn")}</Button></Link>
             <Link to="/signup"><Button size="sm" className="bg-gradient-primary shadow-glow">{t("common.getStarted")}</Button></Link>
@@ -50,15 +52,12 @@ function Landing() {
         </div>
       </header>
 
-      <section className="max-w-5xl mx-auto px-4 pt-16 md:pt-20 pb-16 md:pb-24 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card-glass px-3 py-1 text-xs text-muted-foreground mb-6">
-          <Sparkles className="h-3 w-3 text-primary" />
-          {t("landing.badge")}
-        </div>
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-          {t("landing.heroPre")} <span className="text-gradient">{t("landing.heroAccent")}</span>
+      <section className="max-w-5xl mx-auto px-4 pt-16 md:pt-20 pb-16 md:pb-24 text-center overflow-hidden">
+        <h1 className="whitespace-nowrap text-[clamp(14px,4.15vw,60px)] md:text-6xl font-bold tracking-tight leading-tight">
+          <span className="text-white">{t("landing.heroPre")}</span>{" "}
+          <span className="text-primary">{t("landing.heroAccent")}</span>
         </h1>
-        <p className="mt-6 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+        <p className="mt-4 text-sm md:text-lg text-muted-foreground max-w-2xl mx-auto">
           {t("landing.heroDesc")}
         </p>
         <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">

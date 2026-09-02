@@ -49,14 +49,14 @@ const resources = {
         thinking: "Pensando…",
       },
       landing: {
-        badge: "Plataforma de vendas com IA no WhatsApp",
-        heroPre: "Venda no WhatsApp",
-        heroAccent: "no piloto automático.",
+        badge: "Assistente de IA para WhatsApp",
+        heroPre: "AURI IA,",
+        heroAccent: "Sua Assistente de Atendimento",
         heroDesc:
-          "Conecte seu WhatsApp, plugue seu catálogo e deixe agentes de IA qualificarem leads, atenderem clientes e fecharem vendas — 24/7, em qualquer idioma.",
+          "Você conecta seu WhatsApp e sua assistente de IA cuida do atendimento. Treine a AURI IA com as informações da sua empresa para ela entender seu negócio e atender melhor seus clientes.",
         startTrial: "Iniciar teste grátis",
         viewPricing: "Ver planos",
-        featuresTitle: "Tudo que você precisa para vender com IA",
+        featuresTitle: "Tudo que você precisa para atender com IA",
         pricingTitle: "Planos simples e transparentes",
         pricingDesc: "Cobrado em USD. Cancele quando quiser.",
         perMonth: "/mês",
@@ -65,14 +65,14 @@ const resources = {
         subscribe: "Assinar",
         startPlanTrial: "Iniciar teste",
         features: {
-          aiAgent: { t: "Agente IA de vendas", d: "Treinado no seu catálogo, responde como um vendedor humano." },
-          leadCapture: { t: "Captura instantânea de leads", d: "Detecta intenção, qualifica e direciona leads quentes." },
-          analytics: { t: "Métricas em tempo real", d: "Conversas, conversões e receita em um único painel." },
-          autoBlock: { t: "Bloqueio automático", d: "Guarda de assinatura garante que só clientes ativos consumam IA." },
-          multi: { t: "Multi-instância", d: "Vários números de WhatsApp, isolados por ambiente." },
-          sdr: { t: "IA SDR e Designer", d: "Gera campanhas, scripts e criativos na sua marca." },
+          aiAgent: { t: "Assistente de Atendimento", d: "A Auri IA atende seus clientes pelo WhatsApp de forma natural." },
+          leadCapture: { t: "IA treinável", d: "Treine a Auri IA com as informações, serviços e orientações da sua empresa." },
+          analytics: { t: "Atendimento inteligente", d: "Entende a intenção do cliente e conduz cada conversa com contexto." },
+          autoBlock: { t: "Contexto da empresa", d: "Informe como sua empresa funciona para a IA atender melhor seus clientes." },
+          multi: { t: "WhatsApp conectado", d: "Conecte seu número e deixe a Auri IA cuidar do atendimento." },
+          sdr: { t: "Voz da sua assistente", d: "Escolha a voz que a Auri IA usará nas conversas com seus clientes." },
         },
-        footer: "Assistente IA de Vendas WhatsApp",
+        footer: "Assistente IA para WhatsApp",
       },
       auth: {
         welcomeBack: "Bem-vindo de volta",
@@ -116,8 +116,8 @@ const resources = {
         steps: {
           plan: "Escolha um plano ou continue o teste",
           whats: "Conecte seu WhatsApp (v2)",
-          catalog: "Envie seu catálogo de produtos (v2)",
-          ai: "Ative o Agente IA de Vendas (v2)",
+          catalog: "Configure as informações da sua empresa (v2)",
+          ai: "Configure sua Assistente de Atendimento (v2)",
         },
       },
       billing: {
@@ -436,6 +436,15 @@ export function getPlanCopy(plan: { code?: string | null; name?: string | null; 
   };
 }
 
+const SUPPORTED_LANGUAGES = ["pt-BR", "en", "es"] as const;
+let savedLanguage: string = "pt-BR";
+try {
+  if (typeof window !== "undefined") {
+    const saved = window.localStorage.getItem("lang");
+    if (saved && SUPPORTED_LANGUAGES.includes(saved as typeof SUPPORTED_LANGUAGES[number])) savedLanguage = saved;
+  }
+} catch {}
+
 export function translateInterval(interval?: string | null) {
   if (interval === "yearly") return "anual";
   if (interval === "monthly") return "mensal";
@@ -444,18 +453,18 @@ export function translateInterval(interval?: string | null) {
 }
 
 try {
-  if (typeof window !== "undefined") window.localStorage.setItem("lang", "pt-BR");
+  if (typeof window !== "undefined") window.localStorage.setItem("lang", savedLanguage);
 } catch {}
 
 if (i18n.isInitialized) {
   Object.entries(resources).forEach(([lang, value]) => {
     i18n.addResourceBundle(lang, "translation", value.translation, true, true);
   });
-  void i18n.changeLanguage("pt-BR");
+  void i18n.changeLanguage(savedLanguage);
 } else {
   i18n.use(initReactI18next).init({
     resources,
-    lng: "pt-BR",
+    lng: savedLanguage,
     fallbackLng: "pt-BR",
     defaultNS: "translation",
     ns: ["translation"],

@@ -1,0 +1,465 @@
+{
+  "name": "AURI — Decisão Texto x Áudio + TTS Nexus",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nexus/audio/decide",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "598e1ffc-afdc-48ad-8508-8db86173bd44",
+      "name": "Webhook — Decisão de Áudio",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1000,
+        0
+      ],
+      "notes": "Entrada do Atendimento. O Atendimento deve chamar este webhook somente depois de produzir a resposta textual. O fluxo decide texto x áudio e, se habilitado pela empresa, gera o áudio no Nexus Gateway."
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json.body??$json;\nfor(const k of ['companyId','userId','conversationId','responseText']) {\n  if(b[k]===undefined||b[k]===null||String(b[k]).trim()==='') throw new Error('Campo obrigatório ausente: '+k);\n}\nconst text=String(b.responseText).trim();\nreturn [{json:{\n  ...b, companyId:String(b.companyId), userId:String(b.userId),\n  conversationId:String(b.conversationId), responseText:text,\n  channel:String(b.channel??'whatsapp'),\n  messageId:String(b.messageId??`${b.conversationId}:${Date.now()}`),\n  source:String(b.source??'atendimento'),\n  voiceOverride:b.voiceId??b.voice_id??null\n}}];"
+      },
+      "id": "e3a9621e-bc34-4033-afeb-cb595d906b1e",
+      "name": "Validar + Normalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.responseText }}",
+        "options": {
+          "systemMessage": "Você é o Agente de Áudio interno da Auri.\nSua única decisão nesta etapa é determinar se a resposta final do Atendimento deve ser enviada também como áudio.\n\nREGRA PRINCIPAL:\n- Áudio é complementar, nunca substitui o texto.\n- Prefira texto para respostas curtas.\n- Considere áudio quando a resposta for longa, explicativa, emocional/conversacional ou quando um áudio tornar a comunicação claramente melhor.\n- Como regra prática, respostas com até 220 caracteres normalmente ficam em texto.\n- Acima de 220 caracteres, avalie o contexto; respostas muito longas podem ser divididas/encurtadas para locução.\n- Nunca gere áudio para menus, códigos, URLs, preços isolados, listas muito extensas ou conteúdo que fique claramente melhor em texto.\n- Se o cliente pediu explicitamente áudio/voz, considere isso forte indicação para áudio.\n- Nunca invente texto. Use exatamente a resposta recebida.\n- Nunca escolha uma voz aqui: a voz é definida pela configuração da empresa no Supabase.\n\nRETORNE SOMENTE JSON válido:\n{\"speak\":true|false,\"reason\":\"string\",\"text\":\"texto exato para TTS\"}\n\nCONTEXTO:\nEmpresa: {{ $json.companyId }}\nUsuário: {{ $json.userId }}\nConversa: {{ $json.conversationId }}\nCanal: {{ $json.channel }}\nTexto: {{ $json.responseText }}"
+        }
+      },
+      "id": "a7b2517a-c9ac-48ee-b084-c21e3290751d",
+      "name": "AI Agent — Áudio — Decidir",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -500,
+        0
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "FrbujzpFuKBBhCeA",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "nexus-auto",
+          "mode": "list",
+          "cachedResultName": "nexus-auto"
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "6e1c75de-7da6-4d9c-a3f8-fe3b529a2af8",
+      "name": "Nexus Chat Model — áudio",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -500,
+        260
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "FrbujzpFuKBBhCeA",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ 'audio:'+ $json.companyId + ':' + $json.conversationId }}",
+        "contextWindowLength": 6
+      },
+      "id": "e947e0e3-e3ff-4807-91e6-31cf26928203",
+      "name": "Memória — áudio",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -250,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let raw=$json.output??$json.text??$json.response??$json;\nif(typeof raw==='string'){\n  raw=raw.replace(/^```json\\s*/,'').replace(/^```\\s*/,'').replace(/```$/,'').trim();\n  try{raw=JSON.parse(raw)}catch{throw new Error('Decisão de áudio não retornou JSON válido')}\n}\nconst original=$('Validar + Normalizar').item.json;\nconst speak=raw.speak===true;\nconst text=String(raw.text??original.responseText).trim();\nreturn [{json:{...original,speak,reason:String(raw.reason??''),ttsText:text}}];"
+      },
+      "id": "6fda5e66-0c30-4c51-b7d4-9d910c653954",
+      "name": "Interpretar decisão",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.speak }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "017b1286-bafa-4e06-ba4f-94865955fb89",
+      "name": "IF — Falar em Áudio?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        180,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/company_agent_configs?company_id=eq.' + encodeURIComponent($json.companyId) + '&module_code=eq.atendimento&select=company_id,audio_enabled,voice_id,voice_name&limit=1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer '+$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "3bdb9a2c-63c2-421e-8f93-0c207d8d6ed3",
+      "name": "Supabase — Buscar Voz da Empresa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        430,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg=Array.isArray($json)?$json[0]:$json;\nconst original=$('Interpretar decisão').item.json;\nif(!cfg || cfg.audio_enabled!==true) return [{json:{...original,speak:false,audioStatus:'voice_not_configured',audioUrl:null}}];\nif(!cfg.voice_id) throw new Error('VOICE_ID_NOT_CONFIGURED');\nreturn [{json:{...original,voiceId:cfg.voice_id,voiceName:cfg.voice_name??null,audioStatus:'ready'}}];"
+      },
+      "id": "4467480b-93c3-49d5-b88c-b379d0dcae21",
+      "name": "Validar Voz",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.NEXUS_GATEWAY_URL || 'https://intelligent-ai-router.lovable.app/api/public').replace(/\\/$/,'') + '/v1/audio/speech' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer '+($json.voiceToken || $env.NEXUS_GATEWAY_TOKEN || $env.NEXUS_GATEWAY_API_KEY)}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({input:$json.ttsText,voice_id:$json.voiceId}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "48bf2de2-575e-46cf-9b05-f8392b8ff3cf",
+      "name": "Nexus Gateway — Gerar Áudio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        930,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r=$json;\nconst original=$('Validar Voz').item.json;\nconst url=r?.url ?? r?.audio_url ?? r?.audioUrl;\nif(!url || typeof url !== 'string') throw new Error('Gateway não retornou URL de áudio');\nreturn [{json:{...original,audioUrl:url,audioStatus:'url_ready'}}];"
+      },
+      "id": "a4b5c6d7-e8f9-4a10-b123-c456d789e012",
+      "name": "Nexus Gateway — Extrair URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        930,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.audioUrl }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "b5c6d7e8-f9a0-4b21-c234-d567e890f123",
+      "name": "Baixar Áudio — URL do Gateway",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const bin=$binary?.data;\nif(!bin) throw new Error('Download do Gateway não retornou áudio binário');\nconst v=$('Validar Voz').item.json;\nreturn [{json:{ok:true,speak:true,audioStatus:'generated',companyId:v.companyId,userId:v.userId,conversationId:v.conversationId,messageId:v.messageId,channel:v.channel,voiceId:v.voiceId,voiceName:v.voiceName??null,mimeType:bin.mimeType??'audio/mpeg',audioFileKey:'data'},binary:{data:bin}}];"
+      },
+      "id": "31733ce3-2b4e-4e59-92f8-64428ad105c8",
+      "name": "Preparar Entrega",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "8271bd98-9e9a-4ec1-af5f-34c8bcb38875",
+      "name": "Responder — Áudio",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1690,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {ok:true,speak:false,audioStatus:'text_only',reason:$json.reason,companyId:$json.companyId,conversationId:$json.conversationId} }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "8970e29b-5d7a-4825-83a2-641d5d7d80a1",
+      "name": "Responder — Texto",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        430,
+        300
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook — Decisão de Áudio": {
+      "main": [
+        [
+          {
+            "node": "Validar + Normalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar + Normalizar": {
+      "main": [
+        [
+          {
+            "node": "AI Agent — Áudio — Decidir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent — Áudio — Decidir": {
+      "main": [
+        [
+          {
+            "node": "Interpretar decisão",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nexus Chat Model — áudio": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent — Áudio — Decidir",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memória — áudio": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent — Áudio — Decidir",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar decisão": {
+      "main": [
+        [
+          {
+            "node": "IF — Falar em Áudio?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Falar em Áudio?": {
+      "main": [
+        [
+          {
+            "node": "Supabase — Buscar Voz da Empresa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder — Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — Buscar Voz da Empresa": {
+      "main": [
+        [
+          {
+            "node": "Validar Voz",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Voz": {
+      "main": [
+        [
+          {
+            "node": "Nexus Gateway — Gerar Áudio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nexus Gateway — Gerar Áudio": {
+      "main": [
+        [
+          {
+            "node": "Nexus Gateway — Extrair URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Entrega": {
+      "main": [
+        [
+          {
+            "node": "Responder — Áudio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nexus Gateway — Extrair URL": {
+      "main": [
+        [
+          {
+            "node": "Baixar Áudio — URL do Gateway",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixar Áudio — URL do Gateway": {
+      "main": [
+        [
+          {
+            "node": "Preparar Entrega",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "description": "Fluxo complementar: Atendimento decide texto; este fluxo decide se também gera áudio, lê a voz escolhida no Supabase e chama o Gateway Nexus para TTS. Não usa Evolution para gerar voz."
+  }
+}

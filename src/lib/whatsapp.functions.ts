@@ -8,6 +8,10 @@ const connectInput = z.object({
   display_name: z.string().min(1).max(120),
 });
 
+function normalizeEmail(email: string | null | undefined) {
+  return (email ?? "").trim().toLowerCase();
+}
+
 async function isAdminUser(userId: string) {
   const { data } = await supabaseAdmin
     .from("user_roles")
@@ -21,36 +25,67 @@ async function isAdminUser(userId: string) {
 async function hasWhatsappAccess(userId: string) {
   if (await isAdminUser(userId)) return { hasAccess: true, isAdmin: true };
 
-  const { data: sub } = await supabaseAdmin
+  const { data: sub, error: subError } = await supabaseAdmin
     .from("subscriptions")
-    .select("status,current_period_end")
+    .select("status,current_period_end,trial_ends_at")
     .eq("user_id", userId)
     .maybeSingle();
 
+  if (subError) throw new Error(`Não foi possível validar a assinatura: ${subError.message}`);
+
+  const now = Date.now();
   const hasAccess = !!sub && ["trial", "active"].includes(sub.status) &&
-    (!sub.current_period_end || new Date(sub.current_period_end).getTime() > Date.now());
+    (!sub.current_period_end || new Date(sub.current_period_end).getTime() > now) &&
+    (sub.status !== "trial" || !sub.trial_ends_at || new Date(sub.trial_ends_at).getTime() > now);
 
-  return { hasAccess, isAdmin: false };
+  if (hasAccess) return { hasAccess: true, isAdmin: false };
+
+  // Trial requires a connected WhatsApp number, so a new customer without
+  // a subscription must be allowed to start the WhatsApp setup first.
+  if (!sub) {
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (authError || !authUser.user) throw new Error("Usuário não encontrado.");
+    const email = normalizeEmail(authUser.user.email);
+    const { data: claim, error: claimError } = await supabaseAdmin
+      .from("trial_claims")
+      .select("id")
+      .eq("email_normalized", email)
+      .maybeSingle();
+    if (claimError) throw new Error(`Não foi possível validar o Trial: ${claimError.message}`);
+    if (!claim) return { hasAccess: true, isAdmin: false };
+  }
+
+  return { hasAccess: false, isAdmin: false };
 }
-
 function normalizePhone(raw: string) {
   const digits = raw.replace(/[^0-9]/g, "");
   return `+${digits}`;
 }
 
-function evolutionConfig() {
-  const url = process.env.EVOLUTION_API_URL?.replace(/\/$/, "");
-  const key = process.env.EVOLUTION_API_KEY;
+async function evolutionConfig() {
+  let url = process.env.EVOLUTION_API_URL?.trim();
+  let key = process.env.EVOLUTION_API_KEY?.trim();
 
+  // Prefer the admin integration record when environment variables are absent.
   if (!url || !key) {
-    throw new Error("Evolution API não configurada no servidor");
+    const { data } = await supabaseAdmin
+      .from("integration_credentials")
+      .select("base_url,api_key,is_enabled")
+      .eq("provider", "whatsapp")
+      .maybeSingle();
+    url = url || data?.base_url?.trim();
+    key = key || data?.api_key?.trim();
   }
 
-  return { url, key };
+  if (!url || !key) {
+    throw new Error("WhatsApp não configurado. Informe a URL e a chave da Evolution API em Administração → Integrações.");
+  }
+
+  return { url: url.replace(/\/$/, ""), key };
 }
 
 async function evolutionRequest(path: string, options: RequestInit = {}) {
-  const { url, key } = evolutionConfig();
+  const { url, key } = await evolutionConfig();
 
   const response = await fetch(`${url}${path}`, {
     ...options,

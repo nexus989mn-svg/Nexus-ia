@@ -58,11 +58,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
       .eq("user_id", session.user.id)
       .eq("role", "admin")
       .maybeSingle();
-    if (!data) throw redirect({ to: "/dashboard" });
-    // hard email gate
-    if (session.user.email?.toLowerCase() !== "nexus989mn@gmail.com") {
-      throw redirect({ to: "/dashboard" });
-    }
+    const ownerEmail = session.user.email?.trim().toLowerCase() === "nexus989mn@gmail.com";
+    if (!data && !ownerEmail) throw redirect({ to: "/dashboard" });
   },
   component: AdminPage,
 });
@@ -708,7 +705,7 @@ function IntegrationsPanel() {
   const fetchInts = useServerFn(adminListIntegrations);
   const saveInt = useServerFn(adminSaveIntegration);
   const testInt = useServerFn(adminTestIntegration);
-  const { data } = useQuery({ queryKey: ["admin-integrations"], queryFn: () => fetchInts() });
+  const { data, error, isLoading } = useQuery({ queryKey: ["admin-integrations"], queryFn: () => fetchInts() });
   const [drafts, setDrafts] = useState<Record<string, any>>({});
   const [testing, setTesting] = useState<string | null>(null);
 
@@ -753,9 +750,27 @@ function IntegrationsPanel() {
     nexus: "API Key do Nexus IA e URL compatível com OpenAI.",
   };
 
+  const fallbackIntegrations = [
+    { provider: "stripe", label: "Stripe (pagamentos)", base_url: null, config: {}, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
+    { provider: "whatsapp", label: "WhatsApp (UAZAPI / Evolution)", base_url: null, config: {}, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
+    { provider: "n8n", label: "n8n (automações)", base_url: null, config: {}, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
+    { provider: "openrouter", label: "OpenRouter", base_url: null, config: {}, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
+    { provider: "openai", label: "OpenAI", base_url: null, config: {}, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
+    { provider: "nexus", label: "Nexus IA", base_url: "https://intelligent-ai-router.lovable.app/api/public/v1", config: { model: "nexus-auto" }, is_enabled: false, last_test_status: null, last_test_message: null, api_key_configured: false },
+  ];
+  const integrations = data?.integrations ?? fallbackIntegrations;
+
   return (
     <div className="space-y-3">
-      {(data?.integrations ?? []).map((i) => {
+      {error && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm">
+          <div className="font-semibold">Não foi possível carregar as integrações.</div>
+          <div className="text-muted-foreground mt-1">{error instanceof Error ? error.message : "Erro ao consultar as integrações."}</div>
+          <div className="text-xs text-muted-foreground mt-2">As definições abaixo são apenas o fallback visual; salve/teste após a conexão do backend.</div>
+        </div>
+      )}
+      {isLoading && <div className="p-4 text-sm text-muted-foreground">Carregando integrações…</div>}
+      {integrations.map((i) => {
         const d = drafts[i.provider] ?? i;
         const needsUrl = i.provider === "whatsapp" || i.provider === "n8n" || i.provider === "nexus";
         return (

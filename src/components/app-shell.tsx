@@ -1,10 +1,11 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { LayoutDashboard, CreditCard, Shield, LogOut, MessageCircle, Sparkles, Menu, X, Package, Phone, User as UserIcon, Building2 } from "lucide-react";
+import { LayoutDashboard, CreditCard, Shield, LogOut, MessageCircle, Sparkles, Menu, X, Phone, User as UserIcon, Building2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeCustomizer } from "@/components/theme-customizer";
 import { cn } from "@/lib/utils";
 
 type NavKey = "dashboard" | "agent" | "training" | "whatsapp" | "billing" | "catalog" | "company" | "profile" | "admin";
@@ -15,7 +16,6 @@ const items: Item[] = [
   { to: "/agent", key: "agent", label: "Central interna", icon: Sparkles, adminOnly: true },
   { to: "/training", key: "training", label: "Treine sua IA", icon: Sparkles },
   { to: "/whatsapp", key: "whatsapp", label: "WhatsApp", icon: Phone },
-  { to: "/catalog", key: "catalog", label: "Catálogo", icon: Package },
   { to: "/company", key: "company", label: "Empresa", icon: Building2 },
   { to: "/profile", key: "profile", label: "Perfil", icon: UserIcon },
   { to: "/billing", key: "billing", label: "Assinatura", icon: CreditCard },
@@ -45,6 +45,7 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
           <span>{t("nav.brand")}</span>
         </Link>
         <div className="flex items-center gap-1">
+          <ThemeCustomizer compact />
           <LanguageSwitcher compact />
           <button
             onClick={() => setOpen((v) => !v)}
@@ -95,6 +96,7 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
             {t("nav.signOut")}
           </Button>
           <div className="hidden lg:block">
+            <ThemeCustomizer compact />
             <LanguageSwitcher compact />
           </div>
         </div>

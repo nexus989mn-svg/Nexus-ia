@@ -65,3 +65,29 @@ O workflow atual de quatro agentes permanece intocado nesta etapa.
 `Catálogo do app -> catalog_design_jobs (queued) -> agent_execution_jobs (catalog_design) -> IA Designer interna -> Canva Bridge -> atualizar catalog_design_jobs -> devolver resultado ao app`
 
 O cliente só vê a funcionalidade **Criar catálogo profissional**. O nome/controle da IA Designer fica no ambiente administrativo interno.
+
+## Hard Attendant v1
+
+Antes do worker chamar o agente, ele deve carregar `get_agent_context(...)`.
+
+O agente Atendimento permanece dono da conversa. SDR, Áudio e Designer são recursos internos.
+
+A resposta deve respeitar a política central do Auri:
+
+- agrupar mensagens do mesmo lote após o debounce;
+- preservar o ponto atual da conversa;
+- não pedir novamente dados já conhecidos;
+- manter fatos, decisões, compromissos e pendências;
+- nunca inventar dados ou afirmar ações sem confirmação;
+- solicitar handoff quando necessário;
+- criar ações com idempotência quando uma ação externa for necessária.
+
+### Áudio
+
+A decisão de áudio pertence à Atendimento. O worker deve consultar `attendant.audio_enabled`, `attendant.voice_id` e `attendant.voice_name` do contexto.
+
+Se `audio_enabled=false` ou `voice_id` estiver vazio, a resposta é texto.
+
+Se estiver habilitado, áudio é uma alternativa de entrega. Deve ser usado principalmente para respostas longas/explicativas ou quando o contexto tornar a fala mais natural; não deve ser aplicado indiscriminadamente por número de caracteres.
+
+A geração deve sair diretamente pelo Nexus Gateway usando o `voice_id` da empresa. O n8n não deve armazenar uma voz fixa por workflow.

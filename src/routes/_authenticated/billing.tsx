@@ -11,7 +11,6 @@ import { SubStatusBadge } from "@/components/sub-status-badge";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { getPlanCopy } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/billing")({
@@ -35,12 +34,6 @@ function BillingPage() {
   const { data: plansData } = useQuery({ queryKey: ["plans"], queryFn: () => fetchPlans() });
   const { data: historyData } = useQuery({ queryKey: ["billing-history"], queryFn: () => fetchHistory(), enabled: !!user });
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle()
-      .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
-
   const subscribe = async (code: "trial" | "monthly" | "yearly") => {
     try {
       const res = await checkout({ data: { planCode: code } });
@@ -48,7 +41,11 @@ function BillingPage() {
       if (res.url.startsWith("http")) window.location.href = res.url;
       else qc.invalidateQueries({ queryKey: ["my-sub"] });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro");
+      const message = e instanceof Error ? e.message : "Erro";
+      toast.error(message);
+      if (code === "trial" && /WhatsApp|WHATSAPP/i.test(message)) {
+        window.location.href = "/whatsapp";
+      }
     }
   };
 
@@ -60,7 +57,10 @@ function BillingPage() {
   };
 
   const sub = subData?.subscription;
-  const currentPlan = sub?.plan ? getPlanCopy(sub.plan).name : "—";
+  useEffect(() => {
+    setIsAdmin(subData?.isAdmin === true);
+  }, [subData?.isAdmin]);
+  const currentPlan = subData?.isAdmin ? "Acesso administrativo" : sub?.plan ? getPlanCopy(sub.plan).name : "—";
 
   return (
     <AppShell isAdmin={isAdmin}>
@@ -84,7 +84,7 @@ function BillingPage() {
           <div>
             <div className="text-xs uppercase tracking-widest text-muted-foreground">{t("billing.currentPlan")}</div>
             <div className="mt-1 text-xl font-semibold">{currentPlan}</div>
-            <div className="mt-2"><SubStatusBadge status={sub?.status} /></div>
+            <div className="mt-2"><SubStatusBadge status={subData?.isAdmin ? "active" : sub?.status} /></div>
             {sub?.current_period_end && (
               <div className="text-xs text-muted-foreground mt-2">
                 {t("billing.renewsAt", { date: new Date(sub.current_period_end).toLocaleString(i18n.language) })}
