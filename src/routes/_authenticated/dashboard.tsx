@@ -144,6 +144,18 @@ function Dashboard() {
           <Link to="/billing">
             <Button variant="destructive">{t("dashboard.reactivate")}</Button>
           </Link>
+
+          <a
+            href="/website"
+            className="block rounded-xl border bg-card p-5 transition hover:border-primary"
+          >
+            <div className="font-medium">Cadastre seu site</div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Cadastre o site da sua empresa para que sua IA possa enviar o
+              link quando necessário ou usar o site para agendamentos com
+              data e horário, conforme sua configuração.
+            </p>
+          </a>
         </div>
       )}
 

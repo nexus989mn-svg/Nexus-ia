@@ -48,7 +48,22 @@ const resources = {
         placeholder: "Digite uma mensagem…",
         thinking: "Pensando…",
       },
-      landing: {
+    
+  website: {
+    websiteTitle: "Cadastre seu site",
+    websiteDescription: "Cadastre o site da sua empresa para que sua IA possa enviar o link quando necessário ou usar o site para agendamentos com data e horário, conforme sua configuração.",
+    websiteUrl: "Endereço do site",
+    websiteMode: "Como a IA deve usar o site?",
+    websiteLink: "Enviar link",
+    websiteBooking: "Agendamento",
+    websiteBoth: "Ambos",
+    websiteMessage: "Mensagem para enviar o site",
+    bookingInstructions: "Instruções de agendamento",
+    saveWebsite: "Salvar site",
+    siteSaved: "Site salvo",
+  },
+
+  landing: {
         badge: "Assistente de IA para WhatsApp",
         heroPre: "AURI IA,",
         heroAccent: "Sua Assistente de Atendimento",
@@ -61,7 +76,7 @@ const resources = {
         pricingDesc: "Cobrado em USD. Cancele quando quiser.",
         perMonth: "/mês",
         perYear: "/ano",
-        perTrial: "/teste",
+        perTrial: "/7 dias",
         subscribe: "Assinar",
         startPlanTrial: "Iniciar teste",
         features: {
@@ -181,11 +196,11 @@ const resources = {
         menu: "Menu",
       },
       landing: {
-        badge: "AI-powered WhatsApp sales platform",
-        heroPre: "Sell on WhatsApp",
-        heroAccent: "on autopilot.",
+        badge: "AI Customer Service Assistant for WhatsApp",
+        heroPre: "AURI IA,",
+        heroAccent: "Your Customer Service Assistant",
         heroDesc:
-          "Connect your WhatsApp, plug in your catalog, and let AI agents qualify leads, answer customers and close sales — 24/7, in any language.",
+          "Connect your WhatsApp and your AI assistant takes care of customer service. Train AURI IA with your company information so it understands your business and serves your customers better.",
         startTrial: "Start free trial",
         viewPricing: "View pricing",
         featuresTitle: "Everything you need to sell with AI",
@@ -193,7 +208,7 @@ const resources = {
         pricingDesc: "Billed in USD. Cancel anytime.",
         perMonth: "/month",
         perYear: "/year",
-        perTrial: "/trial",
+        perTrial: "/7 days",
         subscribe: "Subscribe",
         startPlanTrial: "Start trial",
         features: {
@@ -312,11 +327,11 @@ const resources = {
         menu: "Menú",
       },
       landing: {
-        badge: "Plataforma de ventas con IA en WhatsApp",
-        heroPre: "Vende en WhatsApp",
-        heroAccent: "en piloto automático.",
+        badge: "Asistente de atención con IA para WhatsApp",
+        heroPre: "AURI IA,",
+        heroAccent: "Tu Asistente de Atención",
         heroDesc:
-          "Conecta tu WhatsApp, integra tu catálogo y deja que agentes de IA califiquen leads, atiendan clientes y cierren ventas — 24/7, en cualquier idioma.",
+          "Conecta tu WhatsApp y tu asistente de IA se encarga de la atención. Entrena AURI IA con la información de tu empresa para que entienda tu negocio y atienda mejor a tus clientes.",
         startTrial: "Probar gratis",
         viewPricing: "Ver planes",
         featuresTitle: "Todo lo que necesitas para vender con IA",
@@ -324,7 +339,7 @@ const resources = {
         pricingDesc: "Facturado en USD. Cancela cuando quieras.",
         perMonth: "/mes",
         perYear: "/año",
-        perTrial: "/prueba",
+        perTrial: "/7 días",
         subscribe: "Suscribirse",
         startPlanTrial: "Iniciar prueba",
         features: {
@@ -415,7 +430,12 @@ export const planCopy = {
   trial: {
     name: "Teste grátis",
     interval: "teste",
-    features: ["1 instância de WhatsApp", "Assistente de IA", "Até 100 conversas", "Catálogo básico"],
+    features: [
+      "1 instância de WhatsApp",
+      "Assistente de IA",
+      "Até 100 conversas",
+      "Catálogo básico",
+    ],
   },
   monthly: {
     name: "Pro mensal",
@@ -432,7 +452,12 @@ export const planCopy = {
   yearly: {
     name: "Pro anual",
     interval: "anual",
-    features: ["Tudo do plano mensal", "2 meses grátis", "IA Designer incluída", "Implantação dedicada"],
+    features: [
+      "Tudo do plano mensal",
+      "2 meses grátis",
+      "IA Designer incluída",
+      "Implantação dedicada",
+    ],
   },
 } as const;
 
@@ -506,6 +531,30 @@ const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
   "Treine sua IA": { en: "Train your AI", es: "Entrena tu IA" }, "Personalize a Auri com o conhecimento e o jeito da sua empresa. A camada central de qualidade e segurança não pode ser desativada pelo treinamento.": { en: "Customize Auri with your company's knowledge and style. The central quality and safety layer cannot be disabled by training.", es: "Personaliza Auri con el conocimiento y estilo de tu empresa. La capa central de calidad y seguridad no puede desactivarse mediante el entrenamiento." }, "Tutorial rápido": { en: "Quick tutorial", es: "Tutorial rápido" }, "Anterior": { en: "Previous", es: "Anterior" }, "Próximo": { en: "Next", es: "Siguiente" }, "Concluído": { en: "Completed", es: "Completado" }, "Nome de atendimento": { en: "Assistant name", es: "Nombre de atención" }, "Sobre minha empresa": { en: "About my company", es: "Sobre mi empresa" }, "Como quero que o atendimento responda": { en: "How I want customer service to respond", es: "Cómo quiero que responda la atención" }, "Orientações específicas da empresa": { en: "Company-specific instructions", es: "Instrucciones específicas de la empresa" }, "Usar respostas em áudio": { en: "Use audio responses", es: "Usar respuestas de audio" }, "Voz da Auri": { en: "Auri's voice", es: "Voz de Auri" }, "Nenhuma voz está disponível no catálogo do Nexus ainda.": { en: "No voice is available in the Nexus catalog yet.", es: "Aún no hay ninguna voz disponible en el catálogo de Nexus." }, "Suas informações são usadas somente pela sua empresa. Elas personalizam conhecimento e estilo, mas não podem desligar memória, veracidade, segurança, permissões, handoff humano, proteção de credenciais ou outras regras centrais da Auri.": { en: "Your information is used only by your company. It personalizes knowledge and style, but cannot disable memory, truthfulness, safety, permissions, human handoff, credential protection, or other core Auri rules.", es: "Tu información solo la usa tu empresa. Personaliza el conocimiento y el estilo, pero no puede desactivar la memoria, veracidad, seguridad, permisos, traspaso humano, protección de credenciales u otras reglas centrales de Auri." }, "Configuração por empresa, versão controlada e isolada.": { en: "Per-company configuration, controlled and isolated version.", es: "Configuración por empresa, versión controlada y aislada." },
   "WhatsApp bloqueado": { en: "WhatsApp blocked", es: "WhatsApp bloqueado" }, "Ative o Trial ou um plano pago para liberar a conexão do WhatsApp.": { en: "Activate the trial or a paid plan to unlock WhatsApp connection.", es: "Activa la prueba o un plan de pago para habilitar la conexión de WhatsApp." }, "Ver planos": { en: "View plans", es: "Ver planes" }, "Conectar WhatsApp": { en: "Connect WhatsApp", es: "Conectar WhatsApp" }, "Conecte o número que será utilizado pela sua IA. A conexão é feita diretamente pelo aplicativo.": { en: "Connect the number that will be used by your AI. The connection is made directly through the app.", es: "Conecta el número que utilizará tu IA. La conexión se realiza directamente desde la aplicación." }, "Número": { en: "Number", es: "Número" }, "Nome de exibição": { en: "Display name", es: "Nombre de visualización" }, "Instância": { en: "Instance", es: "Instancia" }, "Conectado em": { en: "Connected at", es: "Conectado el" }, "Desconectar": { en: "Disconnect", es: "Desconectar" }, "1. Dados do número": { en: "1. Number details", es: "1. Datos del número" }, "Informe o número que será conectado ao Assistente IA.": { en: "Enter the number that will be connected to the AI Assistant.", es: "Introduce el número que se conectará al Asistente IA." }, "Número do WhatsApp": { en: "WhatsApp number", es: "Número de WhatsApp" }, "Conectando...": { en: "Connecting…", es: "Conectando…" }, "Atualizar QR": { en: "Refresh QR", es: "Actualizar QR" }, "2. Escaneie o QR no WhatsApp": { en: "2. Scan the QR in WhatsApp", es: "2. Escanea el QR en WhatsApp" }, "Abra o WhatsApp no celular.": { en: "Open WhatsApp on your phone.", es: "Abre WhatsApp en tu teléfono." }, "Aparelhos conectados": { en: "Linked devices", es: "Dispositivos vinculados" }, "Conectar um aparelho": { en: "Link a device", es: "Vincular un dispositivo" }, "Aponte a câmera para o QR abaixo.": { en: "Point the camera at the QR below.", es: "Apunta la cámara al QR de abajo." }, "Verificar conexão": { en: "Check connection", es: "Verificar conexión" }, "Cancelar / trocar número": { en: "Cancel / change number", es: "Cancelar / cambiar número" }, "Depois de escanear, o sistema verifica automaticamente a conexão.": { en: "After scanning, the system automatically checks the connection.", es: "Después de escanear, el sistema verifica automáticamente la conexión." }, "Gerando QR de conexão...": { en: "Generating connection QR…", es: "Generando QR de conexión…" }, "A Evolution está preparando o QR.": { en: "Evolution is preparing the QR.", es: "Evolution está preparando el QR." }, "Atualizar": { en: "Refresh", es: "Actualizar" }, "WhatsApp ativo": { en: "WhatsApp active", es: "WhatsApp activo" }, "Seu número está conectado e pronto para receber e responder mensagens com a IA.": { en: "Your number is connected and ready to receive and reply to messages with AI.", es: "Tu número está conectado y listo para recibir y responder mensajes con IA." }, "Abrir catálogo": { en: "Open catalog", es: "Abrir catálogo" }, "Voltar ao painel": { en: "Back to dashboard", es: "Volver al panel" }, "Tentativa de conexão cancelada.": { en: "Connection attempt canceled.", es: "Intento de conexión cancelado." }, "Não foi possível cancelar a conexão": { en: "Could not cancel the connection", es: "No se pudo cancelar la conexión" }, "Desconectar este WhatsApp?": { en: "Disconnect this WhatsApp?", es: "¿Desconectar este WhatsApp?" }, "WhatsApp desconectado.": { en: "WhatsApp disconnected.", es: "WhatsApp desconectado." },
 
+  "Teste grátis": { en: "Free trial", es: "Prueba gratis" },
+  "1 instância de WhatsApp": { en: "1 WhatsApp instance", es: "1 instancia de WhatsApp" },
+  "Assistente de IA": { en: "AI Assistant", es: "Asistente de IA" },
+  "Até 100 conversas": { en: "Up to 100 conversations", es: "Hasta 100 conversaciones" },
+  "Catálogo básico": { en: "Basic catalog", es: "Catálogo básico" },
+  "Pro mensal": { en: "Pro monthly", es: "Pro mensual" },
+  "Conversas ilimitadas": { en: "Unlimited conversations", es: "Conversaciones ilimitadas" },
+  "Múltiplas instâncias de WhatsApp": { en: "Multiple WhatsApp instances", es: "Múltiples instancias de WhatsApp" },
+  "Assistente de vendas com IA": { en: "AI sales assistant", es: "Asistente de ventas con IA" },
+  "IA SDR": { en: "AI SDR", es: "IA SDR" },
+  "Catálogo de produtos": { en: "Product catalog", es: "Catálogo de productos" },
+  "Suporte prioritário": { en: "Priority support", es: "Soporte prioritario" },
+  "Pro anual": { en: "Pro annual", es: "Pro anual" },
+  "Tudo do plano mensal": { en: "Everything in the monthly plan", es: "Todo lo del plan mensual" },
+  "2 meses grátis": { en: "2 months free", es: "2 meses gratis" },
+  "IA Designer incluída": { en: "AI Designer included", es: "IA Designer incluida" },
+  "Implantação dedicada": { en: "Dedicated implementation", es: "Implementación dedicada" },
+  "Assistente IA para WhatsApp": { en: "AI WhatsApp Assistant", es: "Asistente IA para WhatsApp" },
+  "Planos simples e transparentes": { en: "Simple, transparent pricing", es: "Planes simples y transparentes" },
+  "Cobrado em USD. Cancele quando quiser.": { en: "Billed in USD. Cancel anytime.", es: "Facturado en USD. Cancela cuando quieras." },
+  "Iniciar teste grátis": { en: "Start free trial", es: "Iniciar prueba gratis" },
+  "Ver planos": { en: "View pricing", es: "Ver planes" },
+  "Assinar": { en: "Subscribe", es: "Suscribirse" },
+  "Iniciar teste": { en: "Start trial", es: "Iniciar prueba" },
   "anual": { en: "annual", es: "anual" },
   "mensal": { en: "monthly", es: "mensual" },
   "teste": { en: "trial", es: "prueba" },
