@@ -99,7 +99,7 @@ export const saveMyAgentTraining = createServerFn({ method: "POST" })
   });
 export const previewAgentVoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ voiceId: z.string().min(1).max(160) }).parse(d))
+  .inputValidator((d) => z.object({ voiceId: z.string().min(1).max(160), language: z.enum(["pt-BR", "en", "es"]).default("pt-BR") }).parse(d))
   .handler(async ({ context, data }) => {
     await requireActiveSubscription(context.userId);
     const cid = await companyId(context.userId);
@@ -126,6 +126,7 @@ export const previewAgentVoice = createServerFn({ method: "POST" })
       body: JSON.stringify({
         input: "Olá! Eu sou a Auri. Essa é uma amostra da voz que será usada no atendimento.",
         voice_id: voice.voice_id,
+        language: data.language,
       }),
     });
 

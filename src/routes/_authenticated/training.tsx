@@ -48,6 +48,7 @@ function TrainingPage() {
   const get = useServerFn(getMyAgentTraining);
   const save = useServerFn(saveMyAgentTraining);
   const preview = useServerFn(previewAgentVoice);
+  const selectedLanguage = i18n.language === "en" ? "en" : i18n.language === "es" ? "es" : "pt-BR";
   const { data } = useQuery({ queryKey: ["training"], queryFn: () => get(), enabled: !!user });
   const { data: voices = [] } = useQuery({
     queryKey: ["agent-voice-catalog"],
@@ -129,7 +130,7 @@ function TrainingPage() {
                 onClick={async () => {
                   setPreviewingVoice(true);
                   try {
-                    const result = await preview({ data: { voiceId } });
+                    const result = await preview({ data: { voiceId, language: selectedLanguage } });
                     const audio = new Audio(result.url);
                     await audio.play();
                     toast.success(`Prévia da voz ${result.voiceName} reproduzida`);
