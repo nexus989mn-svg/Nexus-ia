@@ -145,7 +145,7 @@ function TrainingPage() {
             <Label>{t("Voz da Auri")}</Label>
             <Select value={voiceId} onValueChange={onVoiceChange} disabled={!audioEnabled}>
               <SelectTrigger><SelectValue placeholder={audioEnabled ? t("Escolha uma voz") : t("Ative o áudio primeiro")}/></SelectTrigger>
-              <SelectContent>{voices.map((voice) => <SelectItem key={voice.voice_id} value={voice.voice_id}>{voice.name} · {voice.language}</SelectItem>)}</SelectContent>
+              <SelectContent>{voices.map((voice) => <SelectItem key={voice.voice_id} value={voice.voice_id}>{voice.name} · {selectedLanguage}</SelectItem>)}</SelectContent>
             </Select>
             {audioEnabled && !voices.length && <p className="text-xs text-amber-500">{t("Nenhuma voz está disponível no catálogo do Nexus ainda.")}</p>}
             {audioEnabled && voiceId && <div className="flex items-center gap-2 pt-1">
