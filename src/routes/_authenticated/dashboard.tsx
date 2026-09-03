@@ -20,7 +20,9 @@ import {
   ArrowRight,
   CreditCard,
   Package,
-  Sparkles, Globe } from "lucide-react";
+  Sparkles,
+  Globe,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { getPlanCopy } from "@/lib/i18n";
