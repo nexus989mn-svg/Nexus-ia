@@ -219,10 +219,10 @@ function Dashboard() {
       <div className="rounded-2xl border border-border bg-card-glass p-5 md:p-6">
         <h2 className="font-semibold text-lg flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
-          Próximos passos
+          {t("dashboard.nextSteps")}
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Siga os passos abaixo para deixar sua IA de atendimento pronta para sua empresa.
+          {t("dashboard.nextStepsDescription")}
         </p>
         <ol className="mt-4 space-y-3">
           {steps.map((step, idx) => (
