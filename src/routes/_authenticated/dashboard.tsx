@@ -222,7 +222,7 @@ function Dashboard() {
           Próximos passos
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Siga a ordem abaixo para deixar sua IA de vendas operacional.
+          Siga os passos abaixo para deixar sua IA de atendimento pronta para sua empresa.
         </p>
         <ol className="mt-4 space-y-3">
           {steps.map((step, idx) => (
