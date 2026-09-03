@@ -134,7 +134,13 @@ function TrainingPage() {
         <div><Label>{t("Nome de atendimento")}</Label><Input value={name === "IA Atendimento" ? t("IA Atendimento") : name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder={t("Ex.: Auri")} /></div>
         <div><Label>{t("Sobre minha empresa")}</Label><Textarea value={company} onChange={(e) => setCompany(e.target.value)} maxLength={12000} placeholder={t("Segmento, produtos, serviços, horários, localização, diferenciais...")} rows={6}/></div>
         <div><Label>{t("Como quero que o atendimento responda")}</Label><Textarea value={behavior} onChange={(e) => setBehavior(e.target.value)} maxLength={12000} placeholder={t("Tom de voz, forma de responder, como abordar clientes, como apresentar os serviços...")} rows={7}/></div>
-        <div><Label>{t("Orientações específicas da empresa")}</Label><Textarea value={rules} onChange={(e) => setRules(e.target.value)} maxLength={12000} placeholder={t("Ex.: não oferecer desconto; sempre confirmar o endereço antes de finalizar...")} rows={5}/></div>
+        <div><Label>{t("Orientações específicas da empresa")}</Label><Textarea value={rules} onChange={(e) => setRules(e.target.value)} maxLength={12000} placeholder={
+  i18n.language === "en"
+    ? "e.g.: do not offer discounts; always confirm the address before finalizing..."
+    : i18n.language === "es"
+      ? "Ej.: no ofrecer descuentos; siempre confirmar la dirección antes de finalizar..."
+      : "Ex.: não oferecer desconto; sempre confirmar o endereço antes de finalizar..."
+} rows={5}/></div>
 
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-4">
           <div className="flex items-start justify-between gap-4">
