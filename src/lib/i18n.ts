@@ -434,33 +434,18 @@ export const planCopy = {
     name: "Teste grátis",
     interval: "teste",
     features: [
-      "1 instância de WhatsApp",
-      "Assistente de IA",
-      "Até 100 conversas",
-      "Catálogo básico",
+      "7 dias de teste gratuito",
     ],
   },
   monthly: {
-    name: "Pro mensal",
+    name: "Plano mensal",
     interval: "mensal",
-    features: [
-      "Conversas ilimitadas",
-      "Múltiplas instâncias de WhatsApp",
-      "Assistente de vendas com IA",
-      "IA SDR",
-      "Catálogo de produtos",
-      "Suporte prioritário",
-    ],
+    features: [],
   },
   yearly: {
-    name: "Pro anual",
+    name: "Plano anual",
     interval: "anual",
-    features: [
-      "Tudo do plano mensal",
-      "2 meses grátis",
-      "IA Designer incluída",
-      "Implantação dedicada",
-    ],
+    features: [],
   },
 } as const;
 
