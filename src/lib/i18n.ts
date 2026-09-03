@@ -530,6 +530,7 @@ const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
   "Plano mensal": { en: "Monthly plan", es: "Plan mensual" },
   "Plano anual": { en: "Annual plan", es: "Plan anual" },
   "Passo {{step}} de {{total}}": { en: "Step {{step}} of {{total}}", es: "Paso {{step}} de {{total}}" },
+  "Passo {{current}} de {{total}}": { en: "Step {{current}} of {{total}}", es: "Paso {{current}} de {{total}}" },
   "Ex.: Auri": { en: "e.g.: Auri", es: "Ej.: Auri" },
   "Segmento, produtos, serviços, horários, localização, diferenciais...": { en: "Industry, products, services, hours, location, differentiators...", es: "Sector, productos, servicios, horarios, ubicación, diferenciales..." },
   "Prévia da voz selecionada": { en: "Selected voice preview", es: "Vista previa de la voz seleccionada" },
@@ -810,11 +811,20 @@ const originalT = i18n.t.bind(i18n);
 i18n.t = ((key: string | string[], options?: Record<string, unknown>) => {
   const rawKey = Array.isArray(key) ? key[0] : key;
   const result = originalT(key as never, options as never);
+
   if (typeof result === "string" && result !== rawKey) return result;
+
+  const direct = translateText(rawKey);
+  if (direct !== rawKey) {
+    return direct.replace(/{{\s*(\w+)\s*}}/g, (_, token) => String(options?.[token] ?? ""));
+  }
+
   const fallback = rawKey.split(".").reduce<unknown>((acc, part) => {
     return acc && typeof acc === "object" ? (acc as Record<string, unknown>)[part] : undefined;
   }, resources["pt-BR"].translation);
+
   if (typeof fallback !== "string") return result;
+
   return fallback.replace(/{{\s*(\w+)\s*}}/g, (_, token) => String(options?.[token] ?? ""));
 }) as typeof i18n.t;
 
