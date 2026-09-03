@@ -20,11 +20,10 @@ import {
   ArrowRight,
   CreditCard,
   Package,
-  Sparkles,, Globe} from "lucide-react";
+  Sparkles, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { getPlanCopy } from "@/lib/i18n";
-import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Painel — Assistente IA de Vendas WhatsApp" }] }),
@@ -125,6 +124,15 @@ function Dashboard() {
       done: (statsData?.enabledAgents ?? 0) > 0,
       disabled: false,
     },
+    {
+      title: t("landing.websiteTitle"),
+      desc: t("landing.websiteDesc"),
+      to: "/website",
+      cta: t("landing.websiteCta", { defaultValue: "Cadastrar site" }),
+      icon: Globe,
+      done: false,
+      disabled: false,
+    },
   ];
 
   return (
@@ -144,18 +152,6 @@ function Dashboard() {
           <Link to="/billing">
             <Button variant="destructive">{t("dashboard.reactivate")}</Button>
           </Link>
-
-          <a
-            href="/website"
-            className="block rounded-xl border bg-card p-5 transition hover:border-primary"
-          >
-            <div className="font-medium">Cadastre seu site</div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Cadastre o site da sua empresa para que sua IA possa enviar o
-              link quando necessário ou usar o site para agendamentos com
-              data e horário, conforme sua configuração.
-            </p>
-          </a>
         </div>
       )}
 
@@ -292,23 +288,6 @@ function Card({
       </div>
       <div className="mt-2 text-xl md:text-2xl font-bold">{value}</div>
       {hint && <div className="text-[11px] md:text-xs text-muted-foreground mt-1 truncate">{hint}</div>}
-    
-        <Link
-          to="/website"
-          className="group block rounded-xl border border-border bg-card p-5 transition hover:border-primary/50 hover:bg-accent/40"
-        >
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Globe className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="font-semibold">{t("landing.websiteTitle")}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t("landing.websiteDesc")}
-              </p>
-            </div>
-          </div>
-        </Link>
 
 </div>
   );
