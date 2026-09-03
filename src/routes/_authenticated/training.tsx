@@ -95,7 +95,7 @@ function TrainingPage() {
   useEffect(() => {
     const c = data?.config as any;
     if (!c) return;
-    setName(c.display_name ?? "");
+    setName(c.display_name ?? "IA Atendimento");
     setBehavior(c.behavior_prompt ?? "");
     const ctx = (c.company_context ?? {}) as Record<string, any>;
     setCompany(ctx.summary ?? "");
@@ -131,7 +131,7 @@ function TrainingPage() {
       </Card>
 
       <Card className="p-5 md:p-6 space-y-5">
-        <div><Label>{t("Nome de atendimento")}</Label><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder={t("Ex.: Auri")} /></div>
+        <div><Label>{t("Nome de atendimento")}</Label><Input value={name === "IA Atendimento" ? t("IA Atendimento") : name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder={t("Ex.: Auri")} /></div>
         <div><Label>{t("Sobre minha empresa")}</Label><Textarea value={company} onChange={(e) => setCompany(e.target.value)} maxLength={12000} placeholder={t("Segmento, produtos, serviços, horários, localização, diferenciais...")} rows={6}/></div>
         <div><Label>{t("Como quero que o atendimento responda")}</Label><Textarea value={behavior} onChange={(e) => setBehavior(e.target.value)} maxLength={12000} placeholder={t("Tom de voz, forma de responder, como abordar clientes, como apresentar os serviços...")} rows={7}/></div>
         <div><Label>{t("Orientações específicas da empresa")}</Label><Textarea value={rules} onChange={(e) => setRules(e.target.value)} maxLength={12000} placeholder={t("Ex.: não oferecer desconto; sempre confirmar o endereço antes de finalizar...")} rows={5}/></div>
