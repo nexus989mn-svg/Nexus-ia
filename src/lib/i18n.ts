@@ -770,7 +770,8 @@ export function installDomTranslations() {
   const run = () => window.requestAnimationFrame(scan);
   if (document.body) { scan(); observer.observe(document.body, { childList: true, subtree: true, characterData: true }); }
   i18n.on("languageChanged", run);
-  return () => { observer.disconnect(); i18n.off("languageChanged", run); };
+  return () => { observer.disconnect(); i18n.off("languageChanged", run); 
+};
 }
 
 export function translateInterval(interval?: string | null) {
