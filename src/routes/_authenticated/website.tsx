@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { createFileRoute } from "@tanstack/react-router";
 import { Globe, CalendarClock, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,10 +12,11 @@ export const Route = createFileRoute("/_authenticated/website")({
 });
 
 function WebsitePage() {
+  const { t } = useTranslation();
   const [url, setUrl] = useState("");
   const [mode, setMode] = useState<"link" | "booking" | "both">("link");
   const [message, setMessage] = useState(
-    "Você pode acessar o site da nossa empresa aqui: {site}"
+    "t("website.defaultMessage")"
   );
   const [booking, setBooking] = useState("");
   const [saved, setSaved] = useState(false);
@@ -28,11 +30,9 @@ function WebsitePage() {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-semibold">Cadastre seu site</h1>
+        <h1 className="text-2xl font-semibold">t("website.websiteTitle")</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Cadastre o site da sua empresa para que sua IA possa enviar o link
-          aos clientes ou utilizar o site para agendamentos, com data e
-          horário, conforme a configuração.
+          t("website.websiteDescription")
         </p>
       </div>
 
@@ -40,26 +40,26 @@ function WebsitePage() {
         <div className="flex items-center gap-3">
           <Globe className="h-5 w-5" />
           <div>
-            <h2 className="font-medium">Site da empresa</h2>
+            <h2 className="font-medium">t("website.websiteCompany")</h2>
             <p className="text-sm text-muted-foreground">
-              Esse site ficará disponível no seu painel.
+              t("website.websiteAvailable")
             </p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="website-url">Endereço do site</Label>
+          <Label htmlFor="website-url">t("website.websiteUrl")</Label>
           <Input
             id="website-url"
             type="url"
-            placeholder="https://www.suaempresa.com.br"
+            placeholder="t("website.websitePlaceholder")"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Como a IA deve usar o site?</Label>
+          <Label>t("website.websiteMode")</Label>
 
           <div className="grid gap-3 md:grid-cols-3">
             <button
@@ -70,9 +70,9 @@ function WebsitePage() {
               }`}
             >
               <Globe className="mb-2 h-5 w-5" />
-              <div className="font-medium">Enviar link</div>
+              <div className="font-medium">t("website.websiteLink")</div>
               <div className="text-xs text-muted-foreground">
-                Catálogo, informações e acesso ao site.
+                t("website.websiteLinkDescription")
               </div>
             </button>
 
@@ -84,9 +84,9 @@ function WebsitePage() {
               }`}
             >
               <CalendarClock className="mb-2 h-5 w-5" />
-              <div className="font-medium">Agendamento</div>
+              <div className="font-medium">t("website.websiteBooking")</div>
               <div className="text-xs text-muted-foreground">
-                Data e horário conforme o serviço configurado.
+                t("website.websiteBookingDescription")
               </div>
             </button>
 
@@ -98,44 +98,44 @@ function WebsitePage() {
               }`}
             >
               <CalendarClock className="mb-2 h-5 w-5" />
-              <div className="font-medium">Ambos</div>
+              <div className="font-medium">t("website.websiteBoth")</div>
               <div className="text-xs text-muted-foreground">
-                Link do site e agendamento.
+                t("website.websiteBothDescription")
               </div>
             </button>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="site-message">Mensagem para enviar o site</Label>
+          <Label htmlFor="site-message">t("website.websiteMessage")</Label>
           <Textarea
             id="site-message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Digite como a IA deve apresentar o site ao cliente."
+            placeholder="t("website.websiteMessagePlaceholder")"
           />
           <p className="text-xs text-muted-foreground">
-            Use <code>{"{site}"}</code> para inserir automaticamente o link.
+            <>Use <code>{"{site}"}</code> {t("website.websiteVariableHelp")}</>
           </p>
         </div>
 
         {(mode === "booking" || mode === "both") && (
           <div className="space-y-2">
             <Label htmlFor="booking-instructions">
-              Instruções de agendamento
+              t("website.bookingInstructions")
             </Label>
             <Textarea
               id="booking-instructions"
               value={booking}
               onChange={(e) => setBooking(e.target.value)}
-              placeholder="Informe como a IA deve orientar o cliente sobre data e horário."
+              placeholder="t("website.bookingInstructionsPlaceholder")"
             />
           </div>
         )}
 
         <Button onClick={saveWebsite} className="w-full">
           <Save className="mr-2 h-4 w-4" />
-          {saved ? "Site salvo" : "Salvar site"}
+          {saved ? "t("website.siteSaved")" : "t("website.saveWebsite")"}
         </Button>
       </div>
     </div>
