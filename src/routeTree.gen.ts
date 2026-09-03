@@ -21,6 +21,7 @@ import { Route as AuthenticatedCompanyRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedTrainingRouteImport } from './routes/_authenticated/training'
+import { Route as AuthenticatedWebsiteRouteImport } from './routes/_authenticated/website'
 import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated/whatsapp'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
@@ -84,6 +85,11 @@ const AuthenticatedTrainingRoute = AuthenticatedTrainingRouteImport.update({
   path: '/training',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedWebsiteRoute = AuthenticatedWebsiteRouteImport.update({
+  id: '/website',
+  path: '/website',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedWhatsappRoute = AuthenticatedWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/training': typeof AuthenticatedTrainingRoute
+  '/website': typeof AuthenticatedWebsiteRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/api/chat': typeof ApiChatRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/training': typeof AuthenticatedTrainingRoute
+  '/website': typeof AuthenticatedWebsiteRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/api/chat': typeof ApiChatRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/training': typeof AuthenticatedTrainingRoute
+  '/_authenticated/website': typeof AuthenticatedWebsiteRoute
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/api/chat': typeof ApiChatRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/profile'
     | '/training'
+    | '/website'
     | '/whatsapp'
     | '/api/chat'
     | '/api/public/stripe-webhook'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/profile'
     | '/training'
+    | '/website'
     | '/whatsapp'
     | '/api/chat'
     | '/api/public/stripe-webhook'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/profile'
     | '/_authenticated/training'
+    | '/_authenticated/website'
     | '/_authenticated/whatsapp'
     | '/api/chat'
     | '/api/public/stripe-webhook'
@@ -297,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTrainingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/website': {
+      id: '/_authenticated/website'
+      path: '/website'
+      fullPath: '/website'
+      preLoaderRoute: typeof AuthenticatedWebsiteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/whatsapp': {
       id: '/_authenticated/whatsapp'
       path: '/whatsapp'
@@ -330,6 +349,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedTrainingRoute: typeof AuthenticatedTrainingRoute
+  AuthenticatedWebsiteRoute: typeof AuthenticatedWebsiteRoute
   AuthenticatedWhatsappRoute: typeof AuthenticatedWhatsappRoute
 }
 
@@ -342,6 +362,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedTrainingRoute: AuthenticatedTrainingRoute,
+  AuthenticatedWebsiteRoute: AuthenticatedWebsiteRoute,
   AuthenticatedWhatsappRoute: AuthenticatedWhatsappRoute,
 }
 
