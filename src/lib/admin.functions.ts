@@ -70,29 +70,106 @@ export const adminSetSubscriptionStatus = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await ensureAdmin(context.userId);
 
-    const updates: {
-      status: typeof data.status;
-      current_period_end?: string;
-      blocked_reason?: string | null;
-    } = { status: data.status };
+    const now = new Date();
+    const updates: Record<string, unknown> = {
+      status: data.status,
+      updated_at: now.toISOString(),
+    };
+
     if (data.status === "active") {
-      const end = new Date();
+      const end = new Date(now);
       end.setMonth(end.getMonth() + 1);
+
+      updates.current_period_start = now.toISOString();
       updates.current_period_end = end.toISOString();
+      updates.trial_ends_at = null;
       updates.blocked_reason = null;
-    }
-    if (data.status === "blocked") {
-      updates.blocked_reason = "Blocked by admin";
+      updates.cancel_at_period_end = false;
     }
 
-    await supabaseAdmin.from("subscriptions").update(updates).eq("user_id", data.targetUserId);
-    await supabaseAdmin.from("system_logs").insert({
-      user_id: data.targetUserId,
-      source: "admin",
-      event: `subscription.${data.status}.manual`,
-      severity: "info",
-      metadata: { by: context.userId },
-    });
+    if (data.status === "trial") {
+      const end = new Date(now);
+      end.setDate(end.getDate() + 7);
+
+      updates.current_period_start = now.toISOString();
+      updates.current_period_end = end.toISOString();
+      updates.trial_ends_at = end.toISOString();
+      updates.blocked_reason = null;
+      updates.cancel_at_period_end = false;
+    }
+
+    if (data.status === "blocked") {
+      updates.blocked_reason = "Bloqueado pelo administrador";
+    }
+
+    const { data: existing, error: findError } = await supabaseAdmin
+      .from("subscriptions")
+      .select("id")
+      .eq("user_id", data.targetUserId)
+      .maybeSingle();
+
+    if (findError) {
+      throw new Error(`Erro ao localizar assinatura: ${findError.message}`);
+    }
+
+    if (existing?.id) {
+      const { error } = await supabaseAdmin
+        .from("subscriptions")
+        .update(updates)
+        .eq("id", existing.id);
+
+      if (error) {
+        throw new Error(`Erro ao atualizar assinatura: ${error.message}`);
+      }
+    } else {
+      if (!["active", "trial"].includes(data.status)) {
+        throw new Error("Este cliente ainda não possui uma assinatura.");
+      }
+
+      const planCode = data.status === "trial" ? "trial" : "monthly";
+
+      const { data: plan, error: planError } = await supabaseAdmin
+        .from("plans")
+        .select("id")
+        .eq("code", planCode)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (planError) {
+        throw new Error(`Erro ao localizar plano: ${planError.message}`);
+      }
+
+      if (!plan) {
+        throw new Error(`Plano ${planCode} não encontrado ou está inativo.`);
+      }
+
+      const { error } = await supabaseAdmin
+        .from("subscriptions")
+        .insert({
+          ...updates,
+          user_id: data.targetUserId,
+          plan_id: plan.id,
+        });
+
+      if (error) {
+        throw new Error(`Erro ao criar assinatura: ${error.message}`);
+      }
+    }
+
+    const { error: logError } = await supabaseAdmin
+      .from("system_logs")
+      .insert({
+        user_id: data.targetUserId,
+        source: "admin",
+        event: `subscription.${data.status}.manual`,
+        severity: "info",
+        metadata: { by: context.userId },
+      });
+
+    if (logError) {
+      console.error("Falha ao registrar log administrativo:", logError);
+    }
+
     return { ok: true };
   });
 
@@ -288,9 +365,25 @@ export const adminSetUserRole = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       if ((count ?? 0) <= 1) throw new Error("O sistema precisa manter pelo menos um administrador.");
     }
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.targetUserId);
-    const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: data.targetUserId, role: data.role });
-    if (error) throw new Error(error.message);
+    const { error: deleteError } = await supabaseAdmin
+      .from("user_roles")
+      .delete()
+      .eq("user_id", data.targetUserId);
+
+    if (deleteError) {
+      throw new Error(`Erro ao remover função atual: ${deleteError.message}`);
+    }
+
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .insert({
+        user_id: data.targetUserId,
+        role: data.role,
+      });
+
+    if (error) {
+      throw new Error(`Erro ao definir nova função: ${error.message}`);
+    }
     await supabaseAdmin.from("system_logs").insert({
       user_id: data.targetUserId,
       source: "admin",
