@@ -536,6 +536,7 @@ const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
   "Prévia da voz selecionada": { en: "Selected voice preview", es: "Vista previa de la voz seleccionada" },
   "Quando ativado, a Auri pode decidir que uma resposta longa ou explicativa fica melhor em áudio. Ela não transforma toda mensagem em voz.": { en: "When enabled, Auri may decide that a long or explanatory response is better as audio. It does not turn every message into voice.", es: "Cuando está activado, Auri puede decidir que una respuesta larga o explicativa funciona mejor en audio. No convierte todos los mensajes en voz." },
   "Configuração por empresa, versão controlada e isolada.": { en: "Per-company configuration, controlled and isolated version.", es: "Configuración por empresa, versión controlada y aislada." },
+  "Ex.: não oferecer desconto; sempre confirmar o endereço antes de finalizar...": { en: "e.g.: do not offer discounts; always confirm the address before finalizing...", es: "Ej.: no ofrecer descuentos; siempre confirmar la dirección antes de finalizar..." },
   "plano mensal": { en: "monthly plan", es: "plan mensual" },
   "plano anual": { en: "annual plan", es: "plan anual" },
   "Plano mensal": { en: "Monthly plan", es: "Plan mensual" },
