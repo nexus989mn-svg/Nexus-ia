@@ -99,7 +99,11 @@ export const saveMyAgentTraining = createServerFn({ method: "POST" })
   });
 export const previewAgentVoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ voiceId: z.string().min(1).max(160), language: z.enum(["pt-BR", "en", "es"]).default("pt-BR") }).parse(d))
+  .inputValidator((d) => z.object({
+    voiceId: z.string().min(1).max(160),
+    language: z.enum(["pt-BR", "en", "es"]).default("pt-BR"),
+    text: z.string().min(1).max(1000).optional(),
+  }).parse(d))
   .handler(async ({ context, data }) => {
     await requireActiveSubscription(context.userId);
     const cid = await companyId(context.userId);
@@ -124,7 +128,13 @@ export const previewAgentVoice = createServerFn({ method: "POST" })
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        input: "Olá! Eu sou a Auri. Essa é uma amostra da voz que será usada no atendimento.",
+        input:
+          data.text ??
+          (data.language === "en"
+            ? "Hello! I am Auri. This is a sample of the voice that will be used for customer service."
+            : data.language === "es"
+              ? "¡Hola! Soy Auri. Esta es una muestra de la voz que se utilizará en la atención al cliente."
+              : "Olá! Eu sou a Auri. Esta é uma amostra da voz que será usada no atendimento."),
         voice_id: voice.voice_id,
         language: data.language,
       }),
