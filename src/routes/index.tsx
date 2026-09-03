@@ -100,11 +100,9 @@ function Landing() {
                   <span className="text-4xl font-bold">${(plan.price_usd_cents / 100).toFixed(0)}</span>
                   <span className="text-muted-foreground"> {perLabel}</span>
                 </div>
-                <ul className="mt-6 space-y-2 text-sm">
-                  {copy.features.map((f) => (
-                    <li key={f} className="flex gap-2"><Check className="h-4 w-4 text-success mt-0.5 shrink-0" />{f}</li>
-                  ))}
-                </ul>
+                {plan.interval === "trial" && (
+                  <p className="mt-4 text-sm text-muted-foreground">7 dias de teste</p>
+                )}
                 <Link to="/signup" className="block mt-6">
                   <Button className={`w-full ${featured ? "bg-gradient-primary shadow-glow" : ""}`} variant={featured ? "default" : "outline"}>
                     {plan.interval === "trial" ? t("landing.startPlanTrial") : t("landing.subscribe")}
