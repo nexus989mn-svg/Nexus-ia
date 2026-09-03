@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Brain, Building2, CheckCircle2, MessageSquare, ShieldCheck, Sparkles, Volume2, Play, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ function Illustration({ index }: { index: number }) {
 }
 
 function TrainingPage() {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const qc = useQueryClient();
   const [isAdmin, setIsAdmin] = useState(false);
