@@ -201,7 +201,7 @@ export const adminExecutiveStats = createServerFn({ method: "GET" })
     await ensureAdmin(context.userId);
     const [{ data: subs }, { data: plans }, { data: profiles }, { data: adminRoles }] =
       await Promise.all([
-        supabaseAdmin.from("subscriptions").select("user_id, status, plan_id, current_period_end, created_at"),
+        supabaseAdmin.from("subscriptions").select("user_id, status, plan_id, current_period_end, created_at, stripe_subscription_id"),
         supabaseAdmin.from("plans").select("id, code, price_usd_cents, interval"),
         supabaseAdmin.from("profiles").select("id, user_id, created_at"),
         supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
@@ -218,11 +218,17 @@ export const adminExecutiveStats = createServerFn({ method: "GET" })
     let arrCents = 0;
     for (const s of (subs ?? []).filter((s) => !adminIds.has(s.user_id))) {
       byStatus[s.status] = (byStatus[s.status] ?? 0) + 1;
-      if (s.status === "active" && s.plan_id) {
+      // Ativação manual pelo ADM não é pagamento.
+      // Só entra no faturamento quando existe uma assinatura
+      // real do Stripe vinculada ao cliente.
+      if (s.status === "active" && s.plan_id && s.stripe_subscription_id) {
         const pl = planMap.get(s.plan_id);
-        if (pl?.interval === "monthly") mrrCents += pl.price_usd_cents;
+
+        if (pl?.interval === "monthly") {
+          mrrCents += pl.price_usd_cents;
+        }
+
         if (pl?.interval === "yearly") {
-          arrCents += pl.price_usd_cents;
           mrrCents += Math.round(pl.price_usd_cents / 12);
         }
       }
@@ -243,7 +249,7 @@ export const adminExecutiveStats = createServerFn({ method: "GET" })
       customers: customerCount ?? 0,
       byStatus,
       mrrUsd: mrrCents / 100,
-      arrUsd: (arrCents + mrrCents * 12) / 100,
+      arrUsd: (mrrCents * 12) / 100,
       activeSubs: byStatus.active ?? 0,
       trialSubs: byStatus.trial ?? 0,
       canceledSubs: byStatus.canceled ?? 0,
