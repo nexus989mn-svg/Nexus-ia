@@ -42,18 +42,18 @@ const stepKeys = [
   },
 ];
 
-function Illustration({ index }: { index: number }) {
-  const Icon = steps[index]?.icon ?? Sparkles;
-  return <div className="h-40 rounded-2xl border border-primary/20 bg-primary/5 flex items-center justify-center"><div className="h-20 w-20 rounded-3xl bg-background border border-border shadow-lg flex items-center justify-center"><Icon className="h-10 w-10 text-primary" /></div></div>;
+function Illustration({ icon: Icon }: { icon?: Step["icon"] }) {
+  const CurrentIcon = Icon ?? Sparkles;
+  return <div className="h-40 rounded-2xl border border-primary/20 bg-primary/5 flex items-center justify-center"><div className="h-20 w-20 rounded-3xl bg-background border border-border shadow-lg flex items-center justify-center"><CurrentIcon className="h-10 w-10 text-primary" /></div></div>;
 }
 
 function TrainingPage() {
+  const { t, i18n } = useTranslation();
   const steps = stepKeys.map((item) => ({
     ...item,
     title: t(item.title),
     text: t(item.text),
   }));
-  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const qc = useQueryClient();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -125,7 +125,7 @@ function TrainingPage() {
       <div><h1 className="text-2xl md:text-3xl font-bold">{t("Treine sua IA")}</h1><p className="text-muted-foreground mt-1">{t("Personalize a Auri com o conhecimento e o jeito da sua empresa. A camada central de qualidade e segurança não pode ser desativada pelo treinamento.")}</p></div>
       <Card className="p-5 md:p-6">
         <div className="flex items-center gap-2 mb-4"><Sparkles className="h-5 w-5 text-primary" /><h2 className="font-semibold">{t("Tutorial rápido")}</h2></div>
-        <Illustration index={step}/>
+        <Illustration icon={steps[step].icon}/>
         <div className="mt-4"><div className="text-xs text-muted-foreground">{t("Passo {{current}} de {{total}}", { current: step + 1, total: steps.length })}</div><h3 className="font-semibold mt-1">{steps[step].title}</h3><p className="text-sm text-muted-foreground mt-1">{steps[step].text}</p></div>
         <div className="flex justify-between mt-5"><Button variant="outline" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>{t("Anterior")}</Button><Button onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}>{step === steps.length - 1 ? t("Concluído") : t("Próximo")}</Button></div>
       </Card>
