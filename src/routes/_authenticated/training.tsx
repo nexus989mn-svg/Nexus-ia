@@ -56,7 +56,11 @@ function TrainingPage() {
     queryKey: ["agent-voice-catalog"],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from("agent_voice_catalog").select("voice_id,name,language").eq("is_active", true).order("name");
+      const { data, error } = await (supabase as any).from("agent_voice_catalog")
+        .select("voice_id,name,language")
+        .eq("is_active", true)
+        .eq("language", selectedLanguage)
+        .order("name");
       if (error) throw new Error(error.message);
       return (data ?? []) as Array<{ voice_id: string; name: string; language: string }>;
     },
@@ -97,32 +101,32 @@ function TrainingPage() {
 
   return <AppShell isAdmin={isAdmin}>
     <div className="max-w-3xl mx-auto space-y-6">
-      <div><h1 className="text-2xl md:text-3xl font-bold">Treine sua IA</h1><p className="text-muted-foreground mt-1">Personalize a Auri com o conhecimento e o jeito da sua empresa. A camada central de qualidade e segurança não pode ser desativada pelo treinamento.</p></div>
+      <div><h1 className="text-2xl md:text-3xl font-bold">{t("Treine sua IA")}</h1><p className="text-muted-foreground mt-1">{t("Personalize a Auri com o conhecimento e o jeito da sua empresa. A camada central de qualidade e segurança não pode ser desativada pelo treinamento.")}</p></div>
       <Card className="p-5 md:p-6">
-        <div className="flex items-center gap-2 mb-4"><Sparkles className="h-5 w-5 text-primary" /><h2 className="font-semibold">Tutorial rápido</h2></div>
+        <div className="flex items-center gap-2 mb-4"><Sparkles className="h-5 w-5 text-primary" /><h2 className="font-semibold">{t("Tutorial rápido")}</h2></div>
         <Illustration index={step}/>
         <div className="mt-4"><div className="text-xs text-muted-foreground">Passo {step + 1} de {steps.length}</div><h3 className="font-semibold mt-1">{steps[step].title}</h3><p className="text-sm text-muted-foreground mt-1">{steps[step].text}</p></div>
-        <div className="flex justify-between mt-5"><Button variant="outline" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>Anterior</Button><Button onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}>{step === steps.length - 1 ? "Concluído" : "Próximo"}</Button></div>
+        <div className="flex justify-between mt-5"><Button variant="outline" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>{t("Anterior")}</Button><Button onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}>{step === steps.length - 1 ? "Concluído" : "Próximo"}</Button></div>
       </Card>
 
       <Card className="p-5 md:p-6 space-y-5">
-        <div><Label>Nome de atendimento</Label><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="Ex.: Auri" /></div>
-        <div><Label>Sobre minha empresa</Label><Textarea value={company} onChange={(e) => setCompany(e.target.value)} maxLength={12000} placeholder="Segmento, produtos, serviços, horários, localização, diferenciais..." rows={6}/></div>
-        <div><Label>Como quero que o atendimento responda</Label><Textarea value={behavior} onChange={(e) => setBehavior(e.target.value)} maxLength={12000} placeholder="Tom de voz, forma de responder, como abordar clientes, como apresentar os serviços..." rows={7}/></div>
-        <div><Label>Orientações específicas da empresa</Label><Textarea value={rules} onChange={(e) => setRules(e.target.value)} maxLength={12000} placeholder="Ex.: não oferecer desconto; sempre confirmar o endereço antes de finalizar..." rows={5}/></div>
+        <div><Label>{t("Nome de atendimento")}</Label><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="Ex.: Auri" /></div>
+        <div><Label>{t("Sobre minha empresa")}</Label><Textarea value={company} onChange={(e) => setCompany(e.target.value)} maxLength={12000} placeholder={t("Segmento, produtos, serviços, horários, localização, diferenciais...")} rows={6}/></div>
+        <div><Label>{t("Como quero que o atendimento responda")}</Label><Textarea value={behavior} onChange={(e) => setBehavior(e.target.value)} maxLength={12000} placeholder={t("Tom de voz, forma de responder, como abordar clientes, como apresentar os serviços...")} rows={7}/></div>
+        <div><Label>{t("Orientações específicas da empresa")}</Label><Textarea value={rules} onChange={(e) => setRules(e.target.value)} maxLength={12000} placeholder={t("Ex.: não oferecer desconto; sempre confirmar o endereço antes de finalizar...")} rows={5}/></div>
 
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-4">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex gap-3"><Volume2 className="h-5 w-5 text-primary mt-0.5"/><div><Label className="text-base">Usar respostas em áudio</Label><p className="text-sm text-muted-foreground mt-1">Quando ativado, a Auri pode decidir que uma resposta longa ou explicativa fica melhor em áudio. Ela não transforma toda mensagem em voz.</p></div></div>
+            <div className="flex gap-3"><Volume2 className="h-5 w-5 text-primary mt-0.5"/><div><Label className="text-base">{t("Usar respostas em áudio")}</Label><p className="text-sm text-muted-foreground mt-1">{t("Quando ativado, a Auri pode decidir que uma resposta longa ou explicativa fica melhor em áudio. Ela não transforma toda mensagem em voz.")}</p></div></div>
             <Switch checked={audioEnabled} onCheckedChange={setAudioEnabled}/>
           </div>
           <div className="space-y-2">
-            <Label>Voz da Auri</Label>
+            <Label>{t("Voz da Auri")}</Label>
             <Select value={voiceId} onValueChange={onVoiceChange} disabled={!audioEnabled}>
               <SelectTrigger><SelectValue placeholder={audioEnabled ? "Escolha uma voz" : "Ative o áudio primeiro"}/></SelectTrigger>
               <SelectContent>{voices.map((voice) => <SelectItem key={voice.voice_id} value={voice.voice_id}>{voice.name} · {voice.language}</SelectItem>)}</SelectContent>
             </Select>
-            {audioEnabled && !voices.length && <p className="text-xs text-amber-500">Nenhuma voz está disponível no catálogo do Nexus ainda.</p>}
+            {audioEnabled && !voices.length && <p className="text-xs text-amber-500">{t("Nenhuma voz está disponível no catálogo do Nexus ainda.")}</p>}
             {audioEnabled && voiceId && <div className="flex items-center gap-2 pt-1">
               <Button
                 type="button"
@@ -151,10 +155,10 @@ function TrainingPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm flex gap-2"><ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5"/><span>Suas informações são usadas somente pela sua empresa. Elas personalizam conhecimento e estilo, mas não podem desligar memória, veracidade, segurança, permissões, handoff humano, proteção de credenciais ou outras regras centrais da Auri.</span></div>
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm flex gap-2"><ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5"/><span>{t("Suas informações são usadas somente pela sua empresa. Elas personalizam conhecimento e estilo, mas não podem desligar memória, veracidade, segurança, permissões, handoff humano, proteção de credenciais ou outras regras centrais da Auri.")}</span></div>
         <Button className="w-full" onClick={onSave} disabled={saving}>{saving ? "Salvando…" : "Salvar configuração"}</Button>
       </Card>
-      <div className="text-xs text-muted-foreground flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5"/> Configuração por empresa, versão controlada e isolada.</div>
+      <div className="text-xs text-muted-foreground flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5"/> {t("Configuração por empresa, versão controlada e isolada.")}</div>
     </div>
   </AppShell>;
 }
