@@ -128,6 +128,7 @@ const resources = {
         renews: "Renova em {{date}}",
         em: "—",
         nextSteps: "Próximos passos",
+  nextStepsDescription: "Siga os passos abaixo para deixar sua IA de atendimento pronta para sua empresa.",
         steps: {
           plan: "Escolha um plano ou continue o teste",
           whats: "Conecte seu WhatsApp (v2)",
@@ -260,6 +261,7 @@ const resources = {
         renews: "Renews {{date}}",
         em: "—",
         nextSteps: "Next steps",
+  nextStepsDescription: "Follow the steps below to get your AI customer service assistant ready for your business.",
         steps: {
           plan: "Choose a plan or continue the trial",
           whats: "Connect your WhatsApp number (v2)",
@@ -391,6 +393,7 @@ const resources = {
         renews: "Renueva el {{date}}",
         em: "—",
         nextSteps: "Próximos pasos",
+  nextStepsDescription: "Sigue los pasos a continuación para preparar tu asistente de atención con IA para tu empresa.",
         steps: {
           plan: "Elige un plan o continúa la prueba",
           whats: "Conecta tu WhatsApp (v2)",
