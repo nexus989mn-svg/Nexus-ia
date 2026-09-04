@@ -30,6 +30,11 @@ const copy = {
     closeConfirm: "Encerrar este atendimento?",
     newSubject: "Suporte AURI",
     supportIntro: "A AURI responde suas dúvidas sobre o aplicativo. Se identificar um problema que precise de intervenção, o atendimento pode ser encaminhado para você.",
+    email: "Suporte por e-mail",
+    emailIntro: "Envie uma solicitação por e-mail. A AURI processará a mensagem e responderá no endereço da sua conta.",
+    emailStart: "Solicitar por e-mail",
+    emailSent: "Solicitação enviada. A resposta será enviada para o seu e-mail.",
+    emailError: "Não foi possível enviar a solicitação por e-mail. Tente novamente.",
   },
   en: {
     nav: "Support",
@@ -60,6 +65,11 @@ const copy = {
     closeConfirm: "Close this support request?",
     newSubject: "AURI Support",
     supportIntro: "AURI answers questions about the app. If an issue needs intervention, the request can be forwarded to human support.",
+    email: "Email support",
+    emailIntro: "Send a support request by email. AURI will process it and reply to your account email.",
+    emailStart: "Request by email",
+    emailSent: "Request sent. The reply will be sent to your email.",
+    emailError: "Could not send the email request. Please try again.",
   },
   es: {
     nav: "Soporte",
@@ -90,6 +100,11 @@ const copy = {
     closeConfirm: "¿Cerrar esta solicitud de soporte?",
     newSubject: "Soporte AURI",
     supportIntro: "AURI responde preguntas sobre la aplicación. Si un problema requiere intervención, la solicitud puede enviarse a soporte humano.",
+    email: "Soporte por correo",
+    emailIntro: "Envía una solicitud por correo. AURI la procesará y responderá al correo de tu cuenta.",
+    emailStart: "Solicitar por correo",
+    emailSent: "Solicitud enviada. La respuesta llegará a tu correo.",
+    emailError: "No se pudo enviar la solicitud por correo. Inténtalo de nuevo.",
   },
 } as const;
 

@@ -12,10 +12,12 @@ import {
   Clock3,
   UserRound,
   Bot,
+  Mail,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/app-shell";
+import { SupportEmailDialog } from "@/components/support-email-dialog";
 import { useAuth } from "@/lib/use-auth";
 import { getSupportCopy } from "@/lib/support-i18n";
 import {
@@ -60,6 +62,7 @@ function SupportPage() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [reply, setReply] = useState("");
+  const [emailOpen, setEmailOpen] = useState(false);
 
   const listFn = useServerFn(listMySupportThreads);
   const messagesFn = useServerFn(getMySupportMessages);
@@ -170,10 +173,16 @@ function SupportPage() {
               <p className="text-sm text-muted-foreground">{copy.subtitle}</p>
             </div>
           </div>
-          <Button onClick={() => setNewTicket(true)} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            {copy.new}
-          </Button>
+          <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setEmailOpen(true)} className="w-full sm:w-auto">
+              <Mail className="h-4 w-4 mr-2" />
+              {copy.email}
+            </Button>
+            <Button onClick={() => setNewTicket(true)} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              {copy.new}
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-border bg-card-glass p-4 md:p-5">
@@ -369,6 +378,7 @@ function SupportPage() {
           </div>
         )}
       </div>
+      <SupportEmailDialog open={emailOpen} onOpenChange={setEmailOpen} />
     </AppShell>
   );
 }
