@@ -1,5 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { LayoutDashboard, CreditCard, Shield, LogOut, MessageCircle, Sparkles, Menu, X, Phone, User as UserIcon, Building2 } from "lucide-react";
+import { LayoutDashboard, CreditCard, Shield, LogOut, MessageCircle, Sparkles, Menu, X, Phone, User as UserIcon, Building2, LifeBuoy } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeCustomizer } from "@/components/theme-customizer";
 import { cn } from "@/lib/utils";
 
-type NavKey = "dashboard" | "agent" | "training" | "whatsapp" | "billing" | "catalog" | "company" | "profile" | "admin";
+type NavKey = "dashboard" | "agent" | "training" | "whatsapp" | "billing" | "catalog" | "company" | "profile" | "admin" | "support";
 type Item = { to: string; key: NavKey; label: string; icon: typeof LayoutDashboard; adminOnly?: boolean };
 
 const items: Item[] = [
@@ -18,6 +18,7 @@ const items: Item[] = [
   { to: "/whatsapp", key: "whatsapp", label: "WhatsApp", icon: Phone },
   { to: "/company", key: "company", label: "Empresa", icon: Building2 },
   { to: "/profile", key: "profile", label: "Perfil", icon: UserIcon },
+  { to: "/support", key: "support", label: "Suporte", icon: LifeBuoy },
   { to: "/billing", key: "billing", label: "Assinatura", icon: CreditCard },
   { to: "/admin", key: "admin", label: "Administração", icon: Shield, adminOnly: true },
 ];
