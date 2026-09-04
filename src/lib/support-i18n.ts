@@ -1,0 +1,107 @@
+export type SupportLanguage = "pt-BR" | "en" | "es";
+
+const copy = {
+  "pt-BR": {
+    nav: "Suporte",
+    title: "Suporte",
+    subtitle: "Tire dúvidas e fale com a AURI sobre sua conta.",
+    new: "Novo atendimento",
+    noTickets: "Você ainda não abriu nenhum atendimento.",
+    start: "Começar atendimento",
+    subject: "Assunto",
+    subjectPlaceholder: "Ex.: Não consigo conectar meu WhatsApp",
+    message: "Mensagem",
+    messagePlaceholder: "Descreva sua dúvida ou problema com o máximo de detalhes possível…",
+    send: "Enviar",
+    sending: "Enviando…",
+    close: "Encerrar",
+    closed: "Encerrado",
+    open: "Aberto",
+    waitingAi: "AURI está analisando",
+    answered: "Respondido",
+    humanPending: "Atendimento humano",
+    ai: "AURI",
+    you: "Você",
+    emptyConversation: "Envie uma mensagem para começar.",
+    waiting: "A AURI está preparando uma resposta…",
+    humanNotice: "Esse atendimento foi encaminhado para atendimento humano. Aguarde a orientação.",
+    closedNotice: "Este atendimento foi encerrado.",
+    error: "Não foi possível concluir a operação. Tente novamente.",
+    closeConfirm: "Encerrar este atendimento?",
+    newSubject: "Suporte AURI",
+    supportIntro: "A AURI responde suas dúvidas sobre o aplicativo. Se identificar um problema que precise de intervenção, o atendimento pode ser encaminhado para você.",
+  },
+  en: {
+    nav: "Support",
+    title: "Support",
+    subtitle: "Get help from AURI with questions about your account.",
+    new: "New support request",
+    noTickets: "You have not opened a support request yet.",
+    start: "Start support",
+    subject: "Subject",
+    subjectPlaceholder: "e.g. I can't connect my WhatsApp",
+    message: "Message",
+    messagePlaceholder: "Describe your question or problem with as much detail as possible…",
+    send: "Send",
+    sending: "Sending…",
+    close: "Close",
+    closed: "Closed",
+    open: "Open",
+    waitingAi: "AURI is reviewing",
+    answered: "Answered",
+    humanPending: "Human support",
+    ai: "AURI",
+    you: "You",
+    emptyConversation: "Send a message to start.",
+    waiting: "AURI is preparing a response…",
+    humanNotice: "This request was forwarded to human support. Please wait for assistance.",
+    closedNotice: "This support request is closed.",
+    error: "The operation could not be completed. Please try again.",
+    closeConfirm: "Close this support request?",
+    newSubject: "AURI Support",
+    supportIntro: "AURI answers questions about the app. If an issue needs intervention, the request can be forwarded to human support.",
+  },
+  es: {
+    nav: "Soporte",
+    title: "Soporte",
+    subtitle: "Resuelve dudas con AURI sobre tu cuenta.",
+    new: "Nuevo soporte",
+    noTickets: "Aún no has abierto ninguna solicitud de soporte.",
+    start: "Iniciar soporte",
+    subject: "Asunto",
+    subjectPlaceholder: "Ej.: No puedo conectar mi WhatsApp",
+    message: "Mensaje",
+    messagePlaceholder: "Describe tu duda o problema con el mayor detalle posible…",
+    send: "Enviar",
+    sending: "Enviando…",
+    close: "Cerrar",
+    closed: "Cerrado",
+    open: "Abierto",
+    waitingAi: "AURI está analizando",
+    answered: "Respondido",
+    humanPending: "Atención humana",
+    ai: "AURI",
+    you: "Tú",
+    emptyConversation: "Envía un mensaje para comenzar.",
+    waiting: "AURI está preparando una respuesta…",
+    humanNotice: "Esta solicitud fue enviada a soporte humano. Espera la orientación.",
+    closedNotice: "Esta solicitud de soporte está cerrada.",
+    error: "No se pudo completar la operación. Inténtalo de nuevo.",
+    closeConfirm: "¿Cerrar esta solicitud de soporte?",
+    newSubject: "Soporte AURI",
+    supportIntro: "AURI responde preguntas sobre la aplicación. Si un problema requiere intervención, la solicitud puede enviarse a soporte humano.",
+  },
+} as const;
+
+export function getSupportCopy(language: string) {
+  const key = language === "en" || language.startsWith("en-")
+    ? "en"
+    : language === "es" || language.startsWith("es-")
+      ? "es"
+      : "pt-BR";
+  return copy[key];
+}
+
+export function supportNavLabel(language: string) {
+  return getSupportCopy(language).nav;
+}

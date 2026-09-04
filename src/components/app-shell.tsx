@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeCustomizer } from "@/components/theme-customizer";
+import { supportNavLabel } from "@/lib/support-i18n";
 import { cn } from "@/lib/utils";
 
 type NavKey = "dashboard" | "agent" | "training" | "whatsapp" | "billing" | "catalog" | "company" | "profile" | "admin" | "support";
@@ -24,7 +25,7 @@ const items: Item[] = [
 ];
 
 export function AppShell({ children, isAdmin = false }: { children: ReactNode; isAdmin?: boolean }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -35,9 +36,13 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
     router.navigate({ to: "/" });
   };
 
+  const labelFor = (item: Item) =>
+    item.key === "support"
+      ? supportNavLabel(i18n.language)
+      : t(`nav.${item.key}`, { defaultValue: item.label });
+
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Mobile top bar */}
       <header className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center justify-between px-4 border-b border-border bg-sidebar/95 backdrop-blur">
         <Link to="/dashboard" className="flex items-center gap-2 font-display font-bold">
           <div className="h-7 w-7 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow">
@@ -58,7 +63,6 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
         </div>
       </header>
 
-      {/* Sidebar */}
       <aside
         className={cn(
           "fixed lg:sticky top-0 left-0 z-30 h-screen w-72 lg:w-64 bg-sidebar border-r border-sidebar-border flex-col transition-transform",
@@ -87,7 +91,7 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
               className="flex items-center gap-3 rounded-lg px-3 py-3 lg:py-2.5 text-sm text-sidebar-foreground hover:bg-accent/60 transition-colors"
             >
               <item.icon className="h-4 w-4" />
-              {t(`nav.${item.key}`, { defaultValue: item.label })}
+              {labelFor(item)}
             </Link>
           ))}
         </nav>
@@ -103,7 +107,6 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
         </div>
       </aside>
 
-      {/* Backdrop mobile */}
       {open && (
         <div
           className="lg:hidden fixed inset-0 z-20 bg-background/70 backdrop-blur-sm"
