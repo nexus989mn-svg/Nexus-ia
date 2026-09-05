@@ -19,6 +19,51 @@ const STORE_NAME = "assets";
 const IMAGE_KEY_PREFIX = "background:";
 const DB_VERSION = 2;
 
+// Estado compartilhado entre todas as instâncias do ThemeCustomizer.
+// O AppShell possui uma instância mobile e outra desktop; ambas precisam
+// enxergar exatamente o mesmo fundo da conta atual.
+let sharedUserId: string | null = null;
+let sharedImage: string | null | undefined = undefined;
+let sharedImagePromise: Promise<string | null> | null = null;
+
+const BACKGROUND_EVENT = "auri-background-change";
+
+function broadcastBackground(image: string | null) {
+  window.dispatchEvent(
+    new CustomEvent(BACKGROUND_EVENT, { detail: { image } })
+  );
+}
+
+function setSharedBackground(userId: string, image: string | null) {
+  sharedUserId = userId;
+  sharedImage = image;
+  sharedImagePromise = null;
+  broadcastBackground(image);
+}
+
+async function getSharedBackground(userId: string): Promise<string | null> {
+  if (sharedUserId === userId && sharedImage !== undefined) {
+    return sharedImage;
+  }
+
+  if (
+    sharedUserId === userId &&
+    sharedImagePromise
+  ) {
+    return sharedImagePromise;
+  }
+
+  sharedUserId = userId;
+
+  sharedImagePromise = loadImage(userId).then((saved) => {
+    sharedImage = saved;
+    sharedImagePromise = null;
+    return saved;
+  });
+
+  return sharedImagePromise;
+}
+
 function openThemeDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -343,21 +388,45 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
   useEffect(() => {
     let alive = true;
 
+    const handleBackgroundChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ image: string | null }>;
+      const nextImage = customEvent.detail?.image ?? null;
+
+      if (!alive) return;
+
+      imageUrlRef.current = nextImage;
+      setImage(nextImage);
+    };
+
+    window.addEventListener(
+      BACKGROUND_EVENT,
+      handleBackgroundChange
+    );
+
     supabase.auth.getUser().then(({ data }) => {
       const userId = data.user?.id;
-      if (!userId) return;
+      if (!userId || !alive) return;
 
-      loadImage(userId).then(saved => {
-      if (alive) {
+      getSharedBackground(userId).then(saved => {
+        if (!alive) {
+          if (saved?.startsWith("blob:")) {
+            URL.revokeObjectURL(saved);
+          }
+          return;
+        }
+
         imageUrlRef.current = saved;
         setImage(saved);
-      } else if (saved?.startsWith("blob:")) {
-        URL.revokeObjectURL(saved);
-      }
-    });
+      });
     });
 
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+      window.removeEventListener(
+        BACKGROUND_EVENT,
+        handleBackgroundChange
+      );
+    };
   }, []);
 
   useEffect(() => {
@@ -378,10 +447,17 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
     setTheme(preset);
     if (imageUrlRef.current?.startsWith("blob:")) URL.revokeObjectURL(imageUrlRef.current);
     imageUrlRef.current = null;
+    setSharedBackground(
+      (await supabase.auth.getUser()).data.user?.id ?? "",
+      null
+    );
     setImage(null);
     saveTheme(preset);
+
     const { data } = await supabase.auth.getUser();
-    if (data.user) await removeImage(data.user.id);
+    if (data.user) {
+      await removeImage(data.user.id);
+    }
   };
 
   const onImage = async (file: File) => {
@@ -398,6 +474,17 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
 
     const previewUrl = URL.createObjectURL(file);
     imageUrlRef.current = previewUrl;
+
+    // Compartilha imediatamente o fundo entre as instâncias mobile/desktop.
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+
+    if (!userId) {
+      URL.revokeObjectURL(previewUrl);
+      return;
+    }
+
+    setSharedBackground(userId, previewUrl);
 
     // A imagem continua sendo o fundo.
     setImage(previewUrl);
