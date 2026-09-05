@@ -336,7 +336,7 @@ function readSavedTheme(): ThemePreset {
 
 export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
   const [theme, setTheme] = useState<ThemePreset>(readSavedTheme);
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<string | null | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageUrlRef = useRef<string | null>(null);
 
@@ -366,7 +366,13 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
     };
   }, []);
 
-  useEffect(() => { applyTheme(theme, image); }, [theme, image]);
+  useEffect(() => {
+    // undefined = ainda carregando. Não apagar um fundo já aplicado
+    // enquanto a imagem persistida da conta ainda está sendo recuperada.
+    if (image !== undefined) {
+      applyTheme(theme, image);
+    }
+  }, [theme, image]);
 
   const choosePreset = async (preset: ThemePreset) => {
     setTheme(preset);
