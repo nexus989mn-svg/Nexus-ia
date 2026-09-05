@@ -45,9 +45,9 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
     <div className="min-h-screen bg-transparent flex">
       <header className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center justify-between px-4 border-b border-border bg-sidebar/95 backdrop-blur">
         <Link to="/dashboard" className="flex items-center gap-2 font-display font-bold">
-          <div className="h-7 w-7 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <div className="h-8 w-8 shrink-0 flex items-center justify-center">
+              <img src="/auri-logo.png" alt="AURI" className="h-8 w-8 object-contain" />
+            </div>
           <span>{t("nav.brand")}</span>
         </Link>
         <div className="flex items-center gap-1">
@@ -71,9 +71,9 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
         )}
       >
         <div className="hidden lg:flex h-16 items-center gap-2 px-6 border-b border-sidebar-border">
-          <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow">
-            <MessageCircle className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <div className="h-8 w-8 shrink-0 flex items-center justify-center">
+              <img src="/auri-logo.png" alt="AURI" className="h-8 w-8 object-contain" />
+            </div>
           <div className="font-display font-bold leading-tight">
             <div className="text-sm">{t("nav.brand")}</div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
