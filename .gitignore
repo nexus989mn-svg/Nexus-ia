@@ -43,3 +43,5 @@ backup-corrigido-*/
 # Arquivos de backup/histórico local
 *.bak
 *.pre_fix_*
+.vercel
+.env*
