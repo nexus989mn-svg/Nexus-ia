@@ -42,7 +42,7 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
       : t(`nav.${item.key}`, { defaultValue: item.label });
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-transparent flex">
       <header className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center justify-between px-4 border-b border-border bg-sidebar/95 backdrop-blur">
         <Link to="/dashboard" className="flex items-center gap-2 font-display font-bold">
           <div className="h-7 w-7 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow">
