@@ -159,6 +159,7 @@ body[data-custom-theme="image"] {
 
 body[data-custom-theme="image"] .bg-background {
   background-color: color-mix(in srgb, var(--background) 48%, transparent) !important;
+  background-image: none !important;
 }
 
 body[data-custom-theme="image"] .bg-sidebar {
