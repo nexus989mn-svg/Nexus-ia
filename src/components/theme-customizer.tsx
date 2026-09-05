@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Palette, RotateCcw, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
@@ -15,7 +16,7 @@ const PRESETS: ThemePreset[] = [
 
 const DB_NAME = "auri-theme-db";
 const STORE_NAME = "assets";
-const IMAGE_KEY = "background";
+const IMAGE_KEY_PREFIX = "background:";
 const DB_VERSION = 2;
 
 function openThemeDb(): Promise<IDBDatabase> {
@@ -30,11 +31,11 @@ function openThemeDb(): Promise<IDBDatabase> {
   });
 }
 
-async function saveImage(image: Blob | string) {
+async function saveImage(image: Blob | string, userId: string) {
   const db = await openThemeDb();
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
-    tx.objectStore(STORE_NAME).put(image, IMAGE_KEY);
+    tx.objectStore(STORE_NAME).put(image, `${IMAGE_KEY_PREFIX}${userId}`);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
     tx.onabort = () => reject(tx.error ?? new Error("Falha ao salvar a imagem"));
@@ -42,12 +43,12 @@ async function saveImage(image: Blob | string) {
   db.close();
 }
 
-async function loadImage(): Promise<string | null> {
+async function loadImage(userId: string): Promise<string | null> {
   try {
     const db = await openThemeDb();
     const stored = await new Promise<Blob | string | null>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readonly");
-      const request = tx.objectStore(STORE_NAME).get(IMAGE_KEY);
+      const request = tx.objectStore(STORE_NAME).get(`${IMAGE_KEY_PREFIX}${userId}`);
       request.onsuccess = () => resolve((request.result as Blob | string | undefined) ?? null);
       request.onerror = () => reject(request.error);
     });
@@ -62,12 +63,12 @@ async function loadImage(): Promise<string | null> {
   }
 }
 
-async function removeImage() {
+async function removeImage(userId: string) {
   try {
     const db = await openThemeDb();
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readwrite");
-      tx.objectStore(STORE_NAME).delete(IMAGE_KEY);
+      tx.objectStore(STORE_NAME).delete(`${IMAGE_KEY_PREFIX}${userId}`);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error ?? new Error("Falha ao remover a imagem"));
@@ -341,7 +342,12 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
 
   useEffect(() => {
     let alive = true;
-    loadImage().then(saved => {
+
+    supabase.auth.getUser().then(({ data }) => {
+      const userId = data.user?.id;
+      if (!userId) return;
+
+      loadImage(userId).then(saved => {
       if (alive) {
         imageUrlRef.current = saved;
         setImage(saved);
@@ -349,6 +355,8 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
         URL.revokeObjectURL(saved);
       }
     });
+    });
+
     return () => { alive = false; };
   }, []);
 
@@ -366,7 +374,8 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
     imageUrlRef.current = null;
     setImage(null);
     saveTheme(preset);
-    await removeImage();
+    const { data } = await supabase.auth.getUser();
+    if (data.user) await removeImage(data.user.id);
   };
 
   const onImage = async (file: File) => {
@@ -404,7 +413,10 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
 
     // Salva o próprio Blob no IndexedDB.
     try {
-      await saveImage(file);
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        await saveImage(file, data.user.id);
+      }
     } catch {
       // A prévia continua funcionando mesmo se o armazenamento local falhar.
     }
