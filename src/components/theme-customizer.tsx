@@ -490,6 +490,14 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
     // A imagem continua sendo o fundo.
     setImage(previewUrl);
 
+    // PERSISTÊNCIA REAL: salva a imagem no Supabase Storage.
+    // Sem isso ela existe somente enquanto a página está aberta.
+    try {
+      await saveImage(file, userId);
+    } catch (error) {
+      console.error("Falha ao persistir fundo personalizado:", error);
+    }
+
     // Extrai automaticamente a paleta da própria imagem.
     const palette = await extractImagePalette(previewUrl);
 
