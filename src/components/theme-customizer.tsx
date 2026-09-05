@@ -14,15 +14,9 @@ const PRESETS: ThemePreset[] = [
   { id: "pink", label: "Rosa", primary: "#ec4899", secondary: "#db2777", background: "#150910", card: "#25111d", accent: "#4b1733" },
 ];
 
-const DB_NAME = "auri-theme-db";
-const STORE_NAME = "assets";
-const IMAGE_KEY_PREFIX = "background:";
-const DB_VERSION = 2;
+const THEME_BUCKET = "theme-assets";
+const GLOBAL_BACKGROUND_PATH = "global/background";
 
-// Estado compartilhado entre todas as instâncias do ThemeCustomizer.
-// O AppShell possui uma instância mobile e outra desktop; ambas precisam
-// enxergar exatamente o mesmo fundo da conta atual.
-let sharedUserId: string | null = null;
 let sharedImage: string | null | undefined = undefined;
 let sharedImagePromise: Promise<string | null> | null = null;
 
@@ -34,118 +28,91 @@ function broadcastBackground(image: string | null) {
   );
 }
 
-function setSharedBackground(userId: string, image: string | null) {
-  sharedUserId = userId;
+function setSharedBackground(_userId: string, image: string | null) {
   sharedImage = image;
   sharedImagePromise = null;
   broadcastBackground(image);
 }
 
-async function getSharedBackground(userId: string): Promise<string | null> {
-  if (sharedUserId === userId && sharedImage !== undefined) {
-    return sharedImage;
-  }
+async function getSharedBackground(_userId: string): Promise<string | null> {
+  if (sharedImage !== undefined) return sharedImage;
 
-  if (
-    sharedUserId === userId &&
-    sharedImagePromise
-  ) {
-    return sharedImagePromise;
-  }
+  if (sharedImagePromise) return sharedImagePromise;
 
-  sharedUserId = userId;
+  sharedImagePromise = (async () => {
+    try {
+      const { data, error } = await supabase.storage
+        .from(THEME_BUCKET)
+        .list("global", {
+          limit: 10,
+          search: "background",
+        });
 
-  sharedImagePromise = loadImage(userId).then((saved) => {
-    sharedImage = saved;
-    sharedImagePromise = null;
-    return saved;
-  });
+      if (error || !data?.some(file => file.name === "background")) {
+        sharedImage = null;
+        return null;
+      }
+
+      const { data: publicData } = supabase.storage
+        .from(THEME_BUCKET)
+        .getPublicUrl(GLOBAL_BACKGROUND_PATH);
+
+      if (!publicData?.publicUrl) {
+        sharedImage = null;
+        return null;
+      }
+
+      // Cache-bust para não ficar preso à imagem anterior da CDN.
+      sharedImage = `${publicData.publicUrl}?v=${Date.now()}`;
+      return sharedImage;
+    } catch {
+      sharedImage = null;
+      return null;
+    } finally {
+      sharedImagePromise = null;
+    }
+  })();
 
   return sharedImagePromise;
 }
 
-function openThemeDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function saveImage(image: Blob | string, userId: string) {
-  const db = await openThemeDb();
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    tx.objectStore(STORE_NAME).put(image, `${IMAGE_KEY_PREFIX}${userId}`);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error ?? new Error("Falha ao salvar a imagem"));
-  });
-  db.close();
-}
-
-async function loadImage(userId: string): Promise<string | null> {
-  try {
-    const db = await openThemeDb();
-
-    const stored = await new Promise<Blob | string | null>((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, "readonly");
-      const request = tx.objectStore(STORE_NAME).get(`${IMAGE_KEY_PREFIX}${userId}`);
-
-      request.onsuccess = () => {
-        resolve(
-          (request.result as Blob | string | undefined) ?? null
-        );
-      };
-
-      request.onerror = () => reject(request.error);
+async function saveImage(image: Blob | string, _userId: string) {
+  const { error } = await supabase.storage
+    .from(THEME_BUCKET)
+    .upload(GLOBAL_BACKGROUND_PATH, image, {
+      upsert: true,
+      cacheControl: "0",
+      contentType:
+        image instanceof Blob && image.type
+          ? image.type
+          : "image/jpeg",
     });
 
-    db.close();
+  if (error) throw error;
 
-    if (!stored) return null;
+  const { data } = supabase.storage
+    .from(THEME_BUCKET)
+    .getPublicUrl(GLOBAL_BACKGROUND_PATH);
 
-    // Data URL não depende do ciclo de vida de um componente.
-    // Isso impede que outra instância do ThemeCustomizer invalide
-    // a imagem através de URL.revokeObjectURL().
-    if (typeof stored === "string") {
-      return stored;
-    }
+  const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
 
-    if (stored instanceof Blob) {
-      return await new Promise<string | null>((resolve) => {
-        const reader = new FileReader();
+  sharedImage = publicUrl;
+  sharedImagePromise = null;
+  broadcastBackground(publicUrl);
 
-        reader.onload = () => {
-          resolve(typeof reader.result === "string" ? reader.result : null);
-        };
-
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(stored);
-      });
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
+  return publicUrl;
 }
-async function removeImage(userId: string) {
-  try {
-    const db = await openThemeDb();
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, "readwrite");
-      tx.objectStore(STORE_NAME).delete(`${IMAGE_KEY_PREFIX}${userId}`);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error ?? new Error("Falha ao remover a imagem"));
-    });
-    db.close();
-  } catch {}
+
+async function removeImage(_userId: string) {
+  const { error } = await supabase.storage
+    .from(THEME_BUCKET)
+    .remove([GLOBAL_BACKGROUND_PATH]);
+
+  if (error) throw error;
+
+  sharedImage = null;
+  sharedImagePromise = null;
+  broadcastBackground(null);
 }
 
 function hexToRgb(hex: string) {
@@ -457,7 +424,6 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
 
   useEffect(() => {
     return () => {
-      if (imageUrlRef.current?.startsWith("blob:")) URL.revokeObjectURL(imageUrlRef.current);
     };
   }, []);
 
@@ -471,7 +437,6 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
 
   const choosePreset = async (preset: ThemePreset) => {
     setTheme(preset);
-    if (imageUrlRef.current?.startsWith("blob:")) URL.revokeObjectURL(imageUrlRef.current);
     imageUrlRef.current = null;
     setSharedBackground(
       (await supabase.auth.getUser()).data.user?.id ?? "",
@@ -538,16 +503,6 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
         id: "image",
         label: "Minha imagem",
       }));
-    }
-
-    // Salva o próprio Blob no IndexedDB.
-    try {
-      const { data } = await supabase.auth.getUser();
-      if (data.user) {
-        await saveImage(file, data.user.id);
-      }
-    } catch {
-      // A prévia continua funcionando mesmo se o armazenamento local falhar.
     }
   };
 
