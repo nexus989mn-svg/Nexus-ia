@@ -91,23 +91,49 @@ async function saveImage(image: Blob | string, userId: string) {
 async function loadImage(userId: string): Promise<string | null> {
   try {
     const db = await openThemeDb();
+
     const stored = await new Promise<Blob | string | null>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readonly");
       const request = tx.objectStore(STORE_NAME).get(`${IMAGE_KEY_PREFIX}${userId}`);
-      request.onsuccess = () => resolve((request.result as Blob | string | undefined) ?? null);
+
+      request.onsuccess = () => {
+        resolve(
+          (request.result as Blob | string | undefined) ?? null
+        );
+      };
+
       request.onerror = () => reject(request.error);
     });
+
     db.close();
 
     if (!stored) return null;
-    if (typeof stored === "string") return stored;
-    if (stored instanceof Blob) return URL.createObjectURL(stored);
+
+    // Data URL não depende do ciclo de vida de um componente.
+    // Isso impede que outra instância do ThemeCustomizer invalide
+    // a imagem através de URL.revokeObjectURL().
+    if (typeof stored === "string") {
+      return stored;
+    }
+
+    if (stored instanceof Blob) {
+      return await new Promise<string | null>((resolve) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          resolve(typeof reader.result === "string" ? reader.result : null);
+        };
+
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(stored);
+      });
+    }
+
     return null;
   } catch {
     return null;
   }
 }
-
 async function removeImage(userId: string) {
   try {
     const db = await openThemeDb();
@@ -472,17 +498,27 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
       return;
     }
 
-    const previewUrl = URL.createObjectURL(file);
+    const previewUrl = await new Promise<string | null>((resolve) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        resolve(typeof reader.result === "string" ? reader.result : null);
+      };
+
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+
+    if (!previewUrl) return;
+
     imageUrlRef.current = previewUrl;
 
-    // Compartilha imediatamente o fundo entre as instâncias mobile/desktop.
+    // Compartilha uma Data URL, nunca um blob: URL.
+    // Assim nenhuma instância pode invalidar o fundo da outra.
     const { data: authData } = await supabase.auth.getUser();
     const userId = authData.user?.id;
 
-    if (!userId) {
-      URL.revokeObjectURL(previewUrl);
-      return;
-    }
+    if (!userId) return;
 
     setSharedBackground(userId, previewUrl);
 
