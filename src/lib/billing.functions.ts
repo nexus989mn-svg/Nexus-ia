@@ -103,64 +103,122 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
   let params = new URLSearchParams();
 
   /*
+   * PREÇO BASE DO SISTEMA = USD
+   *
    * CARTÃO:
    * - assinatura recorrente
-   * - preço-base em USD
+   * - cobra em USD
    *
    * PIX:
    * - pagamento avulso
-   * - preço-base continua em USD
-   * - Stripe Adaptive Pricing converte para BRL no Checkout
-   * - Pix é apresentado em BRL
+   * - converte USD -> BRL no servidor
+   * - Checkout recebe BRL
+   * - Pix aparece corretamente para comprador brasileiro
    */
+
   if (isPix) {
-    const priceParams = new URLSearchParams();
+    // Busca a cotação atual USD -> BRL.
+    const fxResponse = await fetch(
+      "https://api.frankfurter.app/latest?from=USD&to=BRL"
+    );
 
-    // O preço interno continua sendo USD.
-    // Usamos um Price ID porque o Adaptive Pricing não funciona
-    // corretamente quando a moeda é definida manualmente no line_item.
-    priceParams.set("currency", "usd");
-    priceParams.set("unit_amount", String(plan.price_usd_cents));
-    priceParams.set("product_data[name]", plan.name);
-    priceParams.set("product_data[metadata][plan_code]", data.planCode);
-    priceParams.set("metadata[plan_code]", data.planCode);
-    priceParams.set("metadata[payment_method]", "pix");
+    const fxBody: any = await fxResponse.json().catch(() => null);
 
-    const priceResponse = await fetch("https://api.stripe.com/v1/prices", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: priceParams,
-    });
-
-    const priceBody: any = await priceResponse.json().catch(() => null);
-
-    if (!priceResponse.ok || !priceBody?.id) {
-      throw new Error(
-        priceBody?.error?.message ||
-        `Stripe Price HTTP ${priceResponse.status}`
-      );
+    if (!fxResponse.ok || !fxBody?.rates?.BRL) {
+      throw new Error("Não foi possível obter a cotação USD/BRL.");
     }
 
+    const usdToBrl = Number(fxBody.rates.BRL);
+
+    if (!Number.isFinite(usdToBrl) || usdToBrl <= 0) {
+      throw new Error("Cotação USD/BRL inválida.");
+    }
+
+    // price_usd_cents -> USD -> BRL -> centavos de BRL
+    const brlCents = Math.max(
+      50,
+      Math.round((Number(plan.price_usd_cents) / 100) * usdToBrl * 100)
+    );
+
     params.set("mode", "payment");
-    params.set("line_items[0][price]", priceBody.id);
-    params.set("line_items[0][quantity]", "1");
 
-    // Converte USD -> moeda local do comprador.
-    // Para comprador no Brasil, o Pix será apresentado em BRL.
-    params.set("adaptive_pricing[enabled]", "true");
+    params.set(
+      "line_items[0][price_data][currency]",
+      "brl"
+    );
 
-    // Não forçar Pix enquanto o preço-base está em USD.
-    // O Adaptive Pricing converte para BRL e libera Pix
-    // como método de pagamento compatível com a moeda local.
+    params.set(
+      "line_items[0][price_data][product_data][name]",
+      plan.name
+    );
+
+    params.set(
+      "line_items[0][price_data][product_data][metadata][plan_code]",
+      data.planCode
+    );
+
+    params.set(
+      "line_items[0][price_data][unit_amount]",
+      String(brlCents)
+    );
+
+    params.set(
+      "line_items[0][quantity]",
+      "1"
+    );
+
+    // Pix exige uma moeda compatível; aqui o preço já está em BRL.
+    params.set(
+      "payment_method_types[0]",
+      "pix"
+    );
+
     params.set("locale", "pt-BR");
 
-    params.set("client_reference_id", userId);
-    params.set("metadata[user_id]", userId);
-    params.set("metadata[plan_code]", data.planCode);
-    params.set("metadata[payment_method]", "pix");
+    params.set(
+      "client_reference_id",
+      userId
+    );
+
+    params.set(
+      "metadata[user_id]",
+      userId
+    );
+
+    params.set(
+      "metadata[plan_code]",
+      data.planCode
+    );
+
+    params.set(
+      "metadata[payment_method]",
+      "pix"
+    );
+
+    params.set(
+      "metadata[base_currency]",
+      "USD"
+    );
+
+    params.set(
+      "metadata[base_amount_usd_cents]",
+      String(plan.price_usd_cents)
+    );
+
+    params.set(
+      "metadata[fx_usd_brl]",
+      String(usdToBrl)
+    );
+
+    params.set(
+      "metadata[charged_currency]",
+      "BRL"
+    );
+
+    params.set(
+      "metadata[charged_amount_brl_cents]",
+      String(brlCents)
+    );
 
     params.set(
       "success_url",
@@ -171,34 +229,76 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
       "cancel_url",
       `${appUrl()}/billing?checkout=cancelled`
     );
+
   } else {
-    // Cartão continua sendo assinatura recorrente em USD.
+
+    // CARTÃO: assinatura recorrente continua em USD.
     params.set("mode", "subscription");
+
     params.set(
       "line_items[0][price_data][currency]",
       "usd"
     );
+
     params.set(
       "line_items[0][price_data][product_data][name]",
       plan.name
     );
+
+    params.set(
+      "line_items[0][price_data][product_data][metadata][plan_code]",
+      data.planCode
+    );
+
     params.set(
       "line_items[0][price_data][unit_amount]",
       String(plan.price_usd_cents)
     );
-    params.set("line_items[0][quantity]", "1");
+
+    params.set(
+      "line_items[0][quantity]",
+      "1"
+    );
 
     params.set(
       "line_items[0][price_data][recurring][interval]",
       data.planCode === "yearly" ? "year" : "month"
     );
 
-    params.set("payment_method_types[0]", "card");
+    params.set(
+      "payment_method_types[0]",
+      "card"
+    );
 
-    params.set("client_reference_id", userId);
-    params.set("metadata[user_id]", userId);
-    params.set("metadata[plan_code]", data.planCode);
-    params.set("metadata[payment_method]", "card");
+    params.set(
+      "client_reference_id",
+      userId
+    );
+
+    params.set(
+      "metadata[user_id]",
+      userId
+    );
+
+    params.set(
+      "metadata[plan_code]",
+      data.planCode
+    );
+
+    params.set(
+      "metadata[payment_method]",
+      "card"
+    );
+
+    params.set(
+      "metadata[base_currency]",
+      "USD"
+    );
+
+    params.set(
+      "metadata[base_amount_usd_cents]",
+      String(plan.price_usd_cents)
+    );
 
     params.set(
       "success_url",
