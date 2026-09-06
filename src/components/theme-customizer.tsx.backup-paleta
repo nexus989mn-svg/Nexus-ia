@@ -7,96 +7,12 @@ import { Button } from "@/components/ui/button";
 type ThemePreset = { id: string; label: string; primary: string; secondary: string; background: string; card: string; accent: string };
 
 const PRESETS: ThemePreset[] = [
-  { id: "auri", label: "AURI", primary: "#8B5CF6", secondary: "#6D28D9", background: "#08060D", card: "#15101F", accent: "#2E1B4D" },
-
-  { id: "purple", label: "Roxo", primary: "#A855F7", secondary: "#7E22CE", background: "#0E0915", card: "#1B1225", accent: "#32184A" },
-  { id: "violet", label: "Violeta", primary: "#8B5CF6", secondary: "#6366F1", background: "#080812", card: "#141426", accent: "#28284F" },
-  { id: "indigo", label: "Índigo", primary: "#6366F1", secondary: "#4F46E5", background: "#070912", card: "#11172A", accent: "#222D58" },
-  { id: "blue", label: "Azul", primary: "#3B82F6", secondary: "#2563EB", background: "#080D16", card: "#111827", accent: "#172B4D" },
-  { id: "cyan", label: "Ciano", primary: "#06B6D4", secondary: "#0891B2", background: "#061013", card: "#0E2025", accent: "#123D46" },
-  { id: "teal", label: "Turquesa", primary: "#14B8A6", secondary: "#0D9488", background: "#06100F", card: "#10201E", accent: "#16433E" },
-
-  { id: "green", label: "Verde", primary: "#22C55E", secondary: "#16A34A", background: "#080F0A", card: "#142019", accent: "#183F28" },
-  { id: "lime", label: "Lima", primary: "#84CC16", secondary: "#65A30D", background: "#0B1006", card: "#18200D", accent: "#304514" },
-  { id: "yellow", label: "Amarelo", primary: "#EAB308", secondary: "#CA8A04", background: "#110F06", card: "#211D0D", accent: "#493F12" },
-  { id: "amber", label: "Âmbar", primary: "#F59E0B", secondary: "#D97706", background: "#120C05", card: "#24170B", accent: "#4A2D10" },
-  { id: "orange", label: "Laranja", primary: "#F97316", secondary: "#EA580C", background: "#140B06", card: "#24150D", accent: "#4A2412" },
-  { id: "red", label: "Vermelho", primary: "#EF4444", secondary: "#DC2626", background: "#120708", card: "#251013", accent: "#4B171C" },
-  { id: "rose", label: "Rosa", primary: "#F43F5E", secondary: "#E11D48", background: "#14070A", card: "#261016", accent: "#4B1724" },
-  { id: "pink", label: "Pink", primary: "#EC4899", secondary: "#DB2777", background: "#150910", card: "#25111D", accent: "#4B1733" },
-  { id: "fuchsia", label: "Fúcsia", primary: "#D946EF", secondary: "#C026D3", background: "#120813", card: "#241025", accent: "#48194B" },
-
-  { id: "sunset", label: "Sunset", primary: "#F97316", secondary: "#EC4899", background: "#11070B", card: "#241017", accent: "#4B1825" },
-  { id: "fire", label: "Fire", primary: "#EF4444", secondary: "#F59E0B", background: "#120806", card: "#26140D", accent: "#4A2811" },
-  { id: "ocean", label: "Ocean", primary: "#06B6D4", secondary: "#3B82F6", background: "#050B12", card: "#0E1927", accent: "#153B57" },
-  { id: "sky", label: "Sky", primary: "#38BDF8", secondary: "#6366F1", background: "#070B14", card: "#11192A", accent: "#20345A" },
-  { id: "aurora", label: "Aurora", primary: "#22C55E", secondary: "#8B5CF6", background: "#08090F", card: "#151522", accent: "#29304F" },
-  { id: "electric", label: "Electric", primary: "#8B5CF6", secondary: "#06B6D4", background: "#07080F", card: "#121622", accent: "#26334A" },
-  { id: "candy", label: "Candy", primary: "#EC4899", secondary: "#8B5CF6", background: "#100811", card: "#211225", accent: "#43204D" },
-  { id: "forest", label: "Forest", primary: "#22C55E", secondary: "#14B8A6", background: "#060E0B", card: "#12201B", accent: "#174339" },
-  { id: "royal", label: "Royal", primary: "#7C3AED", secondary: "#2563EB", background: "#080712", card: "#151329", accent: "#292A57" },
-  { id: "grape", label: "Grape", primary: "#A855F7", secondary: "#EC4899", background: "#100811", card: "#211225", accent: "#47204A" },
-  { id: "tropical", label: "Tropical", primary: "#14B8A6", secondary: "#84CC16", background: "#07100C", card: "#132016", accent: "#28451C" },
-  { id: "neon", label: "Neon", primary: "#D946EF", secondary: "#22D3EE", background: "#07070D", card: "#151522", accent: "#29334A" },
-  { id: "midnight", label: "Midnight", primary: "#6366F1", secondary: "#A855F7", background: "#05060D", card: "#101222", accent: "#25294A" },
-  { id: "coffee", label: "Café", primary: "#D97706", secondary: "#92400E", background: "#100A06", card: "#21150E", accent: "#472611" },
-  { id: "cherry", label: "Cereja", primary: "#E11D48", secondary: "#9333EA", background: "#10070C", card: "#21101A", accent: "#431D36" },
-  { id: "lavender", label: "Lavanda", primary: "#C084FC", secondary: "#818CF8", background: "#0C0913", card: "#1C1628", accent: "#382A50" },
-  { id: "mint", label: "Menta", primary: "#2DD4BF", secondary: "#22C55E", background: "#06100D", card: "#12201A", accent: "#194235" },
-  { id: "gold", label: "Dourado", primary: "#FBBF24", secondary: "#F59E0B", background: "#100C05", card: "#21190B", accent: "#493712" },
-  { id: "ice", label: "Gelo", primary: "#67E8F9", secondary: "#38BDF8", background: "#060B10", card: "#101C25", accent: "#194153" },
+  { id: "auri", label: "Auri", primary: "#22c55e", secondary: "#16a34a", background: "#0b0f0c", card: "#1a1f1c", accent: "#173b27" },
+  { id: "blue", label: "Azul", primary: "#3b82f6", secondary: "#2563eb", background: "#080d16", card: "#111827", accent: "#172b4d" },
+  { id: "purple", label: "Roxo", primary: "#a855f7", secondary: "#7e22ce", background: "#0e0915", card: "#1b1225", accent: "#32184a" },
+  { id: "orange", label: "Laranja", primary: "#f97316", secondary: "#ea580c", background: "#140b06", card: "#24150d", accent: "#4a2412" },
+  { id: "pink", label: "Rosa", primary: "#ec4899", secondary: "#db2777", background: "#150910", card: "#25111d", accent: "#4b1733" },
 ];
-
-
-type CustomPalette = {
-  id: string;
-  label: string;
-  colors: string[];
-};
-
-const CUSTOM_PALETTES_KEY = "auri-custom-palettes";
-
-const COMBINATION_COLORS = [
-  "#8B5CF6", "#A855F7", "#EC4899", "#F43F5E",
-  "#EF4444", "#F97316", "#F59E0B", "#EAB308",
-  "#84CC16", "#22C55E", "#14B8A6", "#06B6D4",
-  "#38BDF8", "#3B82F6", "#6366F1", "#7C3AED",
-  "#D946EF", "#C084FC", "#2DD4BF", "#67E8F9",
-  "#FFFFFF", "#E5E7EB", "#9CA3AF", "#374151",
-  "#111827", "#000000"
-];
-
-function readCustomPalettes(): CustomPalette[] {
-  try {
-    const raw = localStorage.getItem(CUSTOM_PALETTES_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveCustomPalettes(palettes: CustomPalette[]) {
-  try {
-    localStorage.setItem(CUSTOM_PALETTES_KEY, JSON.stringify(palettes));
-  } catch {}
-}
-
-function paletteTheme(colors: string[], label: string): ThemePreset {
-  const primary = colors[0] || "#8B5CF6";
-  const secondary = colors[1] || primary;
-  const accent = colors[2] || secondary;
-
-  return {
-    id: `custom-${Date.now()}`,
-    label,
-    primary,
-    secondary,
-    background: "#08060D",
-    card: mix("#08060D", primary, 0.16),
-    accent,
-  };
-}
 
 const THEME_BUCKET = "theme-assets";
 const GLOBAL_BACKGROUND_PATH = "global/background";
