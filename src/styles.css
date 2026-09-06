@@ -99,11 +99,11 @@ html {
   --gradient-primary: linear-gradient(135deg, #8B5CF6, #6D28D9);
   --gradient-hero: radial-gradient(
       80% 60% at 50% 0%,
-      oklch(0.50 0.16 148 / 0.30) 0%,
+      oklch(0.50 0.16 292 / 0.30) 0%,
       transparent 70%
     ),
-    linear-gradient(180deg, oklch(0.16 0.012 155) 0%, oklch(0.13 0.012 155) 100%);
-  --gradient-card: linear-gradient(160deg, oklch(0.23 0.018 150 / 0.9), oklch(0.18 0.012 155 / 0.75));
+    linear-gradient(180deg, oklch(0.16 0.018 292) 0%, oklch(0.10 0.018 292) 100%);
+  --gradient-card: linear-gradient(160deg, oklch(0.20 0.022 292 / 0.9), oklch(0.13 0.018 292 / 0.75));
 
   --shadow-glow: 0 0 40px -10px oklch(0.55 0.22 292 / 0.48);
   --shadow-elegant: 0 20px 60px -20px oklch(0.10 0.012 155 / 0.8);
