@@ -28,6 +28,23 @@ async function getTrialEligibility(userId: string) {
   return { eligible: !!phone && !emailClaim && !phoneClaim, email, phone, emailClaim, phoneClaim, reason: !phone ? "whatsapp_required" : emailClaim || phoneClaim ? "already_used" : null };
 }
 
+function appUrl(): string {
+  const configured =
+    process.env.APP_URL ||
+    process.env.PUBLIC_APP_URL ||
+    "";
+
+  if (configured) {
+    return configured.replace(/\/$/, "");
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  return "https://i-ia-vercel-fix-real.vercel.app";
+}
+
 export const getMySubscription = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context;
   await supabaseAdmin.from("subscriptions").update({ status: "expired", blocked_reason: "Subscription period ended" }).eq("user_id", userId).in("status", ["trial","active"]).lt("current_period_end", new Date().toISOString());
