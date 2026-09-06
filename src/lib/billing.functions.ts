@@ -72,7 +72,7 @@ export const listPlans = createServerFn({ method: "GET" }).handler(async () => {
   return { plans: data ?? [] };
 });
 
-export const createCheckout = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => z.object({ planCode:z.enum(["trial","monthly","yearly"]) }).parse(d)).handler(async ({ context, data }) => {
+export const createCheckout = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => z.object({ planCode:z.enum(["trial","monthly","yearly"]), paymentMethod:z.enum(["card","pix"]).default("card") }).parse(d)).handler(async ({ context, data }) => {
   const { userId } = context;
   const { data: plan, error } = await supabaseAdmin.from("plans").select("*").eq("code",data.planCode).single();
   if (error || !plan) throw new Error("Plano não encontrado.");
@@ -99,19 +99,44 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
 
   const key = stripeKey();
   const params = new URLSearchParams();
-  params.set("mode","subscription");
-  params.set("success_url",`${appUrl()}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
-  params.set("cancel_url",`${appUrl()}/billing?checkout=cancelled`);
-  params.set("line_items[0][price_data][currency]","usd");
-  params.set("line_items[0][price_data][unit_amount]",String(plan.price_usd_cents));
-  params.set("line_items[0][price_data][recurring][interval]",data.planCode === "yearly" ? "year" : "month");
-  params.set("line_items[0][price_data][product_data][name]",plan.name);
-  params.set("line_items[0][quantity]","1");
-  params.set("client_reference_id",userId);
-  params.set("metadata[user_id]",userId);
-  params.set("metadata[plan_code]",data.planCode);
-  params.set("subscription_data[metadata][user_id]",userId);
-  params.set("subscription_data[metadata][plan_code]",data.planCode);
+  const isPix = data.paymentMethod === "pix";
+
+  params.set("mode", isPix ? "payment" : "subscription");
+
+  params.set("line_items[0][price_data][currency]", "usd");
+  params.set(
+    "line_items[0][price_data][product_data][name]",
+    plan.name
+  );
+  params.set(
+    "line_items[0][price_data][unit_amount]",
+    String(plan.price_usd_cents)
+  );
+
+  if (!isPix) {
+    params.set(
+      "line_items[0][price_data][recurring][interval]",
+      data.planCode === "yearly" ? "year" : "month"
+    );
+    params.set("payment_method_types[0]", "card");
+  } else {
+    params.set("payment_method_types[0]", "pix");
+  }
+
+  params.set("client_reference_id", context.userId);
+  params.set("metadata[user_id]", context.userId);
+  params.set("metadata[plan_code]", data.planCode);
+  params.set("metadata[payment_method]", data.paymentMethod);
+
+  params.set(
+    "success_url",
+    `${appUrl()}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+  );
+  params.set(
+    "cancel_url",
+    `${appUrl()}/billing?checkout=cancelled`
+  );
+
   const auth = Buffer.from(`${key}:`).toString("base64");
   const r = await fetch("https://api.stripe.com/v1/checkout/sessions",{method:"POST",headers:{Authorization:`Basic ${auth}`,"Content-Type":"application/x-www-form-urlencoded"},body:params});
   const body:any = await r.json().catch(()=>null);
