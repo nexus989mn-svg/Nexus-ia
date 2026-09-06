@@ -112,6 +112,7 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
     "line_items[0][price_data][unit_amount]",
     String(plan.price_usd_cents)
   );
+  params.set("line_items[0][quantity]", "1");
 
   if (!isPix) {
     params.set(
