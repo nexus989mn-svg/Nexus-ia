@@ -100,46 +100,58 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
   const key = stripeKey();
   const auth = Buffer.from(`${key}:`).toString("base64");
   const isPix = data.paymentMethod === "pix";
+
   let params = new URLSearchParams();
 
   /*
-   * PREÇO BASE DO SISTEMA = USD
+   * MOEDA BASE DO SISTEMA = USD
+   *
+   * Para comprador brasileiro:
+   * USD -> BRL pela cotação atual
    *
    * CARTÃO:
    * - assinatura recorrente
-   * - cobra em USD
+   * - cobra em BRL
    *
    * PIX:
    * - pagamento avulso
-   * - converte USD -> BRL no servidor
-   * - Checkout recebe BRL
-   * - Pix aparece corretamente para comprador brasileiro
+   * - cobra em BRL
+   *
+   * Assim o Checkout não tenta cobrar
+   * um cartão brasileiro em USD.
    */
 
+  const fxResponse = await fetch(
+    "https://api.frankfurter.app/latest?from=USD&to=BRL"
+  );
+
+  const fxBody: any = await fxResponse.json().catch(() => null);
+
+  if (!fxResponse.ok || !fxBody?.rates?.BRL) {
+    throw new Error("Não foi possível obter a cotação USD/BRL.");
+  }
+
+  const usdToBrl = Number(fxBody.rates.BRL);
+
+  if (!Number.isFinite(usdToBrl) || usdToBrl <= 0) {
+    throw new Error("Cotação USD/BRL inválida.");
+  }
+
+  // Exemplo:
+  // USD 0,39 -> BRL pela cotação atual
+  // USD 28,00 -> BRL pela cotação atual
+  //
+  // Stripe trabalha internamente com a menor unidade da moeda:
+  // BRL 1,00 = 100 centavos.
+  const brlCents = Math.max(
+    50,
+    Math.round(
+      (Number(plan.price_usd_cents) / 100) * usdToBrl * 100
+    )
+  );
+
   if (isPix) {
-    // Busca a cotação atual USD -> BRL.
-    const fxResponse = await fetch(
-      "https://api.frankfurter.app/latest?from=USD&to=BRL"
-    );
-
-    const fxBody: any = await fxResponse.json().catch(() => null);
-
-    if (!fxResponse.ok || !fxBody?.rates?.BRL) {
-      throw new Error("Não foi possível obter a cotação USD/BRL.");
-    }
-
-    const usdToBrl = Number(fxBody.rates.BRL);
-
-    if (!Number.isFinite(usdToBrl) || usdToBrl <= 0) {
-      throw new Error("Cotação USD/BRL inválida.");
-    }
-
-    // price_usd_cents -> USD -> BRL -> centavos de BRL
-    const brlCents = Math.max(
-      50,
-      Math.round((Number(plan.price_usd_cents) / 100) * usdToBrl * 100)
-    );
-
+    // PIX: pagamento avulso em BRL.
     params.set("mode", "payment");
 
     params.set(
@@ -167,7 +179,6 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
       "1"
     );
 
-    // Pix exige uma moeda compatível; aqui o preço já está em BRL.
     params.set(
       "payment_method_types[0]",
       "pix"
@@ -231,13 +242,12 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
     );
 
   } else {
-
-    // CARTÃO: assinatura recorrente continua em USD.
+    // CARTÃO: assinatura recorrente em BRL.
     params.set("mode", "subscription");
 
     params.set(
       "line_items[0][price_data][currency]",
-      "usd"
+      "brl"
     );
 
     params.set(
@@ -252,7 +262,7 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
 
     params.set(
       "line_items[0][price_data][unit_amount]",
-      String(plan.price_usd_cents)
+      String(brlCents)
     );
 
     params.set(
@@ -268,6 +278,11 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
     params.set(
       "payment_method_types[0]",
       "card"
+    );
+
+    params.set(
+      "locale",
+      "pt-BR"
     );
 
     params.set(
@@ -298,6 +313,21 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
     params.set(
       "metadata[base_amount_usd_cents]",
       String(plan.price_usd_cents)
+    );
+
+    params.set(
+      "metadata[fx_usd_brl]",
+      String(usdToBrl)
+    );
+
+    params.set(
+      "metadata[charged_currency]",
+      "BRL"
+    );
+
+    params.set(
+      "metadata[charged_amount_brl_cents]",
+      String(brlCents)
     );
 
     params.set(
