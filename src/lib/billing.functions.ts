@@ -152,8 +152,9 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
     // Para comprador no Brasil, o Pix será apresentado em BRL.
     params.set("adaptive_pricing[enabled]", "true");
 
-    // Pix é somente pagamento avulso.
-    params.set("payment_method_types[0]", "pix");
+    // Não forçar Pix enquanto o preço-base está em USD.
+    // O Adaptive Pricing converte para BRL e libera Pix
+    // como método de pagamento compatível com a moeda local.
     params.set("locale", "pt-BR");
 
     params.set("client_reference_id", userId);
