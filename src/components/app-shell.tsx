@@ -81,7 +81,7 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
             </div>
           </div>
         </div>
-        <nav className="flex-1 p-4 space-y-1 mt-14 lg:mt-0">
+        <nav className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1 mt-14 lg:mt-0">
           {visible.map((item) => (
             <Link
               key={item.to}
@@ -95,7 +95,7 @@ export function AppShell({ children, isAdmin = false }: { children: ReactNode; i
             </Link>
           ))}
         </nav>
-        <div className="p-4 border-t border-sidebar-border flex items-center justify-between gap-2">
+        <div className="shrink-0 p-4 border-t border-sidebar-border flex items-center justify-between gap-2 bg-sidebar">
           <Button variant="ghost" className="justify-start flex-1" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
             {t("nav.signOut")}
