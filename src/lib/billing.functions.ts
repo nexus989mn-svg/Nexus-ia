@@ -100,7 +100,6 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
   const key = stripeKey();
   const params = new URLSearchParams();
   params.set("mode","subscription");
-  params.set("automatic_payment_methods[enabled]","true");
   params.set("success_url",`${appUrl()}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
   params.set("cancel_url",`${appUrl()}/billing?checkout=cancelled`);
   params.set("line_items[0][price_data][currency]","usd");
