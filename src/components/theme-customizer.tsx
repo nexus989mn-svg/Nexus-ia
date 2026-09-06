@@ -56,6 +56,117 @@ type CustomPalette = {
 
 const CUSTOM_PALETTES_KEY = "auri-custom-palettes";
 
+/*
+ * AURI COLOR ENGINE
+ * ----------------------------------------------------------
+ * Não existe limite artificial de cores.
+ * O disco usa HSL contínuo e o usuário pode escolher
+ * qualquer combinação e qualquer quantidade de cores.
+ */
+
+function hslToHex(h: number, s: number, l: number) {
+  s /= 100;
+  l /= 100;
+
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (h < 60) {
+    r = c; g = x; b = 0;
+  } else if (h < 120) {
+    r = x; g = c; b = 0;
+  } else if (h < 180) {
+    r = 0; g = c; b = x;
+  } else if (h < 240) {
+    r = 0; g = x; b = c;
+  } else if (h < 300) {
+    r = x; g = 0; b = c;
+  } else {
+    r = c; g = 0; b = x;
+  }
+
+  return rgbToHex(
+    (r + m) * 255,
+    (g + m) * 255,
+    (b + m) * 255
+  );
+}
+
+function generatedColorWheel() {
+  const colors: string[] = [];
+
+  /*
+   * 72 matizes x 5 níveis de saturação/luminosidade.
+   * A seleção do disco continua sendo contínua,
+   * então isso não limita as cores possíveis.
+   */
+  for (let h = 0; h < 360; h += 5) {
+    colors.push(hslToHex(h, 100, 50));
+  }
+
+  return colors;
+}
+
+const AURI_COLOR_WHEEL = generatedColorWheel();
+
+function generatedCombinations() {
+  const result: Array<{ colors: string[]; label: string }> = [];
+
+  /*
+   * Gera uma grande variedade de combinações automaticamente.
+   * Não limita as combinações criadas pelo usuário.
+   */
+  for (let h = 0; h < 360; h += 15) {
+    const a = hslToHex(h, 82, 58);
+    const complementary = hslToHex((h + 180) % 360, 78, 55);
+    const analogous = hslToHex((h + 30) % 360, 78, 55);
+    const triadic = hslToHex((h + 120) % 360, 78, 55);
+
+    result.push({
+      colors: [a, complementary],
+      label: "Complementar",
+    });
+
+    result.push({
+      colors: [a, analogous],
+      label: "Análoga",
+    });
+
+    result.push({
+      colors: [a, triadic],
+      label: "Triádica",
+    });
+  }
+
+  return result;
+}
+
+const AURI_GENERATED_COMBINATIONS = generatedCombinations();
+
+function themeFromColors(colors: string[], label = "Combinação AURI"): ThemePreset {
+  const safe = colors.filter(Boolean);
+
+  const primary = safe[0] || "#8B5CF6";
+  const secondary = safe[1] || primary;
+  const accent = safe[2] || safe[1] || primary;
+
+  return {
+    id: `custom-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    label,
+    primary,
+    secondary,
+    background: "#08060D",
+    card: mix("#08060D", primary, 0.16),
+    accent,
+  };
+}
+
+
 const COMBINATION_COLORS = [
   "#8B5CF6", "#A855F7", "#EC4899", "#F43F5E",
   "#EF4444", "#F97316", "#F59E0B", "#EAB308",
@@ -461,6 +572,11 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
   const [image, setImage] = useState<string | null | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageUrlRef = useRef<string | null>(null);
+  const [customPalettes, setCustomPalettes] = useState<CustomPalette[]>(readCustomPalettes);
+  const [selectedCombinationColors, setSelectedCombinationColors] = useState<string[]>([]);
+  const [exactColor, setExactColor] = useState("#8B5CF6");
+  const [imagePickedColor, setImagePickedColor] = useState<string | null>(null);
+
 
   useEffect(() => {
     let alive = true;
@@ -598,6 +714,105 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
     }
   };
 
+
+  const selectAnyColor = (color: string) => {
+    const normalized = color.startsWith("#") ? color : `#${color}`;
+    setExactColor(normalized);
+
+    setSelectedCombinationColors((current) => {
+      if (current.includes(normalized)) return current;
+      return [...current, normalized];
+    });
+  };
+
+  const applyColorCombination = (colors: string[], label = "Combinação AURI") => {
+    if (!colors.length) return;
+
+    const nextTheme = themeFromColors(colors, label);
+    setTheme(nextTheme);
+    saveTheme(nextTheme);
+
+    setSelectedCombinationColors([...colors]);
+  };
+
+  const addCurrentColor = () => {
+    selectAnyColor(exactColor);
+  };
+
+  const createUnlimitedCombination = () => {
+    if (!selectedCombinationColors.length) return;
+
+    const nextTheme = themeFromColors(
+      selectedCombinationColors,
+      `Minha combinação (${selectedCombinationColors.length} cores)`
+    );
+
+    setTheme(nextTheme);
+    saveTheme(nextTheme);
+
+    const nextPalette: CustomPalette = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      label: nextTheme.label,
+      colors: [...selectedCombinationColors],
+    };
+
+    const next = [...customPalettes, nextPalette];
+    setCustomPalettes(next);
+    saveCustomPalettes(next);
+  };
+
+  const pickFromImage = (
+    event: React.MouseEvent<HTMLImageElement>
+  ) => {
+    if (!image) return;
+
+    try {
+      const img = event.currentTarget;
+      const rect = img.getBoundingClientRect();
+
+      const x = Math.max(
+        0,
+        Math.min(
+          img.naturalWidth - 1,
+          Math.floor((event.clientX - rect.left) * img.naturalWidth / rect.width)
+        )
+      );
+
+      const y = Math.max(
+        0,
+        Math.min(
+          img.naturalHeight - 1,
+          Math.floor((event.clientY - rect.top) * img.naturalHeight / rect.height)
+        )
+      );
+
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+
+      const ctx = canvas.getContext("2d", {
+        willReadFrequently: true,
+      });
+
+      if (!ctx) return;
+
+      ctx.drawImage(img, 0, 0);
+
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+
+      const color = rgbToHex(
+        pixel[0],
+        pixel[1],
+        pixel[2]
+      );
+
+      setImagePickedColor(color);
+      selectAnyColor(color);
+    } catch (error) {
+      console.warn("Não foi possível amostrar esta imagem diretamente:", error);
+    }
+  };
+
   return (
     <>
       <input
@@ -621,26 +836,336 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
           <span className="sr-only">Personalizar aparência</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-60">
-        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Paleta de cores</div>
-        {PRESETS.map(p => (
-          <DropdownMenuItem key={p.id} onClick={() => choosePreset(p)} className="gap-2">
-            <span className="h-4 w-4 rounded-full border" style={{ background: p.primary }} />
-            {p.label}
-            {theme.id === p.id && <Check className="ml-auto h-4 w-4" />}
-          </DropdownMenuItem>
-        ))}
+      <DropdownMenuContent
+        align="end"
+        className="w-[min(92vw,380px)] max-h-[82vh] overflow-y-auto p-2"
+      >
+        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+          Aparência da AURI
+        </div>
+
+        {/* ======================================================
+            CORES PRINCIPAIS — compactas
+            ====================================================== */}
+        <div className="px-2 pt-2 pb-1">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+            Cores principais
+          </div>
+
+          <div className="grid grid-cols-2 gap-1">
+            {PRESETS.slice(0, 12).map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => void choosePreset(p)}
+                className="flex items-center gap-2 rounded-lg px-2 py-2 text-left text-xs hover:bg-accent transition-colors"
+              >
+                <span
+                  className="h-4 w-4 shrink-0 rounded-full border border-white/20"
+                  style={{ background: p.primary }}
+                />
+                <span className="truncate">{p.label}</span>
+                {theme.id === p.id && (
+                  <Check className="ml-auto h-3.5 w-3.5 shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <DropdownMenuSeparator />
+
+        {/* ======================================================
+            DISCO CROMÁTICO
+            ====================================================== */}
+        <div className="px-2 py-2">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+            Disco cromático
+          </div>
+
+          <div className="flex flex-col items-center gap-3">
+            <div
+              className="relative h-44 w-44 rounded-full p-4 shadow-lg"
+              style={{
+                background:
+                  "conic-gradient(red, #ff7a00, yellow, #7cff00, #00ff88, cyan, #008cff, #004cff, #6a00ff, #b000ff, magenta, red)",
+              }}
+            >
+              <button
+                type="button"
+                aria-label="Escolher cor no disco cromático"
+                className="absolute inset-4 rounded-full border-4 border-background/80 shadow-inner"
+                style={{
+                  background:
+                    "radial-gradient(circle, white 0%, rgba(255,255,255,.65) 18%, transparent 55%)",
+                }}
+                onClick={(event) => {
+                  const rect = event.currentTarget.getBoundingClientRect();
+                  const cx = rect.left + rect.width / 2;
+                  const cy = rect.top + rect.height / 2;
+                  const dx = event.clientX - cx;
+                  const dy = event.clientY - cy;
+
+                  let hue =
+                    Math.atan2(dy, dx) * 180 / Math.PI + 90;
+
+                  if (hue < 0) hue += 360;
+
+                  const color = hslToHex(hue, 82, 55);
+                  selectAnyColor(color);
+                }}
+              />
+
+              <div
+                className="pointer-events-none absolute inset-[30%] rounded-full border border-white/30"
+                style={{
+                  background: exactColor,
+                  boxShadow: "0 0 0 3px rgba(0,0,0,.28)",
+                }}
+              />
+            </div>
+
+            <div className="flex w-full items-center gap-2">
+              <input
+                type="color"
+                value={exactColor}
+                onChange={(event) => selectAnyColor(event.target.value)}
+                className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent"
+                title="Escolher qualquer cor"
+              />
+
+              <input
+                type="text"
+                value={exactColor}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setExactColor(value);
+                  if (/^#[0-9a-fA-F]{6}$/.test(value)) {
+                    selectAnyColor(value);
+                  }
+                }}
+                className="h-9 flex-1 rounded-lg border border-border bg-background px-2 text-xs font-mono"
+                aria-label="Código hexadecimal da cor"
+              />
+
+              <button
+                type="button"
+                onClick={addCurrentColor}
+                className="h-9 rounded-lg border border-border px-3 text-xs hover:bg-accent"
+              >
+                Adicionar
+              </button>
+            </div>
+
+            <div className="text-[10px] text-muted-foreground text-center">
+              O disco é contínuo: não existe limite de cores disponíveis.
+            </div>
+          </div>
+        </div>
+
+        <DropdownMenuSeparator />
+
+        {/* ======================================================
+            CORES COMBINADAS
+            ====================================================== */}
+        <div className="px-2 py-2">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+            Cores combinadas
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {AURI_GENERATED_COMBINATIONS.slice(0, 48).map((combo, index) => (
+              <button
+                key={`${combo.label}-${index}`}
+                type="button"
+                onClick={() => applyColorCombination(combo.colors, combo.label)}
+                className="overflow-hidden rounded-lg border border-border text-left hover:border-primary/60 transition-colors"
+              >
+                <div
+                  className="h-8 w-full"
+                  style={{
+                    background: `linear-gradient(90deg, ${combo.colors[0]}, ${combo.colors[1]})`,
+                  }}
+                />
+                <div className="px-2 py-1.5 text-[10px]">
+                  {combo.label}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-2 text-[10px] text-muted-foreground">
+            As combinações exibidas são sugestões. Você pode criar quantas
+            combinações próprias quiser.
+          </div>
+        </div>
+
+        <DropdownMenuSeparator />
+
+        {/* ======================================================
+            COMBINADOR SEM LIMITE
+            ====================================================== */}
+        <div className="px-2 py-2">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+            Combinar minhas cores
+          </div>
+
+          {selectedCombinationColors.length > 0 ? (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {selectedCombinationColors.map((color, index) => (
+                <button
+                  key={`${color}-${index}`}
+                  type="button"
+                  title={`Remover ${color}`}
+                  onClick={() => {
+                    setSelectedCombinationColors((current) =>
+                      current.filter((_, i) => i !== index)
+                    );
+                  }}
+                  className="group flex items-center gap-1 rounded-full border border-border px-2 py-1 text-[10px]"
+                >
+                  <span
+                    className="h-3 w-3 rounded-full border border-white/20"
+                    style={{ background: color }}
+                  />
+                  <span>{color}</span>
+                  <span className="text-muted-foreground group-hover:text-foreground">
+                    ×
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="mb-2 rounded-lg border border-dashed border-border px-3 py-2 text-[10px] text-muted-foreground">
+              Escolha quantas cores quiser no disco ou no seletor acima.
+            </div>
+          )}
+
+          <button
+            type="button"
+            disabled={!selectedCombinationColors.length}
+            onClick={createUnlimitedCombination}
+            className="w-full rounded-lg bg-gradient-primary px-3 py-2 text-xs font-medium text-primary-foreground disabled:opacity-40"
+          >
+            Criar combinação com {selectedCombinationColors.length} cores
+          </button>
+        </div>
+
+        {/* ======================================================
+            COMBINAÇÕES SALVAS
+            ====================================================== */}
+        {customPalettes.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+
+            <div className="px-2 py-2">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+                Minhas combinações
+              </div>
+
+              <div className="space-y-1">
+                {customPalettes.map((palette) => (
+                  <button
+                    key={palette.id}
+                    type="button"
+                    onClick={() =>
+                      applyColorCombination(
+                        palette.colors,
+                        palette.label
+                      )
+                    }
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-accent"
+                  >
+                    <div className="flex shrink-0">
+                      {palette.colors.slice(0, 8).map((color, index) => (
+                        <span
+                          key={`${color}-${index}`}
+                          className="-ml-1 h-4 w-4 rounded-full border border-background first:ml-0"
+                          style={{ background: color }}
+                        />
+                      ))}
+                    </div>
+
+                    <span className="truncate text-xs">
+                      {palette.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        <DropdownMenuSeparator />
+
+        {/* ======================================================
+            IMAGEM — NÃO ALTERA O UPLOAD EXISTENTE
+            ====================================================== */}
         <DropdownMenuItem asChild className="gap-2 cursor-pointer">
           <label htmlFor="auri-theme-image-upload">
             <ImagePlus className="h-4 w-4" />
             Usar minha imagem
           </label>
         </DropdownMenuItem>
+
+        {/* ======================================================
+            ESCOLHER COR DA FOTO
+            ====================================================== */}
+        {image && (
+          <>
+            <div className="px-2 pt-2">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+                Ajustar cor da imagem
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-border bg-black/20">
+                <img
+                  src={image}
+                  alt="Imagem usada como fundo"
+                  crossOrigin="anonymous"
+                  className="block max-h-48 w-full cursor-crosshair object-cover"
+                  onClick={pickFromImage}
+                />
+              </div>
+
+              <div className="mt-2 text-[10px] text-muted-foreground">
+                Toque diretamente na foto para escolher uma cor dela.
+                Essa cor pode ser usada na combinação sem remover a imagem.
+              </div>
+
+              {imagePickedColor && (
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-border px-2 py-2">
+                  <span
+                    className="h-6 w-6 rounded-full border border-white/20"
+                    style={{ background: imagePickedColor }}
+                  />
+                  <span className="text-xs font-mono">
+                    {imagePickedColor}
+                  </span>
+
+                  <button
+                    type="button"
+                    className="ml-auto rounded-md border border-border px-2 py-1 text-[10px] hover:bg-accent"
+                    onClick={() => {
+                      selectAnyColor(imagePickedColor);
+                      applyColorCombination(
+                        [imagePickedColor],
+                        "Cor escolhida da imagem"
+                      );
+                    }}
+                  >
+                    Usar cor
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         {image && (
           <DropdownMenuItem onClick={() => choosePreset(PRESETS[0])}>
             <RotateCcw className="h-4 w-4" />
-            Voltar à paleta Auri
+            Voltar à paleta AURI
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

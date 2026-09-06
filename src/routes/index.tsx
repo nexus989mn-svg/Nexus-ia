@@ -38,8 +38,12 @@ function Landing() {
       <header className="sticky top-0 z-30 backdrop-blur bg-background/60 border-b border-border">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-display font-bold">
-            <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow">
-              <MessageCircle className="h-4 w-4 text-primary-foreground" />
+            <div className="h-8 w-8 rounded-lg overflow-hidden bg-black flex items-center justify-center shadow-glow border border-white/10">
+              <img
+                src="/auri-logo.png"
+                alt="AURI"
+                className="h-full w-full object-contain"
+              />
             </div>
             <span className="hidden sm:inline">{t("nav.brand")}</span>
           </Link>

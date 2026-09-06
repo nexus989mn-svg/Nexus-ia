@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ==========================================================================
-   TW Design Studio — Tema Preto & Verde (SaaS premium, ChatGPT-like)
-   Paleta: #0B0F0C / #1A1F1C / #22C55E / #16A34A / #FFFFFF
+   TW Design Studio — Tema AURI — Preto & Roxo (SaaS premium, ChatGPT-like)
+   Paleta AURI: #08060D / #15101F / #8B5CF6 / #6D28D9 / #FFFFFF
    ========================================================================== */
 
 @theme inline {
@@ -54,49 +54,49 @@ html {
 
   --radius: 0.875rem;
 
-  /* Base — preto profundo com leve toque verde */
-  --background: oklch(0.16 0.012 155);        /* #0B0F0C */
-  --foreground: oklch(0.98 0.005 150);         /* branco */
+  /* Base AURI — preto profundo com roxo */
+  --background: oklch(0.145 0.018 290);        /* #0B0F0C */
+  --foreground: oklch(0.98 0.005 290);         /* branco */
 
-  --card: oklch(0.21 0.014 155);               /* #1A1F1C */
-  --card-foreground: oklch(0.98 0.005 150);
+  --card: oklch(0.19 0.022 290);               /* #1A1F1C */
+  --card-foreground: oklch(0.98 0.005 290);
 
-  --popover: oklch(0.20 0.014 155);
-  --popover-foreground: oklch(0.98 0.005 150);
+  --popover: oklch(0.18 0.022 290);
+  --popover-foreground: oklch(0.98 0.005 290);
 
-  /* Verde principal #22C55E / glow #16A34A */
-  --primary: oklch(0.74 0.18 148);
-  --primary-foreground: oklch(0.16 0.012 155);
-  --primary-glow: oklch(0.66 0.17 148);
+  /* AURI principal #8B5CF6 / glow #6D28D9 */
+  --primary: oklch(0.69 0.20 292);
+  --primary-foreground: oklch(0.14 0.018 290);
+  --primary-glow: oklch(0.61 0.21 292);
 
-  --secondary: oklch(0.25 0.014 155);
-  --secondary-foreground: oklch(0.98 0.005 150);
+  --secondary: oklch(0.23 0.022 290);
+  --secondary-foreground: oklch(0.98 0.005 290);
 
-  --muted: oklch(0.23 0.012 155);
-  --muted-foreground: oklch(0.72 0.018 150);
+  --muted: oklch(0.21 0.018 290);
+  --muted-foreground: oklch(0.72 0.018 290);
 
-  --accent: oklch(0.30 0.06 150);
-  --accent-foreground: oklch(0.98 0.005 150);
+  --accent: oklch(0.30 0.08 292);
+  --accent-foreground: oklch(0.98 0.005 290);
 
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --success: oklch(0.74 0.18 148);
-  --success-foreground: oklch(0.16 0.012 155);
+  --success: oklch(0.69 0.20 292);
+  --success-foreground: oklch(0.14 0.018 290);
 
   --warning: oklch(0.80 0.16 75);
-  --warning-foreground: oklch(0.16 0.012 155);
+  --warning-foreground: oklch(0.14 0.018 290);
 
   --border: oklch(1 0 0 / 0.07);
   --input: oklch(1 0 0 / 0.09);
-  --ring: oklch(0.74 0.18 148);
+  --ring: oklch(0.69 0.20 292);
 
-  --sidebar: oklch(0.13 0.012 155);            /* mais escuro que bg */
-  --sidebar-foreground: oklch(0.92 0.008 150);
+  --sidebar: oklch(0.115 0.018 290);            /* mais escuro que bg */
+  --sidebar-foreground: oklch(0.92 0.008 290);
   --sidebar-border: oklch(1 0 0 / 0.05);
 
   /* Gradientes & sombras */
-  --gradient-primary: linear-gradient(135deg, oklch(0.74 0.18 148), oklch(0.66 0.17 148));
+  --gradient-primary: linear-gradient(135deg, #8B5CF6, #6D28D9);
   --gradient-hero: radial-gradient(
       80% 60% at 50% 0%,
       oklch(0.50 0.16 148 / 0.30) 0%,
@@ -105,7 +105,7 @@ html {
     linear-gradient(180deg, oklch(0.16 0.012 155) 0%, oklch(0.13 0.012 155) 100%);
   --gradient-card: linear-gradient(160deg, oklch(0.23 0.018 150 / 0.9), oklch(0.18 0.012 155 / 0.75));
 
-  --shadow-glow: 0 0 40px -10px oklch(0.74 0.18 148 / 0.45);
+  --shadow-glow: 0 0 40px -10px oklch(0.55 0.22 292 / 0.48);
   --shadow-elegant: 0 20px 60px -20px oklch(0.10 0.012 155 / 0.8);
 }
 
