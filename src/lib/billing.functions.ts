@@ -9,9 +9,6 @@ function stripeKey() {
   if (!key) throw new Error("Stripe não configurado no servidor.");
   return key;
 }
-function appUrl() {
-  return (process.env.APP_URL || process.env.PUBLIC_APP_URL || "http://localhost:8080").replace(/\/$/, "");
-}
 function normalizeEmail(email: string | null | undefined) { return (email ?? "").trim().toLowerCase(); }
 async function isAdminUser(userId: string) {
   const { data } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
