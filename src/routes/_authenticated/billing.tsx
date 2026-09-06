@@ -41,12 +41,31 @@ function BillingPage() {
       .then(({ data }) => setIsAdmin(!!data));
   }, [user]);
 
-  const subscribe = async (code: "trial" | "monthly" | "yearly") => {
+  const subscribe = async (
+    code: "trial" | "monthly" | "yearly",
+    paymentMethod: "card" | "pix" = "card"
+  ) => {
     try {
-      const res = await checkout({ data: { planCode: code } });
-      toast.success(res.mock ? t("billing.activatedMock") : t("billing.redirecting"));
-      if (res.url.startsWith("http")) window.location.href = res.url;
-      else qc.invalidateQueries({ queryKey: ["my-sub"] });
+      const res = await checkout({
+        data: {
+          planCode: code,
+          paymentMethod,
+        },
+      });
+
+      toast.success(
+        res.mock
+          ? t("billing.activatedMock")
+          : paymentMethod === "pix"
+            ? "Abrindo pagamento via Pix..."
+            : t("billing.redirecting")
+      );
+
+      if (res.url.startsWith("http")) {
+        window.location.href = res.url;
+      } else {
+        qc.invalidateQueries({ queryKey: ["my-sub"] });
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -116,9 +135,47 @@ function BillingPage() {
                 <li key={f} className="flex gap-2"><Check className="h-4 w-4 text-success mt-0.5 shrink-0" />{f}</li>
               ))}
             </ul>
-            <Button onClick={() => subscribe(p.code as "trial" | "monthly" | "yearly")} className="w-full mt-5 bg-gradient-primary shadow-glow">
-              {sub?.plan?.id === p.id ? t("billing.renew") : t("billing.choosePlan")}
-            </Button>
+            {p.code === "trial" ? (
+              <Button
+                onClick={() =>
+                  subscribe(
+                    p.code as "trial" | "monthly" | "yearly",
+                    "card"
+                  )
+                }
+                className="w-full mt-5 bg-gradient-primary shadow-glow"
+              >
+                {sub?.plan?.id === p.id
+                  ? t("billing.renew")
+                  : t("billing.choosePlan")}
+              </Button>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 mt-5">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    subscribe(
+                      p.code as "trial" | "monthly" | "yearly",
+                      "card"
+                    )
+                  }
+                >
+                  💳 Cartão
+                </Button>
+
+                <Button
+                  onClick={() =>
+                    subscribe(
+                      p.code as "trial" | "monthly" | "yearly",
+                      "pix"
+                    )
+                  }
+                  className="bg-gradient-primary shadow-glow"
+                >
+                  Pix
+                </Button>
+              </div>
+            )}
           </div>
         )})}
       </div>

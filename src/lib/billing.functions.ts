@@ -98,47 +98,118 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
   }
 
   const key = stripeKey();
-  const params = new URLSearchParams();
+  const auth = Buffer.from(`${key}:`).toString("base64");
   const isPix = data.paymentMethod === "pix";
+  let params = new URLSearchParams();
 
-  params.set("mode", isPix ? "payment" : "subscription");
+  /*
+   * CARTÃO:
+   * - assinatura recorrente
+   * - preço-base em USD
+   *
+   * PIX:
+   * - pagamento avulso
+   * - preço-base continua em USD
+   * - Stripe Adaptive Pricing converte para BRL no Checkout
+   * - Pix é apresentado em BRL
+   */
+  if (isPix) {
+    const priceParams = new URLSearchParams();
 
-  params.set("line_items[0][price_data][currency]", "usd");
-  params.set(
-    "line_items[0][price_data][product_data][name]",
-    plan.name
-  );
-  params.set(
-    "line_items[0][price_data][unit_amount]",
-    String(plan.price_usd_cents)
-  );
-  params.set("line_items[0][quantity]", "1");
+    // O preço interno continua sendo USD.
+    // Usamos um Price ID porque o Adaptive Pricing não funciona
+    // corretamente quando a moeda é definida manualmente no line_item.
+    priceParams.set("currency", "usd");
+    priceParams.set("unit_amount", String(plan.price_usd_cents));
+    priceParams.set("product_data[name]", plan.name);
+    priceParams.set("product_data[metadata][plan_code]", data.planCode);
+    priceParams.set("metadata[plan_code]", data.planCode);
+    priceParams.set("metadata[payment_method]", "pix");
 
-  if (!isPix) {
+    const priceResponse = await fetch("https://api.stripe.com/v1/prices", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: priceParams,
+    });
+
+    const priceBody: any = await priceResponse.json().catch(() => null);
+
+    if (!priceResponse.ok || !priceBody?.id) {
+      throw new Error(
+        priceBody?.error?.message ||
+        `Stripe Price HTTP ${priceResponse.status}`
+      );
+    }
+
+    params.set("mode", "payment");
+    params.set("line_items[0][price]", priceBody.id);
+    params.set("line_items[0][quantity]", "1");
+
+    // Converte USD -> moeda local do comprador.
+    // Para comprador no Brasil, o Pix será apresentado em BRL.
+    params.set("adaptive_pricing[enabled]", "true");
+
+    // Pix é somente pagamento avulso.
+    params.set("payment_method_types[0]", "pix");
+    params.set("locale", "pt-BR");
+
+    params.set("client_reference_id", userId);
+    params.set("metadata[user_id]", userId);
+    params.set("metadata[plan_code]", data.planCode);
+    params.set("metadata[payment_method]", "pix");
+
+    params.set(
+      "success_url",
+      `${appUrl()}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+    );
+
+    params.set(
+      "cancel_url",
+      `${appUrl()}/billing?checkout=cancelled`
+    );
+  } else {
+    // Cartão continua sendo assinatura recorrente em USD.
+    params.set("mode", "subscription");
+    params.set(
+      "line_items[0][price_data][currency]",
+      "usd"
+    );
+    params.set(
+      "line_items[0][price_data][product_data][name]",
+      plan.name
+    );
+    params.set(
+      "line_items[0][price_data][unit_amount]",
+      String(plan.price_usd_cents)
+    );
+    params.set("line_items[0][quantity]", "1");
+
     params.set(
       "line_items[0][price_data][recurring][interval]",
       data.planCode === "yearly" ? "year" : "month"
     );
+
     params.set("payment_method_types[0]", "card");
-  } else {
-    params.set("payment_method_types[0]", "pix");
+
+    params.set("client_reference_id", userId);
+    params.set("metadata[user_id]", userId);
+    params.set("metadata[plan_code]", data.planCode);
+    params.set("metadata[payment_method]", "card");
+
+    params.set(
+      "success_url",
+      `${appUrl()}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+    );
+
+    params.set(
+      "cancel_url",
+      `${appUrl()}/billing?checkout=cancelled`
+    );
   }
 
-  params.set("client_reference_id", context.userId);
-  params.set("metadata[user_id]", context.userId);
-  params.set("metadata[plan_code]", data.planCode);
-  params.set("metadata[payment_method]", data.paymentMethod);
-
-  params.set(
-    "success_url",
-    `${appUrl()}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`
-  );
-  params.set(
-    "cancel_url",
-    `${appUrl()}/billing?checkout=cancelled`
-  );
-
-  const auth = Buffer.from(`${key}:`).toString("base64");
   const r = await fetch("https://api.stripe.com/v1/checkout/sessions",{method:"POST",headers:{Authorization:`Basic ${auth}`,"Content-Type":"application/x-www-form-urlencoded"},body:params});
   const body:any = await r.json().catch(()=>null);
   if (!r.ok || !body?.url) throw new Error(body?.error?.message || `Stripe HTTP ${r.status}`);
