@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { Check, MessageCircle, Sparkles, Zap, Bot, Shield, BarChart3 } from "lucide-react";
+import { Sparkles, Zap, Bot, Shield, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeCustomizer } from "@/components/theme-customizer";
@@ -29,7 +29,16 @@ function Landing() {
     { icon: Zap, k: "leadCapture" },
     { icon: BarChart3, k: "analytics" },
     { icon: Shield, k: "autoBlock" },
-    { icon: MessageCircle, k: "multi" },
+    {
+      icon: () => (
+        <img
+          src="/auri-logo.png"
+          alt="AURI"
+          className="h-6 w-6 object-contain"
+        />
+      ),
+      k: "multi",
+    },
     { icon: Sparkles, k: "sdr" },
   ] as const;
 
