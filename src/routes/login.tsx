@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { toast } from "sonner";
-import { MessageCircle } from "lucide-react";
+
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — Assistente IA de Vendas WhatsApp" }] }),
@@ -47,7 +47,7 @@ function LoginPage() {
       <div className="w-full max-w-md bg-card-glass border border-border rounded-2xl p-6 md:p-8 shadow-elegant">
         <Link to="/" className="flex items-center gap-2 font-display font-bold mb-6">
           <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow">
-            <MessageCircle className="h-4 w-4 text-primary-foreground" />
+            <img src="/auri-logo.png" alt="AURI" className="h-5 w-5 object-contain" />
           </div>
           {t("nav.brand")}
         </Link>
