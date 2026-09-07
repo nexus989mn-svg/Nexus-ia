@@ -56,6 +56,10 @@ type CustomPalette = {
 
 const CUSTOM_PALETTES_KEY = "auri-custom-palettes";
 
+function userStorageKey(base: string, userId: string) {
+  return `${base}:${userId}`;
+}
+
 /*
  * AURI COLOR ENGINE
  * ----------------------------------------------------------
@@ -179,7 +183,9 @@ const COMBINATION_COLORS = [
 
 function readCustomPalettes(): CustomPalette[] {
   try {
-    const raw = localStorage.getItem(CUSTOM_PALETTES_KEY);
+    const userId = localStorage.getItem("auri-current-user-id");
+    if (!userId) return [];
+    const raw = localStorage.getItem(userStorageKey(CUSTOM_PALETTES_KEY, userId));
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -189,7 +195,9 @@ function readCustomPalettes(): CustomPalette[] {
 
 function saveCustomPalettes(palettes: CustomPalette[]) {
   try {
-    localStorage.setItem(CUSTOM_PALETTES_KEY, JSON.stringify(palettes));
+    const userId = localStorage.getItem("auri-current-user-id");
+    if (!userId) return;
+    localStorage.setItem(userStorageKey(CUSTOM_PALETTES_KEY, userId), JSON.stringify(palettes));
   } catch {}
 }
 
@@ -210,10 +218,13 @@ function paletteTheme(colors: string[], label: string): ThemePreset {
 }
 
 const THEME_BUCKET = "theme-assets";
-const GLOBAL_BACKGROUND_PATH = "global/background";
 
-let sharedImage: string | null | undefined = undefined;
-let sharedImagePromise: Promise<string | null> | null = null;
+function userBackgroundPath(userId: string) {
+  return `users/${userId}/background`;
+}
+
+const sharedImages = new Map<string, string | null | undefined>();
+const sharedImagePromises = new Map<string, Promise<string | null>>();
 
 const BACKGROUND_EVENT = "auri-background-change";
 
@@ -223,58 +234,65 @@ function broadcastBackground(image: string | null) {
   );
 }
 
-function setSharedBackground(_userId: string, image: string | null) {
-  sharedImage = image;
-  sharedImagePromise = null;
+function setSharedBackground(userId: string, image: string | null) {
+  sharedImages.set(userId, image);
+  sharedImagePromises.delete(userId);
   broadcastBackground(image);
 }
 
-async function getSharedBackground(_userId: string): Promise<string | null> {
-  if (sharedImage !== undefined) return sharedImage;
+async function getSharedBackground(userId: string): Promise<string | null> {
+  const cached = sharedImages.get(userId);
+  if (cached !== undefined) return cached;
 
-  if (sharedImagePromise) return sharedImagePromise;
+  const pending = sharedImagePromises.get(userId);
+  if (pending) return pending;
 
-  sharedImagePromise = (async () => {
+  const path = userBackgroundPath(userId);
+
+  const promise = (async () => {
     try {
       const { data, error } = await supabase.storage
         .from(THEME_BUCKET)
-        .list("global", {
+        .list(`users/${userId}`, {
           limit: 10,
           search: "background",
         });
 
       if (error || !data?.some(file => file.name === "background")) {
-        sharedImage = null;
+        sharedImages.set(userId, null);
         return null;
       }
 
       const { data: publicData } = supabase.storage
         .from(THEME_BUCKET)
-        .getPublicUrl(GLOBAL_BACKGROUND_PATH);
+        .getPublicUrl(path);
 
       if (!publicData?.publicUrl) {
-        sharedImage = null;
+        sharedImages.set(userId, null);
         return null;
       }
 
-      // Cache-bust para não ficar preso à imagem anterior da CDN.
-      sharedImage = `${publicData.publicUrl}?v=${Date.now()}`;
-      return sharedImage;
+      const url = `${publicData.publicUrl}?v=${Date.now()}`;
+      sharedImages.set(userId, url);
+      return url;
     } catch {
-      sharedImage = null;
+      sharedImages.set(userId, null);
       return null;
     } finally {
-      sharedImagePromise = null;
+      sharedImagePromises.delete(userId);
     }
   })();
 
-  return sharedImagePromise;
+  sharedImagePromises.set(userId, promise);
+  return promise;
 }
 
-async function saveImage(image: Blob | string, _userId: string) {
+async function saveImage(image: Blob | string, userId: string) {
+  const path = userBackgroundPath(userId);
+
   const { error } = await supabase.storage
     .from(THEME_BUCKET)
-    .upload(GLOBAL_BACKGROUND_PATH, image, {
+    .upload(path, image, {
       upsert: true,
       cacheControl: "0",
       contentType:
@@ -287,26 +305,28 @@ async function saveImage(image: Blob | string, _userId: string) {
 
   const { data } = supabase.storage
     .from(THEME_BUCKET)
-    .getPublicUrl(GLOBAL_BACKGROUND_PATH);
+    .getPublicUrl(path);
 
   const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
 
-  sharedImage = publicUrl;
-  sharedImagePromise = null;
+  sharedImages.set(userId, publicUrl);
+  sharedImagePromises.delete(userId);
   broadcastBackground(publicUrl);
 
   return publicUrl;
 }
 
-async function removeImage(_userId: string) {
+async function removeImage(userId: string) {
+  const path = userBackgroundPath(userId);
+
   const { error } = await supabase.storage
     .from(THEME_BUCKET)
-    .remove([GLOBAL_BACKGROUND_PATH]);
+    .remove([path]);
 
   if (error) throw error;
 
-  sharedImage = null;
-  sharedImagePromise = null;
+  sharedImages.set(userId, null);
+  sharedImagePromises.delete(userId);
   broadcastBackground(null);
 }
 

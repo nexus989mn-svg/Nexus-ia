@@ -39,7 +39,7 @@ function appUrl(): string {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  return "https://i-ia-vercel-fix-real.vercel.app";
+  return "https://auri-ia-vercel-fix-real.vercel.app";
 }
 
 export const getMySubscription = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
