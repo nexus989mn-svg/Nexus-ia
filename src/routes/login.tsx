@@ -47,7 +47,7 @@ function LoginPage() {
       <div className="w-full max-w-md bg-card-glass border border-border rounded-2xl p-6 md:p-8 shadow-elegant">
         <Link to="/" className="flex items-center gap-2 font-display font-bold mb-6">
           <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow">
-            <img src="/auri-logo.png" alt="AURI" className="h-5 w-5 object-contain" />
+            <img src="/auri-logo.png" alt="AURI" className="h-full w-full object-cover rounded-lg" />
           </div>
           {t("nav.brand")}
         </Link>
