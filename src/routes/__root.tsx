@@ -33,6 +33,26 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+
+    // Recupera abas que ficaram com chunks de um deployment anterior.
+    // Os chunks do Vercel são imutáveis e possuem hash no nome.
+    if (
+      typeof window !== "undefined" &&
+      error.message.includes("Failed to fetch dynamically imported module")
+    ) {
+      const key = "auri-dynamic-import-recovery";
+      const now = Date.now();
+      const last = Number(sessionStorage.getItem(key) || "0");
+
+      // Evita loop infinito de reload.
+      if (!Number.isFinite(last) || now - last > 30000) {
+        sessionStorage.setItem(key, String(now));
+
+        const url = new URL(window.location.href);
+        url.searchParams.set("refresh", String(now));
+        window.location.replace(url.toString());
+      }
+    }
   }, [error]);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 text-center">
