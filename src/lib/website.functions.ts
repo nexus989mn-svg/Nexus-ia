@@ -35,7 +35,7 @@ export const getMyWebsite = createServerFn({ method: "GET" })
 
     const companyId = await getCompanyId(context.userId);
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await context.supabase
       .from("company_websites")
       .select("*")
       .eq("company_id", companyId)
@@ -54,7 +54,7 @@ export const saveMyWebsite = createServerFn({ method: "POST" })
 
     const companyId = await getCompanyId(context.userId);
 
-    const { data: saved, error } = await supabaseAdmin
+    const { data: saved, error } = await context.supabase
       .from("company_websites")
       .upsert(
         {

@@ -14,6 +14,13 @@ const messageInput = z.object({
 
 const threadIdInput = z.object({ threadId: z.string().uuid() });
 
+function unwrapInput<T>(input: unknown): T {
+  if (input && typeof input === "object" && "data" in input) {
+    return (input as { data: T }).data;
+  }
+  return input as T;
+}
+
 async function getCompanyId(supabase: any, userId: string) {
   const { data, error } = await supabase
     .from("companies")
@@ -58,7 +65,7 @@ export const listMySupportThreads = createServerFn({ method: "GET" })
 
 export const getMySupportMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => threadIdInput.parse(d))
+  .inputValidator((d) => threadIdInput.parse(unwrapInput(d)))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const thread = await assertThreadOwner(supabase, userId, data.threadId);
@@ -76,7 +83,7 @@ export const getMySupportMessages = createServerFn({ method: "GET" })
 
 export const createSupportThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => threadInput.parse(d))
+  .inputValidator((d) => threadInput.parse(unwrapInput(d)))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const companyId = await getCompanyId(supabase, userId);
@@ -114,7 +121,7 @@ export const createSupportThread = createServerFn({ method: "POST" })
 
 export const sendSupportMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => messageInput.parse(d))
+  .inputValidator((d) => messageInput.parse(unwrapInput(d)))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const thread = await assertThreadOwner(supabase, userId, data.threadId);
@@ -149,7 +156,7 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
 
 export const closeSupportThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => threadIdInput.parse(d))
+  .inputValidator((d) => threadIdInput.parse(unwrapInput(d)))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertThreadOwner(supabase, userId, data.threadId);
