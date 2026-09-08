@@ -64,11 +64,13 @@ function WebsitePage() {
 
     try {
       await saveMyWebsite({
-        url,
-        isActive: true,
-        usageMode: mode,
-        linkMessage: message,
-        bookingInstructions: booking,
+        data: {
+          url,
+          isActive: true,
+          usageMode: mode,
+          linkMessage: message,
+          bookingInstructions: booking,
+        },
       });
 
       setSaved(true);

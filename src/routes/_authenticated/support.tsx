@@ -149,15 +149,22 @@ function SupportPage() {
     event.preventDefault();
     if (!message.trim() || createMutation.isPending) return;
     createMutation.mutate({
-      subject: subject.trim() || copy.newSubject,
-      message: message.trim(),
+      data: {
+        subject: subject.trim() || copy.newSubject,
+        message: message.trim(),
+      },
     });
   };
 
   const submitReply = (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedId || !reply.trim() || sendMutation.isPending) return;
-    sendMutation.mutate({ threadId: selectedId, message: reply.trim() });
+    sendMutation.mutate({
+      data: {
+        threadId: selectedId,
+        message: reply.trim(),
+      },
+    });
   };
 
   return (
@@ -299,7 +306,9 @@ function SupportPage() {
                         size="sm"
                         disabled={closeMutation.isPending}
                         onClick={() => {
-                          if (window.confirm(copy.closeConfirm)) closeMutation.mutate({ threadId: selectedThread.id });
+                          if (window.confirm(copy.closeConfirm)) {
+                            closeMutation.mutate({ data: { threadId: selectedThread.id } });
+                          }
                         }}
                       >
                         {copy.close}
