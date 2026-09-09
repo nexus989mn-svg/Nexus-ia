@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Package, FolderTree, Search, Sparkles, Send, Wand2, Upload, CheckCircle2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Package, FolderTree, Search, Sparkles, Send, Image as ImageIcon, Wand2, Upload, CheckCircle2 } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -38,10 +38,7 @@ import {
   toggleProductActive,
 } from "@/lib/catalog.functions";
 import { catalogAgentChat } from "@/lib/catalog-agent.functions";
-import {
-  createCatalogDesignJob,
-  createCatalogProductImageJob,
-} from "@/lib/catalog-design.functions";
+import { createCatalogDesignJob, createCatalogProductImageJob } from "@/lib/catalog-design.functions";
 import { getMySubscription } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/_authenticated/catalog")({
@@ -303,6 +300,48 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
               <div className="flex gap-2"><Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Ex.: quero cadastrar um X-Burger por R$ 29,90…" /><Button size="icon" onClick={send} disabled={!input.trim() || sending}><Send className="h-4 w-4" /></Button></div>
             </div>
           </div>
+          <div className="rounded-2xl border border-border bg-background/45 p-4 space-y-3">
+            <div className="flex items-center gap-2 font-semibold"><ImageIcon className="h-4 w-4 text-primary" /> Imagem do produto</div>
+            <p className="text-xs text-muted-foreground">Envie uma foto e escolha na conversa se quer usar a original, usar como referência ou gerar uma nova imagem.</p>
+            {imageUrl ? (
+              <div className="space-y-2">
+                <img src={imageUrl} alt="Foto do produto" className="w-full aspect-square object-cover rounded-xl border border-border" />
+                <label className="w-full h-10 rounded-xl border border-border inline-flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-accent">
+                  <Upload className="h-4 w-4" /> Trocar foto
+                  <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.currentTarget.value = ""; }} />
+                </label>
+              </div>
+            ) : (
+              <label className="aspect-square rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 flex flex-col items-center justify-center text-center text-sm text-muted-foreground cursor-pointer hover:bg-primary/10 transition-colors">
+                <Upload className="h-9 w-9 mb-2 text-primary" />
+                <span className="font-medium text-foreground">Adicionar foto do produto</span>
+                <span className="text-xs mt-1">Toque aqui para escolher da galeria ou câmera</span>
+                <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.currentTarget.value = ""; }} />
+              </label>
+            )}
+            <div className="space-y-2 rounded-xl border border-border bg-background/40 p-3">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Imagem deste produto</div>
+              <div className="grid grid-cols-3 gap-2">
+                <Button type="button" size="sm" variant={imageMode === "original" ? "default" : "outline"} onClick={() => setImageMode("original")}>Usar foto</Button>
+                <Button type="button" size="sm" variant={imageMode === "reference" ? "default" : "outline"} onClick={() => setImageMode("reference")} disabled={!imageUrl}>Referência</Button>
+                <Button type="button" size="sm" variant={imageMode === "generate" ? "default" : "outline"} onClick={() => setImageMode("generate")} disabled={!draft?.name}>Gerar nova</Button>
+              </div>
+              {imageMode === "generate" && (
+                <Button type="button" className="w-full" disabled={imageGenerating || !draft?.name} onClick={async () => {
+                  setImageGenerating(true);
+                  try {
+                    const result = await createImageJob({ data: { productName: String(draft.name), productDescription: String(draft.description || ""), styleBrief: "Imagem profissional de produto para catálogo comercial, fundo limpo, iluminação de estúdio, aparência realista e apresentação premium.", referenceImageUrl: imageUrl, referenceUrls: [] } });
+                    toast.success(`Imagem enviada para a IA Designer (${result.job.id.slice(0, 8)})`);
+                    setMessages((m) => [...m, { role: "assistant", content: "Enviei a imagem para a IA Designer interna. Ela vai produzir a imagem e devolver o resultado para este produto." }]);
+                  } catch (e) { toast.error(e instanceof Error ? e.message : "Não foi possível enviar para a IA Designer"); }
+                  finally { setImageGenerating(false); }
+                }}>
+                  <Wand2 className="h-4 w-4 mr-2" />{imageGenerating ? "Enviando para Designer…" : "Gerar imagem com IA Designer"}
+                </Button>
+              )}
+            </div>
+            {draft && <div className="rounded-xl border border-primary/20 bg-primary/5 p-3"><div className="text-xs uppercase tracking-widest text-primary">Prévia pronta</div><div className="font-semibold mt-1">{draft.name}</div><div className="text-sm text-primary mt-1">R$ {(Number(draft.price_cents || 0) / 100).toFixed(2).replace(".", ",")}</div><p className="text-xs text-muted-foreground mt-1 line-clamp-3">{draft.description}</p><Button className="w-full mt-3" onClick={saveDraft}>Salvar produto</Button></div>}
+          </div>
         </div>
       )}
     </section>
@@ -369,51 +408,6 @@ function CategoryDialog({ category, onSaved }: { category?: Category; onSaved: (
     is_active: category?.is_active ?? true,
   });
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-
-  const uploadProductImage = async (file: File) => {
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth.user;
-
-    if (!user) {
-      toast.error("Sessão expirada. Entre novamente.");
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-
-      const { error } = await supabase.storage
-        .from("catalog-assets")
-        .upload(path, file, {
-          contentType: file.type || "image/jpeg",
-          upsert: false,
-        });
-
-      if (error) throw new Error(error.message);
-
-      const { data } =
-        supabase.storage.from("catalog-assets").getPublicUrl(path);
-
-      setForm((f) => ({
-        ...f,
-        image_url: data.publicUrl,
-      }));
-
-      toast.success("Foto do produto carregada");
-    } catch (e) {
-      toast.error(
-        e instanceof Error
-          ? e.message
-          : "Falha ao carregar a foto"
-      );
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const submit = async () => {
     setSaving(true);
@@ -741,78 +735,9 @@ function ProductDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Foto do produto</Label>
-
-            {form.image_url ? (
-              <div className="space-y-2">
-                <img
-                  src={form.image_url}
-                  alt={form.name || "Foto do produto"}
-                  className="w-full h-40 object-cover rounded-xl border border-border bg-muted"
-                />
-
-                <label className="w-full h-10 rounded-xl border border-border inline-flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-accent">
-                  <Upload className="h-4 w-4" />
-                  {uploading ? "Enviando…" : "Trocar foto"}
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    disabled={uploading}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-
-                      if (file) {
-                        uploadProductImage(file);
-                      }
-
-                      e.currentTarget.value = "";
-                    }}
-                  />
-                </label>
-              </div>
-            ) : (
-              <label className="w-full min-h-28 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 flex flex-col items-center justify-center text-center text-sm text-muted-foreground cursor-pointer hover:bg-primary/10 transition-colors p-4">
-                <Upload className="h-7 w-7 mb-2 text-primary" />
-
-                <span className="font-medium text-foreground">
-                  Carregar foto do produto
-                </span>
-
-                <span className="text-xs mt-1">
-                  Toque para escolher da galeria ou câmera
-                </span>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={uploading}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-
-                    if (file) {
-                      uploadProductImage(file);
-                    }
-
-                    e.currentTarget.value = "";
-                  }}
-                />
-              </label>
-            )}
-
-            <Input
-              value={form.image_url ?? ""}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  image_url: e.target.value,
-                })
-              }
-              placeholder="Ou cole uma URL de imagem…"
-            />
+          <div>
+            <Label>URL da imagem</Label>
+            <Input value={form.image_url ?? ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://…" />
           </div>
           <div className="flex items-center gap-2">
             <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} id="prod-active" />
