@@ -369,51 +369,6 @@ function CategoryDialog({ category, onSaved }: { category?: Category; onSaved: (
     is_active: category?.is_active ?? true,
   });
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-
-  const uploadProductImage = async (file: File) => {
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth.user;
-
-    if (!user) {
-      toast.error("Sessão expirada. Entre novamente.");
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-
-      const { error } = await supabase.storage
-        .from("catalog-assets")
-        .upload(path, file, {
-          contentType: file.type || "image/jpeg",
-          upsert: false,
-        });
-
-      if (error) throw new Error(error.message);
-
-      const { data } =
-        supabase.storage.from("catalog-assets").getPublicUrl(path);
-
-      setForm((f) => ({
-        ...f,
-        image_url: data.publicUrl,
-      }));
-
-      toast.success("Foto do produto carregada");
-    } catch (e) {
-      toast.error(
-        e instanceof Error
-          ? e.message
-          : "Falha ao carregar a foto"
-      );
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const submit = async () => {
     setSaving(true);
@@ -643,6 +598,51 @@ function ProductDialog({
     is_active: product?.is_active ?? true,
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadProductImage = async (file: File) => {
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth.user;
+
+    if (!user) {
+      toast.error("Sessão expirada. Entre novamente.");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+
+      const { error } = await supabase.storage
+        .from("catalog-assets")
+        .upload(path, file, {
+          contentType: file.type || "image/jpeg",
+          upsert: false,
+        });
+
+      if (error) throw new Error(error.message);
+
+      const { data } =
+        supabase.storage.from("catalog-assets").getPublicUrl(path);
+
+      setForm((f) => ({
+        ...f,
+        image_url: data.publicUrl,
+      }));
+
+      toast.success("Foto do produto carregada");
+    } catch (e) {
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : "Falha ao carregar a foto"
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const submit = async () => {
     setSaving(true);
