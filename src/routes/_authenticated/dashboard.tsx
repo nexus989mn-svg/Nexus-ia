@@ -127,10 +127,10 @@ function Dashboard() {
       disabled: false,
     },
     {
-      title: t("landing.websiteTitle"),
-      desc: t("landing.websiteDesc"),
+      title: "Cadastre seu site",
+      desc: "Adicione o site da sua empresa para integrar as informações à IA.",
       to: "/website",
-      cta: t("landing.websiteCta", { defaultValue: "Cadastrar site" }),
+      cta: "Cadastrar site",
       icon: Globe,
       done: false,
       disabled: false,
