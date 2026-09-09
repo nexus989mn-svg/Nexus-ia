@@ -1,5 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { LayoutDashboard, CreditCard, Shield, LogOut, MessageCircle, Sparkles, Menu, X, Phone, User as UserIcon, Building2, LifeBuoy } from "lucide-react";
+import { LayoutDashboard, CreditCard, Shield, LogOut, MessageCircle, Sparkles, Menu, X, Phone, User as UserIcon, Building2, LifeBuoy, Package } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ const items: Item[] = [
   { to: "/agent", key: "agent", label: "Central interna", icon: Sparkles, adminOnly: true },
   { to: "/training", key: "training", label: "Treine sua IA", icon: Sparkles },
   { to: "/whatsapp", key: "whatsapp", label: "WhatsApp", icon: Phone },
+  { to: "/catalog", key: "catalog", label: "Catálogo", icon: Package },
   { to: "/company", key: "company", label: "Empresa", icon: Building2 },
   { to: "/profile", key: "profile", label: "Perfil", icon: UserIcon },
   { to: "/support", key: "support", label: "Suporte", icon: LifeBuoy },

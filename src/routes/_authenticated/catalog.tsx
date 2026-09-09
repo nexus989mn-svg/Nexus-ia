@@ -166,7 +166,7 @@ function CatalogPage() {
               />
             </div>
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
-              O pedido usa os produtos e categorias já cadastrados. A criação visual será processada internamente e entregue pelo fluxo de catálogo/Canva.
+              O pedido usa os produtos e categorias já cadastrados. A criação visual será processada internamente pelo executor do catálogo.
             </div>
           </div>
           <DialogFooter>
