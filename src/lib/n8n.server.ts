@@ -12,6 +12,7 @@ export type N8nChatPayload = {
   temperature?: number;
   maxTokens?: number;
   customPrompt?: string;
+  imageUrl?: string | null;
   isAdmin?: boolean;
 };
 

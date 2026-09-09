@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { nexusChat } from "@/lib/nexus.server";
+import { callN8nChat } from "@/lib/n8n.server";
 import { requireActiveSubscription } from "@/lib/security.server";
 
 const messageSchema = z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(8000) });
@@ -37,7 +37,31 @@ Empresa: ${company.name}. Categorias existentes: ${(categories ?? []).map((c) =>
       messages.push(...data.messages);
     }
 
-    const reply = await nexusChat(messages, { temperature: 0.35, max_tokens: 2200 });
+    const lastMessage = data.messages[data.messages.length - 1]?.content ?? "";
+
+    const result = await callN8nChat({
+      userId,
+      companyId: company.id,
+      companyName: company.name,
+      conversationId: `catalog:${userId}`,
+      moduleCode: "catalogo",
+      message: lastMessage,
+      messages: data.messages,
+      systemPrompt: system,
+      temperature: 0.35,
+      maxTokens: 2200,
+      imageUrl: data.imageUrl ?? null,
+      isAdmin: false,
+    });
+
+    if (!result) {
+      throw new Error("Integração n8n não está configurada ou está desativada.");
+    }
+
+    const reply = String(result.output ?? "").trim();
+    if (!reply) {
+      throw new Error("O fluxo do Catálogo no n8n não retornou uma resposta.");
+    }
     const match = reply.match(/<CATALOG_DRAFT>\s*([\s\S]*?)\s*<\/CATALOG_DRAFT>/i);
     let draft: any = null;
     if (match) {
