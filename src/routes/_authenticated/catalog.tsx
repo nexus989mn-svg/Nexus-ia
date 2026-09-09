@@ -248,8 +248,68 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
     setSending(true);
     try {
       const result = await runAgent({ data: { messages: next, imageUrl } });
-      setMessages((m) => [...m, { role: "assistant", content: result.reply }]);
-      if (result.draft) setDraft(result.draft);
+
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: result.reply },
+      ]);
+
+      if (result.draft) {
+        setDraft(result.draft);
+      }
+
+      if (result.needsDesigner) {
+        setImageGenerating(true);
+
+        try {
+          const productName =
+            result.draft?.name ||
+            text
+              .replace(/^(gere|gerar|crie|criar|faça|fazer|melhore|melhorar)\\s+/i, "")
+              .trim() ||
+            "Produto do catálogo";
+
+          const job = await createImageJob({
+            data: {
+              productName,
+              productDescription: String(
+                result.draft?.description || ""
+              ),
+              styleBrief: text,
+              referenceImageUrl: imageUrl,
+              referenceUrls: [],
+            },
+          });
+
+          setMessages((m) => [
+            ...m,
+            {
+              role: "assistant",
+              content:
+                "Perfeito. Encaminhei a produção para a IA Designer. A arte será processada pelo Executor.",
+            },
+          ]);
+        } catch (e) {
+          const message =
+            e instanceof Error
+              ? e.message
+              : "Não foi possível iniciar a produção visual.";
+
+          setMessages((m) => [
+            ...m,
+            {
+              role: "assistant",
+              content:
+                "Entendi o pedido, mas não consegui iniciar a produção visual: " +
+                message,
+            },
+          ]);
+
+          toast.error(message);
+        } finally {
+          setImageGenerating(false);
+        }
+      }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Falha no Agente de Catálogo";
       setMessages((m) => [...m, { role: "assistant", content: `Não consegui processar agora: ${message}` }]);
