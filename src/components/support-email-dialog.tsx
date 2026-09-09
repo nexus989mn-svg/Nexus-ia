@@ -31,7 +31,12 @@ export function SupportEmailDialog({ open, onOpenChange }: Props) {
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!subject.trim() || !message.trim() || mutation.isPending) return;
-    mutation.mutate({ subject: subject.trim(), message: message.trim() });
+    mutation.mutate({
+      data: {
+        subject: subject.trim(),
+        message: message.trim(),
+      },
+    });
   };
 
   return (
