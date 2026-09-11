@@ -166,7 +166,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
   };
 
   const [messages, setMessages] = useState<CatalogMessage[]>([
-    { role: "assistant", content: "Vamos criar seu produto. Me diga o nome e o que você quer cadastrar. Depois eu vou perguntar só o que estiver faltando." },
+    { role: "assistant", content: "Olá! O que você quer montar no seu catálogo? Pode me explicar do jeito que quiser. Eu vou entender o que você precisa e conduzir a criação com você." },
   ]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
