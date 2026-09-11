@@ -16,8 +16,8 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
   DialogTrigger,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -38,7 +38,6 @@ import {
   toggleProductActive,
 } from "@/lib/catalog.functions";
 import { catalogAgentChat } from "@/lib/catalog-agent.functions";
-import { createCatalogDesignJob } from "@/lib/catalog-design.functions";
 import { getCatalogExecutionJob } from "@/lib/catalog-design.functions";
 import { getMySubscription } from "@/lib/billing.functions";
 
@@ -98,11 +97,6 @@ function CatalogPage() {
   const products: Product[] = data?.products ?? [];
   const hasAccess = !!subData?.hasAccess;
   const refresh = () => qc.invalidateQueries({ queryKey: ["catalog"] });
-  const createDesignJob = useServerFn(createCatalogDesignJob);
-  const [designOpen, setDesignOpen] = useState(false);
-  const [designBrief, setDesignBrief] = useState("");
-  const [designRefs, setDesignRefs] = useState("");
-  const [designing, setDesigning] = useState(false);
 
   if (user && !subLoading && !isAdmin && !hasAccess) {
     return (
@@ -126,13 +120,10 @@ function CatalogPage() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Catálogo</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Gerencie categorias e produtos. O atendimento usa este catálogo para responder seus clientes.
+            Crie e organize seu catálogo conversando com o assistente. O atendimento usa este catálogo para responder seus clientes.
           </p>
         </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
-            <Button variant="outline" onClick={() => setDesignOpen(true)} disabled={!products.length}>
-              <Sparkles className="h-4 w-4 mr-2" /> Criar catálogo profissional
-            </Button>
             <div className="flex items-center gap-2 text-xs text-muted-foreground rounded-full border border-border px-3 py-1.5 bg-background/40">
               <Package className="h-4 w-4" /> {products.length} produtos · {categories.length} categorias
             </div>
@@ -141,52 +132,6 @@ function CatalogPage() {
       </div>
 
       <CatalogAIAgent categories={categories} products={products} onSaved={refresh} />
-
-      <Dialog open={designOpen} onOpenChange={setDesignOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Criar catálogo profissional</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <Label>Como você quer o catálogo?</Label>
-              <Textarea
-                value={designBrief}
-                onChange={(e) => setDesignBrief(e.target.value)}
-                rows={6}
-                placeholder="Ex.: catálogo premium para WhatsApp, preto e dourado, 10 páginas, capa, categorias, produtos, combos e contato."
-              />
-            </div>
-            <div>
-              <Label>Referências (opcional)</Label>
-              <Textarea
-                value={designRefs}
-                onChange={(e) => setDesignRefs(e.target.value)}
-                rows={4}
-                placeholder="Cole uma URL por linha de sites, imagens ou referências visuais."
-              />
-            </div>
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
-              O pedido usa os produtos e categorias já cadastrados. A criação visual será processada internamente pelo executor do catálogo.
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDesignOpen(false)}>Cancelar</Button>
-            <Button disabled={designing} onClick={async () => {
-              setDesigning(true);
-              try {
-                const references = designRefs.split(/\n+/).map((v) => v.trim()).filter(Boolean).filter((v) => /^https?:\/\//i.test(v));
-                const result = await createDesignJob({ data: { brief: designBrief, references } });
-                toast.success(`Pedido de catálogo criado (${result.job.id.slice(0, 8)})`);
-                setDesignOpen(false);
-                setDesignBrief("");
-                setDesignRefs("");
-              } catch (e) { toast.error(e instanceof Error ? e.message : "Não foi possível iniciar o catálogo"); }
-              finally { setDesigning(false); }
-            }}>{designing ? "Preparando…" : "Criar catálogo"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Tabs defaultValue="products" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">
@@ -227,7 +172,6 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const [draft, setDraft] = useState<any>(null);
-  const [imageGenerating, setImageGenerating] = useState(false);
   const [imageMode, setImageMode] = useState<"original" | "reference" | "generate">("original");
 
   const uploadImage = async (file: File) => {
@@ -286,7 +230,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
        * o resultado desse job e entrega o resultado na conversa.
        */
       if (result.jobId) {
-        setImageGenerating(true);
+
 
         try {
           const started = Date.now();
@@ -378,7 +322,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
             },
           ]);
         } finally {
-          setImageGenerating(false);
+
         }
       }
     } catch (e) {
@@ -456,7 +400,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
                 <label className="h-9 px-3 rounded-lg border border-border inline-flex items-center gap-2 text-xs cursor-pointer hover:bg-accent"><Upload className="h-4 w-4" />{uploading ? "Enviando…" : "Foto"}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.currentTarget.value = ""; }} /></label>
                 {imageUrl && <span className="text-xs text-primary flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" />Imagem anexada</span>}
               </div>
-              <div className="flex gap-2"><Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Ex.: quero cadastrar um X-Burger por R$ 29,90…" /><Button size="icon" onClick={send} disabled={!input.trim() || sending}><Send className="h-4 w-4" /></Button></div>
+              <div className="flex gap-2"><Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Ex.: quero criar um catálogo completo para minha barbearia…" /><Button size="icon" onClick={send} disabled={!input.trim() || sending}><Send className="h-4 w-4" /></Button></div>
             </div>
           </div>
         </div>
