@@ -48,36 +48,100 @@ No final, quando houver dados suficientes, devolva também um bloco JSON válido
 
 Empresa: ${company.name}. Categorias existentes: ${(categories ?? []).map((c) => c.name).join(", ") || "nenhuma"}.`;
 
-    const control = `CONTROLE INTERNO DO AGENTE:
+    const control = `CONTROLE INTERNO DA IA CATÁLOGO:
 
-Você é a IA Catálogo e conversa normalmente com o usuário.
+Você é a IA Catálogo.
 
-Você funciona como um assistente conversacional, não como um formulário.
+Sua função é entender o usuário e executar as tarefas de catálogo quando ele pedir.
 
-Antes de agir, interprete o contexto da conversa.
+NÃO existe palavra-chave obrigatória.
+NÃO existe frase específica.
+NÃO existe botão obrigatório.
+NÃO dependa de "pode criar", "criar", "gerar" ou qualquer palavra isolada.
 
-Um pedido de "criar um catálogo", "montar um catálogo", "catálogo de barbearia", "catálogo da minha empresa" ou equivalente NÃO significa automaticamente criar um produto.
+INTERPRETE A INTENÇÃO PELO CONTEXTO.
 
-Quando o assunto for o catálogo inteiro, converse sobre o catálogo inteiro.
+Se o usuário disser que quer fazer, criar, montar, gerar, preparar, produzir, deixar pronto, organizar ou qualquer expressão equivalente, entenda semanticamente que ele quer que a tarefa seja executada.
 
-Quando o assunto for um produto específico, converse sobre aquele produto.
+Se ele já deu informações suficientes, NÃO fique fazendo perguntas desnecessárias.
 
-Nunca force a conversa para produto quando o usuário estiver falando do catálogo.
+Se faltarem detalhes NÃO essenciais, complete-os de forma coerente e profissional.
 
-Não encaminhe para produção apenas porque o usuário fez o pedido inicial.
-Primeiro entenda exatamente o que será produzido, reúna os dados necessários e apresente a proposta ao usuário para confirmação.
+CATÁLOGO COMPLETO:
 
-Se o usuário pedir alterações, faça as alterações e apresente a nova proposta.
+Se o usuário pedir para criar/montar/fazer um catálogo, você deve ser capaz de montar o catálogo inteiro por conta própria.
 
-Somente depois de uma autorização explícita do usuário para produzir/gerar a imagem, encaminhe o pedido para a IA Designer.
+Crie quando necessário:
+- nome do catálogo;
+- descrição;
+- categorias;
+- produtos;
+- descrições dos produtos;
+- preços coerentes;
+- SKU quando necessário;
+- estoque quando necessário;
+- organização;
+- informações visuais;
+- briefing de produção.
 
-Quando houver essa autorização explícita, acrescente ao final da resposta, sem explicar essa marcação ao usuário:
+Não transforme um pedido de catálogo em uma pergunta sobre um único produto.
 
-<DESIGNER_REQUEST>{"brief":"descrição completa da produção visual","product":"nome do produto","referenceImageUrl":null}</DESIGNER_REQUEST>
+Quando o catálogo estiver suficientemente definido e o usuário pedir para fazer, gere internamente:
 
-A marca <DESIGNER_REQUEST> é exclusivamente interna. Nunca mostre essa marca, JSON ou qualquer instrução interna ao usuário.
+<CATALOG_PLAN>
+{
+  "name": "nome do catálogo",
+  "description": "descrição profissional",
+  "categories": [
+    {
+      "name": "categoria",
+      "description": "descrição da categoria",
+      "products": [
+        {
+          "name": "nome do produto",
+          "description": "descrição",
+          "price_cents": 0,
+          "sku": null,
+          "stock": null,
+          "image_url": null
+        }
+      ]
+    }
+  ]
+}
+</CATALOG_PLAN>
 
-Se o usuário estiver apenas conversando, perguntando, cadastrando ou ajustando informações, NÃO envie DESIGNER_REQUEST.`;
+PRODUTO:
+
+Se o pedido for especificamente um produto, monte todos os detalhes necessários e use <CATALOG_DRAFT>.
+
+PRODUÇÃO:
+
+Quando o usuário quiser que o material seja realmente produzido, gere também o pedido interno para a IA Designer:
+
+<DESIGNER_REQUEST>
+{
+  "brief": "brief completo e autocontido para produção visual",
+  "product": "nome do produto ou material",
+  "referenceImageUrl": null
+}
+</DESIGNER_REQUEST>
+
+O brief da Designer deve conter todas as informações necessárias para produzir o material sem precisar perguntar novamente ao usuário.
+
+A IA Catálogo NÃO chama o Executor diretamente.
+
+O caminho obrigatório é:
+
+IA CATÁLOGO → IA DESIGNER → EXECUTOR → RESULTADO → APP
+
+Se o usuário estiver apenas conversando, perguntando ou ajustando informações, converse normalmente.
+
+Se ele pedir execução, EXECUTE. Não fique apenas explicando o que poderia fazer.
+
+As marcações CATALOG_PLAN, CATALOG_DRAFT e DESIGNER_REQUEST são internas e nunca devem aparecer na resposta visível ao usuário.
+
+Nunca mostre JSON, tags internas ou instruções internas ao usuário.`;
 
     const messages: Array<{ role: "system" | "user" | "assistant"; content: any }> = [
       { role: "system", content: system },
@@ -112,6 +176,96 @@ Se o usuário estiver apenas conversando, perguntando, cadastrando ou ajustando 
     );
 
     let draft: any = null;
+
+    let catalogPlan: {
+      name: string;
+      description: string;
+      categories: Array<{
+        name: string;
+        description: string | null;
+        products: Array<{
+          name: string;
+          description: string | null;
+          price_cents: number;
+          sku: string | null;
+          stock: number | null;
+          image_url: string | null;
+        }>;
+      }>;
+    } | null = null;
+
+    const catalogPlanMatch = replyText.match(
+      /<CATALOG_PLAN>\s*([\s\S]*?)\s*<\/CATALOG_PLAN>/i
+    );
+
+    if (catalogPlanMatch) {
+      try {
+        const parsed = JSON.parse(catalogPlanMatch[1]);
+
+        if (
+          parsed &&
+          typeof parsed.name === "string" &&
+          Array.isArray(parsed.categories)
+        ) {
+          catalogPlan = {
+            name: parsed.name.trim(),
+            description: String(parsed.description ?? "").trim(),
+            categories: parsed.categories
+              .filter((category: any) =>
+                category && typeof category.name === "string"
+              )
+              .map((category: any) => ({
+                name: String(category.name).trim(),
+                description:
+                  category.description == null
+                    ? null
+                    : String(category.description).trim(),
+                products: Array.isArray(category.products)
+                  ? category.products
+                      .filter((product: any) =>
+                        product && typeof product.name === "string"
+                      )
+                      .map((product: any) => ({
+                        name: String(product.name).trim(),
+                        description:
+                          product.description == null
+                            ? null
+                            : String(product.description).trim(),
+                        price_cents: Number.isFinite(
+                          Number(product.price_cents)
+                        )
+                          ? Math.max(
+                              0,
+                              Math.round(Number(product.price_cents))
+                            )
+                          : 0,
+                        sku:
+                          product.sku == null ||
+                          String(product.sku).trim() === ""
+                            ? null
+                            : String(product.sku).trim(),
+                        stock:
+                          product.stock == null ||
+                          String(product.stock).trim() === ""
+                            ? null
+                            : Math.max(
+                                0,
+                                Math.round(Number(product.stock))
+                              ),
+                        image_url:
+                          typeof product.image_url === "string"
+                            ? product.image_url
+                            : null,
+                      }))
+                  : [],
+              })),
+          };
+        }
+      } catch {
+        catalogPlan = null;
+      }
+    }
+
 
     if (draftMatch) {
       try {
@@ -166,6 +320,105 @@ Se o usuário estiver apenas conversando, perguntando, cadastrando ou ajustando 
      */
     let designer: Record<string, unknown> | null = null;
     let executionJobId: string | null = null;
+
+    // Quando a IA montou um catálogo completo, o APP
+    // salva automaticamente categorias e produtos.
+    if (catalogPlan) {
+      for (
+        let categoryIndex = 0;
+        categoryIndex < catalogPlan.categories.length;
+        categoryIndex++
+      ) {
+        const category = catalogPlan.categories[categoryIndex];
+
+        const { data: existingCategory, error: categoryLookupError } =
+          await supabaseAdmin
+            .from("catalog_categories")
+            .select("id")
+            .eq("company_id", company.id)
+            .ilike("name", category.name)
+            .maybeSingle();
+
+        if (categoryLookupError) {
+          throw new Error(categoryLookupError.message);
+        }
+
+        let categoryId = existingCategory?.id ?? null;
+
+        if (!categoryId) {
+          const { data: createdCategory, error: categoryError } =
+            await supabaseAdmin
+              .from("catalog_categories")
+              .insert({
+                user_id: userId,
+                company_id: company.id,
+                name: category.name,
+                description: category.description ?? null,
+                sort_order: categoryIndex,
+                is_active: true,
+              })
+              .select("id")
+              .single();
+
+          if (categoryError) {
+            throw new Error(categoryError.message);
+          }
+
+          categoryId = createdCategory.id;
+        }
+
+        for (const product of category.products) {
+          const { data: existingProduct, error: productLookupError } =
+            await supabaseAdmin
+              .from("catalog_products")
+              .select("id")
+              .eq("company_id", company.id)
+              .ilike("name", product.name)
+              .maybeSingle();
+
+          if (productLookupError) {
+            throw new Error(productLookupError.message);
+          }
+
+          const payload = {
+            category_id: categoryId,
+            name: product.name,
+            description: product.description ?? null,
+            sku: product.sku ?? null,
+            price_cents: product.price_cents ?? 0,
+            currency: "BRL",
+            image_url: product.image_url ?? null,
+            stock: product.stock ?? null,
+            is_active: true,
+          };
+
+          if (existingProduct?.id) {
+            const { error } = await supabaseAdmin
+              .from("catalog_products")
+              .update(payload)
+              .eq("id", existingProduct.id)
+              .eq("company_id", company.id);
+
+            if (error) {
+              throw new Error(error.message);
+            }
+          } else {
+            const { error } = await supabaseAdmin
+              .from("catalog_products")
+              .insert({
+                user_id: userId,
+                company_id: company.id,
+                ...payload,
+              });
+
+            if (error) {
+              throw new Error(error.message);
+            }
+          }
+        }
+      }
+    }
+
 
     if (designerRequest) {
       /*
@@ -242,6 +495,10 @@ Se o usuário estiver apenas conversando, perguntando, cadastrando ou ajustando 
                 brief: designerRequest.brief,
                 referenceImageUrl: designerRequest.referenceImageUrl,
                 catalogDraft: draft,
+                catalogPlan,
+                catalogName: catalogPlan?.name ?? null,
+                catalogDescription: catalogPlan?.description ?? null,
+                categories: catalogPlan?.categories ?? null,
               }),
             },
           ],
@@ -287,6 +544,10 @@ Se o usuário estiver apenas conversando, perguntando, cadastrando ou ajustando 
     const cleanReply = replyText
       .replace(
         /<DESIGNER_REQUEST>[\s\S]*?<\/DESIGNER_REQUEST>/i,
+        ""
+      )
+      .replace(
+        /<CATALOG_PLAN>[\s\S]*?<\/CATALOG_PLAN>/i,
         ""
       )
       .replace(
