@@ -154,9 +154,9 @@ Empresa: ${company.name}. Categorias existentes: ${(categories ?? []).map((c) =>
         ""
       )
       // O cliente recebe texto limpo, sem marcação Markdown.
-      .replace(/\\*\\*/g, "")
-      .replace(/^\\s*[-•]\\s*/gm, "")
-      .replace(/\\n{3,}/g, "\\n\\n")
+      .replace(/\*\*/g, "")
+      .replace(/^\s*[-•]\s*/gm, "")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
 
     const designerData = designer ?? {};
