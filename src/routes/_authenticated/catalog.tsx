@@ -211,7 +211,8 @@ function CatalogPage() {
 function CatalogAIAgent({ categories, products, onSaved }: { categories: Category[]; products: Product[]; onSaved: () => void }) {
   const { user } = useAuth();
   const runAgent = useServerFn(catalogAgentChat);
-  const createImageJob = useServerFn(createCatalogProductImageJob);
+  // A produção visual não é disparada diretamente pelo APP.
+  // A IA Catálogo decide quando encaminhar para a IA Designer.
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([

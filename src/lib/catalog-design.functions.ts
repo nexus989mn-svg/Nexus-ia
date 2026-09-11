@@ -132,3 +132,28 @@ export const createCatalogDesignJob = createServerFn({ method: "POST" })
 
     return { job };
   });
+
+
+export const getCatalogExecutionJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      jobId: z.string().uuid(),
+    }).parse(d ?? {})
+  )
+  .handler(async ({ context, data }) => {
+    await requireActiveSubscription(context.userId);
+    const companyId = await getCompanyId(context.userId);
+
+    const { data: job, error } = await supabaseAdmin
+      .from("agent_execution_jobs")
+      .select("id,status,result,error_message,created_at,started_at,completed_at,updated_at")
+      .eq("id", data.jobId)
+      .eq("company_id", companyId)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!job) throw new Error("Produção não encontrada.");
+
+    return { job };
+  });
