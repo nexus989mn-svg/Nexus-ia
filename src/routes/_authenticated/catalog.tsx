@@ -427,7 +427,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
       <div className="p-5 md:p-6 flex items-start justify-between gap-4">
         <div className="flex gap-3 min-w-0">
           <div className="h-11 w-11 shrink-0 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center"><Sparkles className="h-5 w-5 text-primary" /></div>
-          <div><div className="text-xs uppercase tracking-widest text-primary font-semibold">Assistente de catálogo</div><h2 className="text-lg md:text-xl font-bold mt-1">Crie produtos conversando com o assistente</h2><p className="text-sm text-muted-foreground mt-1">Converse, envie sua própria foto ou peça uma nova. A IA Designer trabalha internamente quando você escolher gerar.</p></div>
+          <div><div className="text-xs uppercase tracking-widest text-primary font-semibold">Assistente de catálogo</div><h2 className="text-lg md:text-xl font-bold mt-1">Crie produtos conversando com o assistente</h2><p className="text-sm text-muted-foreground mt-1">Converse, envie sua própria foto ou peça uma nova.</p></div>
         </div>
         <Button onClick={() => setOpen((v) => !v)} className="shrink-0 bg-gradient-primary"><Wand2 className="h-4 w-4 mr-2" />{open ? "Fechar" : "Criar com IA"}</Button>
       </div>

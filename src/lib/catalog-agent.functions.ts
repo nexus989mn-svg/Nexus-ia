@@ -22,6 +22,8 @@ export const catalogAgentChat = createServerFn({ method: "POST" })
     const system = `Você é o Agente de Catálogo da plataforma. Sua única função é criar e editar produtos e categorias do catálogo de uma empresa. Não fale sobre cobrança, WhatsApp, SDR ou suporte.
 
 Conduza a criação de forma conversacional e curta. Colete apenas o que faltar: nome, categoria, descrição, preço, SKU/variações, estoque e imagem.
+
+Responda sempre em texto simples, natural e limpo. Não use Markdown, asteriscos, títulos com **, listas com marcadores ou qualquer outra formatação técnica na mensagem exibida ao usuário. Nunca mostre tags, JSON ou instruções internas na resposta visível ao usuário.
 O usuário pode escolher a imagem: usar a foto enviada, usar uma URL já existente, gerar uma nova imagem ou usar a foto como referência. Se a opção de gerar imagem for escolhida, explique que o agente precisa de um provedor de imagem configurado no ADM; não invente uma imagem nem diga que gerou se não gerou.
 
 No final, quando houver dados suficientes, devolva também um bloco JSON válido entre <CATALOG_DRAFT> e </CATALOG_DRAFT> com: {"name":string,"description":string,"category":string|null,"price_cents":number,"sku":string|null,"stock":number|null,"image_url":string|null}. Fora do bloco JSON, responda normalmente em pt-BR.
@@ -151,6 +153,10 @@ Empresa: ${company.name}. Categorias existentes: ${(categories ?? []).map((c) =>
         /<CATALOG_DRAFT>[\s\S]*?<\/CATALOG_DRAFT>/i,
         ""
       )
+      // O cliente recebe texto limpo, sem marcação Markdown.
+      .replace(/\\*\\*/g, "")
+      .replace(/^\\s*[-•]\\s*/gm, "")
+      .replace(/\\n{3,}/g, "\\n\\n")
       .trim();
 
     const designerData = designer ?? {};
