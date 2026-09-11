@@ -135,35 +135,123 @@ Se o usuário estiver apenas conversando, perguntando, cadastrando ou ajustando 
      * A Designer é quem segue para o fluxo/executor existente.
      */
     let designer: Record<string, unknown> | null = null;
+    let executionJobId: string | null = null;
 
     if (designerRequest) {
-      const designerResult = await callN8nChat({
-        userId,
-        companyId: company.id,
-        companyName: company.name,
-        conversationId: `catalog:${userId}`,
-        moduleCode: "designer",
-        message: designerRequest.brief,
-        messages: [
-          {
-            role: "user",
-            content: JSON.stringify({
-              product: designerRequest.product,
-              brief: designerRequest.brief,
-              referenceImageUrl: designerRequest.referenceImageUrl,
-              catalogDraft: draft,
-            }),
-          },
-        ],
-        systemPrompt:
-          "Você é a IA Designer. Receba o pedido encaminhado pela IA Catálogo, prepare a produção visual e encaminhe a produção pelo fluxo existente. Você é a única IA responsável por acionar a produção. Não responda como IA Catálogo e não altere o pedido do cliente.",
-        temperature: 0.35,
-        maxTokens: 2200,
-        imageUrl: designerRequest.referenceImageUrl,
-        isAdmin: false,
-      });
+      /*
+       * O APP cria o job ANTES de chamar a IA Designer.
+       * Assim a Designer recebe um jobId real e o mesmo ID
+       * pode ser acompanhado pelo APP até a conclusão.
+       *
+       * Não existe botão/gatilho de produção aqui.
+       * A entrada neste bloco acontece somente quando a IA Catálogo
+       * decidiu, pelo contexto da conversa, que houve autorização explícita.
+       */
+      const { data: designerInstance, error: designerInstanceError } =
+        await supabaseAdmin
+          .from("company_agent_instances")
+          .select("id")
+          .eq("company_id", company.id)
+          .eq("module_code", "designer")
+          .maybeSingle();
 
-      designer = designerResult as Record<string, unknown> | null;
+      if (designerInstanceError) {
+        throw new Error(designerInstanceError.message);
+      }
+
+      executionJobId = crypto.randomUUID();
+
+      const jobPayload = {
+        companyId: company.id,
+        userId,
+        conversationId: `catalog:${userId}`,
+        jobId: executionJobId,
+        assetType: "catalog_product_image",
+        product: designerRequest.product,
+        brief: designerRequest.brief,
+        referenceImageUrl: designerRequest.referenceImageUrl,
+        catalogDraft: draft,
+        status: "queued",
+      };
+
+      const { error: jobError } = await supabaseAdmin
+        .from("agent_execution_jobs")
+        .insert({
+          id: executionJobId,
+          company_id: company.id,
+          agent_instance_id: designerInstance?.id ?? null,
+          job_type: "catalog_product_image",
+          idempotency_key: `catalog-designer:${executionJobId}`,
+          status: "queued",
+          payload: jobPayload,
+        });
+
+      if (jobError) {
+        throw new Error(jobError.message);
+      }
+
+      try {
+        const designerResult = await callN8nChat({
+          userId,
+          companyId: company.id,
+          companyName: company.name,
+          conversationId: `catalog:${userId}`,
+          moduleCode: "designer",
+          message: designerRequest.brief,
+          jobId: executionJobId,
+          messages: [
+            {
+              role: "user",
+              content: JSON.stringify({
+                jobId: executionJobId,
+                companyId: company.id,
+                userId,
+                conversationId: `catalog:${userId}`,
+                assetType: "catalog_product_image",
+                product: designerRequest.product,
+                brief: designerRequest.brief,
+                referenceImageUrl: designerRequest.referenceImageUrl,
+                catalogDraft: draft,
+              }),
+            },
+          ],
+          systemPrompt:
+            "Você é a IA Designer. Receba o pedido encaminhado pela IA Catálogo, prepare a produção visual e encaminhe a produção pelo fluxo existente. Você é a única IA responsável por acionar a produção. Use obrigatoriamente o jobId recebido no pedido ao encaminhar a produção. Não responda como IA Catálogo e não altere o pedido do cliente.",
+          temperature: 0.35,
+          maxTokens: 2200,
+          imageUrl: designerRequest.referenceImageUrl,
+          isAdmin: false,
+        });
+
+        designer = designerResult as Record<string, unknown> | null;
+
+        if (!designerResult) {
+          await supabaseAdmin
+            .from("agent_execution_jobs")
+            .update({
+              status: "failed",
+              error_message: "Integração n8n indisponível ou desativada.",
+              completed_at: new Date().toISOString(),
+            })
+            .eq("id", executionJobId)
+            .eq("company_id", company.id);
+        }
+      } catch (error) {
+        await supabaseAdmin
+          .from("agent_execution_jobs")
+          .update({
+            status: "failed",
+            error_message:
+              error instanceof Error
+                ? error.message
+                : "Falha ao encaminhar para a IA Designer.",
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", executionJobId)
+          .eq("company_id", company.id);
+
+        throw error;
+      }
     }
 
     const cleanReply = replyText
@@ -183,10 +271,7 @@ Se o usuário estiver apenas conversando, perguntando, cadastrando ou ajustando 
 
     const designerData = designer ?? {};
 
-    const jobId =
-      typeof designerData.jobId === "string"
-        ? designerData.jobId
-        : null;
+    const jobId = executionJobId;
 
     const producedImageUrl =
       typeof designerData.imageUrl === "string"

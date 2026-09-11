@@ -14,6 +14,7 @@ export type N8nChatPayload = {
   customPrompt?: string;
   imageUrl?: string | null;
   isAdmin?: boolean;
+  jobId?: string | null;
 };
 
 export async function callN8nChat(payload: N8nChatPayload) {
