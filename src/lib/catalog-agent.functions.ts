@@ -67,5 +67,38 @@ Empresa: ${company.name}. Categorias existentes: ${(categories ?? []).map((c) =>
     if (match) {
       try { draft = JSON.parse(match[1]); } catch { draft = null; }
     }
-    return { reply: reply.replace(/<CATALOG_DRAFT>[\s\S]*?<\/CATALOG_DRAFT>/i, "").trim(), draft };
+    const responseData = result as Record<string, unknown>;
+
+  const needsDesigner = Boolean(
+    responseData.needsDesigner ??
+    responseData.needsDesign ??
+    responseData.createDesign ??
+    false
+  );
+
+  const jobId =
+    typeof responseData.jobId === "string"
+      ? responseData.jobId
+      : null;
+
+  const resultData = responseData.result ?? null;
+
+  const producedImageUrl =
+    typeof responseData.imageUrl === "string"
+      ? responseData.imageUrl
+      : typeof responseData.image_url === "string"
+        ? responseData.image_url
+        : null;
+
+  return {
+    reply: reply
+      .replace(/<CATALOG_DRAFT>[\s\S]*?<\/CATALOG_DRAFT>/i, "")
+      .trim(),
+    draft,
+    needsDesigner,
+    jobId,
+    result: resultData,
+    imageUrl: producedImageUrl,
+    execution: responseData.execution ?? null,
+  };
   });

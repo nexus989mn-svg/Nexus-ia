@@ -38,10 +38,8 @@ import {
   toggleProductActive,
 } from "@/lib/catalog.functions";
 import { catalogAgentChat } from "@/lib/catalog-agent.functions";
-import {
-  createCatalogDesignJob,
-  createCatalogProductImageJob,
-} from "@/lib/catalog-design.functions";
+import { createCatalogDesignJob } from "@/lib/catalog-design.functions";
+import { getCatalogExecutionJob } from "@/lib/catalog-design.functions";
 import { getMySubscription } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/_authenticated/catalog")({
@@ -211,11 +209,18 @@ function CatalogPage() {
 function CatalogAIAgent({ categories, products, onSaved }: { categories: Category[]; products: Product[]; onSaved: () => void }) {
   const { user } = useAuth();
   const runAgent = useServerFn(catalogAgentChat);
+  const getExecutionJob = useServerFn(getCatalogExecutionJob);
   // A produção visual não é disparada diretamente pelo APP.
   // A IA Catálogo decide quando encaminhar para a IA Designer.
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
+  type CatalogMessage = {
+    role: "user" | "assistant";
+    content: string;
+    imageUrl?: string | null;
+  };
+
+  const [messages, setMessages] = useState<CatalogMessage[]>([
     { role: "assistant", content: "Vamos criar seu produto. Me diga o nome e o que você quer cadastrar. Depois eu vou perguntar só o que estiver faltando." },
   ]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -243,80 +248,157 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
   const send = async () => {
     const text = input.trim();
     if (!text || sending) return;
-    const next = [...messages, { role: "user" as const, content: text }];
+
+    const next = [
+      ...messages,
+      { role: "user" as const, content: text },
+    ];
+
     setMessages(next);
     setInput("");
     setSending(true);
+
     try {
-      const result = await runAgent({ data: { messages: next, imageUrl } });
+      const result = await runAgent({
+        data: {
+          messages: next,
+          imageUrl,
+        },
+      });
 
       setMessages((m) => [
         ...m,
-        { role: "assistant", content: result.reply },
+        {
+          role: "assistant",
+          content: result.reply,
+        },
       ]);
 
       if (result.draft) {
         setDraft(result.draft);
       }
 
-      if (result.needsDesigner) {
+      /*
+       * A IA Catálogo decide se existe produção.
+       * O APP não cria job diretamente.
+       *
+       * Se a resposta trouxer um jobId, o APP apenas acompanha
+       * o resultado desse job e entrega o resultado na conversa.
+       */
+      if (result.jobId) {
         setImageGenerating(true);
 
         try {
-          const productName =
-            result.draft?.name ||
-            text
-              .replace(/^(gere|gerar|crie|criar|faça|fazer|melhore|melhorar)\\s+/i, "")
-              .trim() ||
-            "Produto do catálogo";
+          const started = Date.now();
+          const timeout = 120000;
 
-          const job = await createImageJob({
-            data: {
-              productName,
-              productDescription: String(
-                result.draft?.description || ""
-              ),
-              styleBrief: text,
-              referenceImageUrl: imageUrl,
-              referenceUrls: [],
-            },
-          });
+          while (Date.now() - started < timeout) {
+            const execution = await getExecutionJob({
+              data: {
+                jobId: result.jobId,
+              },
+            });
 
-          setMessages((m) => [
-            ...m,
-            {
-              role: "assistant",
-              content:
-                "Perfeito. Encaminhei a produção para a IA Designer. A arte será processada pelo Executor.",
-            },
-          ]);
+            const job = execution.job;
+            const status = String(job.status || "").toLowerCase();
+
+            if (
+              status === "completed" ||
+              status === "done" ||
+              status === "success"
+            ) {
+              const resultData = job.result as any;
+
+              const producedImage =
+                resultData?.imageUrl ||
+                resultData?.image_url ||
+                resultData?.url ||
+                resultData?.output?.imageUrl ||
+                resultData?.output?.image_url ||
+                null;
+
+              if (producedImage) {
+                setImageUrl(producedImage);
+
+                setMessages((m) => [
+                  ...m,
+                  {
+                    role: "assistant",
+                    content: "Pronto. A produção visual foi concluída.",
+                    imageUrl: producedImage,
+                  },
+                ]);
+              } else {
+                setMessages((m) => [
+                  ...m,
+                  {
+                    role: "assistant",
+                    content:
+                      "A produção foi concluída, mas o resultado visual não ficou disponível.",
+                  },
+                ]);
+              }
+
+              break;
+            }
+
+            if (
+              status === "failed" ||
+              status === "error" ||
+              status === "cancelled"
+            ) {
+              setMessages((m) => [
+                ...m,
+                {
+                  role: "assistant",
+                  content: job.error_message
+                    ? `A produção não foi concluída: ${job.error_message}`
+                    : "A produção visual não foi concluída.",
+                },
+              ]);
+
+              break;
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
         } catch (e) {
           const message =
             e instanceof Error
               ? e.message
-              : "Não foi possível iniciar a produção visual.";
+              : "Não foi possível consultar a produção.";
 
           setMessages((m) => [
             ...m,
             {
               role: "assistant",
               content:
-                "Entendi o pedido, mas não consegui iniciar a produção visual: " +
-                message,
+                `A conversa continua normalmente, mas não consegui ` +
+                `acompanhar a produção: ${message}`,
             },
           ]);
-
-          toast.error(message);
         } finally {
           setImageGenerating(false);
         }
       }
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Falha no Agente de Catálogo";
-      setMessages((m) => [...m, { role: "assistant", content: `Não consegui processar agora: ${message}` }]);
+      const message =
+        e instanceof Error
+          ? e.message
+          : "Falha no Agente de Catálogo";
+
+      setMessages((m) => [
+        ...m,
+        {
+          role: "assistant",
+          content: `Não consegui processar agora: ${message}`,
+        },
+      ]);
+
       toast.error(message);
+    } finally {
+      setSending(false);
     }
-    finally { setSending(false); }
   };
 
   const saveDraft = async () => {
@@ -353,7 +435,20 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
         <div className="border-t border-primary/15 p-4 md:p-6 grid lg:grid-cols-[1fr_300px] gap-4">
           <div className="rounded-2xl border border-border bg-background/45 overflow-hidden">
             <div className="h-[330px] md:h-[390px] overflow-y-auto p-4 space-y-3">
-              {messages.map((m, i) => <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}><div className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>{m.content}</div></div>)}
+              {messages.map((m, i) => (
+  <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+    <div className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
+      <div>{m.content}</div>
+      {m.imageUrl && (
+        <img
+          src={m.imageUrl}
+          alt="Resultado da produção"
+          className="mt-3 max-w-full rounded-xl border border-border"
+        />
+      )}
+    </div>
+  </div>
+))}
               {sending && <div className="text-xs text-muted-foreground">Preparando…</div>}
             </div>
             <div className="p-3 border-t border-border space-y-2">

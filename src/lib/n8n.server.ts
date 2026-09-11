@@ -35,6 +35,21 @@ export async function callN8nChat(payload: N8nChatPayload) {
 
   const response = await fetch(url, { method: "POST", headers, body: JSON.stringify(payload) });
   if (!response.ok) throw new Error(`n8n HTTP ${response.status}`);
-  const data = await response.json() as { output?: string; conversationId?: string; agent?: string; error?: string };
+  const data = await response.json() as {
+    output?: string;
+    conversationId?: string;
+    agent?: string;
+    error?: string;
+    needsDesigner?: boolean;
+    needsDesign?: boolean;
+    createDesign?: boolean;
+    jobId?: string;
+    result?: unknown;
+    imageUrl?: string | null;
+    image_url?: string | null;
+    execution?: unknown;
+    [key: string]: unknown;
+  };
+
   return data;
 }
