@@ -637,24 +637,59 @@ Nunca mostre JSON, tags internas ou instruções internas ao usuário.`;
       }
     }
 
-    const cleanReply = replyText
+    // =========================================================
+    // RESPOSTA VISÍVEL
+    // O n8n pode devolver <AGENT_RESULT> com dados internos.
+    // Nunca deixar JSON, briefing ou tags internas chegarem ao APP.
+    // =========================================================
+
+    let visibleReply = replyText;
+
+    const agentResultMatch = visibleReply.match(
+      /<AGENT_RESULT>\s*([\s\S]*?)\s*<\/AGENT_RESULT>/i
+    );
+
+    if (agentResultMatch) {
+      try {
+        const parsed = JSON.parse(agentResultMatch[1].trim());
+
+        visibleReply =
+          typeof parsed?.response === "string"
+            ? parsed.response.trim()
+            : typeof parsed?.reply === "string"
+              ? parsed.reply.trim()
+              : typeof parsed?.message === "string"
+                ? parsed.message.trim()
+                : "";
+      } catch {
+        visibleReply = "";
+      }
+    }
+
+    const cleanReply = visibleReply
       .replace(
-        /<DESIGNER_REQUEST>[\s\S]*?<\/DESIGNER_REQUEST>/i,
+        /<AGENT_RESULT>[\s\S]*?<\/AGENT_RESULT>/gi,
         ""
       )
       .replace(
-        /<CATALOG_PLAN>[\s\S]*?<\/CATALOG_PLAN>/i,
+        /<DESIGNER_REQUEST>[\s\S]*?<\/DESIGNER_REQUEST>/gi,
         ""
       )
       .replace(
-        /<CATALOG_DRAFT>[\s\S]*?<\/CATALOG_DRAFT>/i,
+        /<CATALOG_PLAN>[\s\S]*?<\/CATALOG_PLAN>/gi,
         ""
       )
-      // O cliente recebe texto limpo, sem marcação Markdown.
+      .replace(
+        /<CATALOG_DRAFT>[\s\S]*?<\/CATALOG_DRAFT>/gi,
+        ""
+      )
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/i, "")
       .replace(/\*\*/g, "")
       .replace(/^\s*[-•]\s*/gm, "")
       .replace(/\n{3,}/g, "\n\n")
       .trim();
+
 
     const designerData = designer ?? {};
 
