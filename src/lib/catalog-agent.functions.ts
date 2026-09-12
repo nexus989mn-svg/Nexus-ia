@@ -3,7 +3,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { callN8nChat } from "@/lib/n8n.server";
-import { nexusChat } from "@/lib/nexus.server";
 import { requireActiveSubscription } from "@/lib/security.server";
 
 const messageSchema = z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(8000) });
@@ -160,12 +159,26 @@ Nunca mostre JSON, tags internas ou instruções internas ao usuário.`;
 
     // A IA Catálogo conversa usando a IA configurada no próprio APP.
     // O n8n não é usado para responder a conversa do Catálogo.
-    const nexusReply = await nexusChat(messages, {
+    const n8nReply = await callN8nChat({
+      userId,
+      companyId: company.id,
+      companyName: company.name,
+      conversationId: `catalog-${userId}`,
+      moduleCode: "catalog",
+      message: lastMessage,
+      messages: data.messages,
+      systemPrompt: `${system}\n\n${control}`,
       temperature: 0.35,
-      max_tokens: 2200,
+      maxTokens: 2200,
+      imageUrl: data.imageUrl ?? null,
     });
 
-    const replyText = String(nexusReply ?? "").trim();
+    const replyText = String(
+      n8nReply?.output ??
+      n8nReply?.reply ??
+      n8nReply?.message ??
+      ""
+    ).trim();
 
     if (!replyText) {
       throw new Error("A IA do Catálogo não retornou uma resposta.");
