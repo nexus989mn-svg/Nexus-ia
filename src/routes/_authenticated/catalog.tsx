@@ -171,6 +171,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [executionStatus, setExecutionStatus] = useState<string | null>(null);
   const [draft, setDraft] = useState<any>(null);
   const [imageMode, setImageMode] = useState<"original" | "reference" | "generate">("original");
 
@@ -210,16 +211,26 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
         },
       });
 
-      setMessages((m) => [
-        ...m,
-        {
-          role: "assistant",
-          content: result.reply,
-        },
-      ]);
+      // A resposta visível só entra quando existir texto realmente
+      // destinado ao usuário. Dados técnicos ficam fora da conversa.
+      const visibleReply = String(result.reply ?? "").trim();
+
+      if (visibleReply) {
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            content: visibleReply,
+          },
+        ]);
+      }
 
       if (result.draft) {
         setDraft(result.draft);
+      }
+
+      if (result.needsDesigner) {
+        setExecutionStatus("Preparando criação visual…");
       }
 
       /*
@@ -236,6 +247,8 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
           const started = Date.now();
           const timeout = 120000;
 
+          setExecutionStatus("Designer preparando a arte…");
+
           while (Date.now() - started < timeout) {
             const execution = await getExecutionJob({
               data: {
@@ -245,6 +258,12 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
 
             const job = execution.job;
             const status = String(job.status || "").toLowerCase();
+
+            if (status === "queued" || status === "pending" || status === "pending_design") {
+              setExecutionStatus("Na fila para produção…");
+            } else if (status === "running" || status === "processing" || status === "in_progress") {
+              setExecutionStatus("Designer está produzindo a arte…");
+            }
 
             if (
               status === "completed" ||
@@ -262,6 +281,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
                 null;
 
               if (producedImage) {
+                setExecutionStatus("Arte concluída.");
                 setImageUrl(producedImage);
 
                 setMessages((m) => [
@@ -291,6 +311,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
               status === "error" ||
               status === "cancelled"
             ) {
+              setExecutionStatus(null);
               setMessages((m) => [
                 ...m,
                 {
@@ -322,10 +343,11 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
             },
           ]);
         } finally {
-
+          setExecutionStatus(null);
         }
       }
     } catch (e) {
+      setExecutionStatus(null);
       const message =
         e instanceof Error
           ? e.message
@@ -393,7 +415,12 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
     </div>
   </div>
 ))}
-              {sending && <div className="text-xs text-muted-foreground">Preparando…</div>}
+              {sending && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 py-1">
+                  <span className="inline-block h-2 w-2 rounded-full bg-primary animate-pulse" />
+                  <span>{executionStatus || "Processando…"}</span>
+                </div>
+              )}
             </div>
             <div className="p-3 border-t border-border space-y-2">
               <div className="flex items-center gap-2">

@@ -408,119 +408,8 @@ Nunca mostre JSON, tags internas ou instruções internas ao usuário.`;
       }
     }
 
-    /*
-     * Somente aqui a IA Catálogo chama a IA Designer.
-     * O módulo enviado é "designer", nunca "catalogo".
-     *
-     * A Designer é quem segue para o fluxo/executor existente.
-     */
-    let designer: Record<string, unknown> | null = null;
-    let executionJobId: string | null = null;
-
-    // Quando a IA montou um catálogo completo, o APP
-    // salva automaticamente categorias e produtos.
-    if (catalogPlan) {
-      for (
-        let categoryIndex = 0;
-        categoryIndex < catalogPlan.categories.length;
-        categoryIndex++
-      ) {
-        const category = catalogPlan.categories[categoryIndex];
-
-        const { data: existingCategory, error: categoryLookupError } =
-          await supabaseAdmin
-            .from("catalog_categories")
-            .select("id")
-            .eq("company_id", company.id)
-            .ilike("name", category.name)
-            .maybeSingle();
-
-        if (categoryLookupError) {
-          throw new Error(categoryLookupError.message);
-        }
-
-        let categoryId = existingCategory?.id ?? null;
-
-        if (!categoryId) {
-          const { data: createdCategory, error: categoryError } =
-            await supabaseAdmin
-              .from("catalog_categories")
-              .insert({
-                user_id: userId,
-                company_id: company.id,
-                name: category.name,
-                description: category.description ?? null,
-                sort_order: categoryIndex,
-                is_active: true,
-              })
-              .select("id")
-              .single();
-
-          if (categoryError) {
-            throw new Error(categoryError.message);
-          }
-
-          categoryId = createdCategory.id;
-        }
-
-        for (const product of category.products) {
-          const { data: existingProduct, error: productLookupError } =
-            await supabaseAdmin
-              .from("catalog_products")
-              .select("id")
-              .eq("company_id", company.id)
-              .ilike("name", product.name)
-              .maybeSingle();
-
-          if (productLookupError) {
-            throw new Error(productLookupError.message);
-          }
-
-          const payload = {
-            category_id: categoryId,
-            name: product.name,
-            description: product.description ?? null,
-            sku: product.sku ?? null,
-            price_cents: product.price_cents ?? 0,
-            currency: "BRL",
-            image_url: product.image_url ?? null,
-            stock: product.stock ?? null,
-            is_active: true,
-          };
-
-          if (existingProduct?.id) {
-            const { error } = await supabaseAdmin
-              .from("catalog_products")
-              .update(payload)
-              .eq("id", existingProduct.id)
-              .eq("company_id", company.id);
-
-            if (error) {
-              throw new Error(error.message);
-            }
-          } else {
-            const { error } = await supabaseAdmin
-              .from("catalog_products")
-              .insert({
-                user_id: userId,
-                company_id: company.id,
-                ...payload,
-              });
-
-            if (error) {
-              throw new Error(error.message);
-            }
-          }
-        }
-      }
-    }
-
-
-    // O encaminhamento Catálogo → Designer é feito exclusivamente pelo n8n.
-    // O APP não cria job nem chama o Designer diretamente.
-    const designer: Record<string, unknown> | null = null;
-    const executionJobId: string | null = null;
-
+    // O encaminhamento Catálogo → Designer é responsabilidade exclusiva
+    // do workflow n8n. O APP não cria job e não chama Designer.
     // =========================================================
     // RESPOSTA VISÍVEL
     // O n8n pode devolver <AGENT_RESULT> com dados internos.
@@ -575,9 +464,15 @@ Nunca mostre JSON, tags internas ou instruções internas ao usuário.`;
       .trim();
 
 
-    const designerData = designer ?? {};
+    const designerData =
+      n8nReply && typeof n8nReply === "object"
+        ? n8nReply
+        : {};
 
-    const jobId = executionJobId;
+    const jobId =
+      typeof designerData.jobId === "string"
+        ? designerData.jobId
+        : null;
 
     const producedImageUrl =
       typeof designerData.imageUrl === "string"
@@ -586,13 +481,26 @@ Nunca mostre JSON, tags internas ou instruções internas ao usuário.`;
           ? designerData.image_url
           : null;
 
+    // Nunca devolve briefing, JSON ou tags internas como mensagem.
+    // Quando o Designer estiver trabalhando, o frontend usa os
+    // estados de execução para mostrar o progresso.
+    const hasDesignerPayload =
+      !!designerRequest ||
+      designerData.needsDesigner === true ||
+      designerData.needsDesign === true ||
+      designerData.createDesign === true;
+
     return {
       reply: cleanReply,
       draft,
-      needsDesigner: !!designerRequest,
+      needsDesigner: hasDesignerPayload,
       jobId,
       result: designerData.result ?? null,
       imageUrl: producedImageUrl,
       execution: designerData.execution ?? null,
+      status:
+        typeof designerData.status === "string"
+          ? designerData.status
+          : null,
     };
   });
