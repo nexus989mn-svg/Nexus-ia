@@ -18,14 +18,13 @@ export const catalogAgentChat = createServerFn({ method: "POST" })
 
     const lastMessage = data.messages[data.messages.length - 1]?.content ?? "";
 
-    // A IA Catálogo conversa usando a IA configurada no próprio APP.
-    // O n8n não é usado para responder a conversa do Catálogo.
+    // O Catálogo usa o fluxo central do n8n para processar a conversa.
     const n8nReply = await callN8nChat({
       userId,
       companyId: company.id,
       companyName: company.name,
       conversationId: `catalog-${userId}`,
-      moduleCode: "catalog",
+      moduleCode: "catalogo",
       message: lastMessage,
       messages: data.messages,
 temperature: 0.35,
