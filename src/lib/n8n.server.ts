@@ -8,7 +8,7 @@ export type N8nChatPayload = {
   moduleCode: string;
   message: string;
   messages: Array<{ role: "user" | "assistant"; content: string }>;
-  systemPrompt: string;
+  systemPrompt?: string;
   temperature?: number;
   maxTokens?: number;
   customPrompt?: string;

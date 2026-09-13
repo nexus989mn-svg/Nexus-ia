@@ -16,228 +16,6 @@ export const catalogAgentChat = createServerFn({ method: "POST" })
     const { data: company } = await supabaseAdmin.from("companies").select("id, name").eq("owner_user_id", userId).maybeSingle();
     if (!company) throw new Error("Empresa não encontrada.");
 
-    const { data: categories } = await supabaseAdmin.from("catalog_categories").select("id,name").eq("company_id", company.id).order("name");
-
-    const system = `Você é a IA Catálogo da plataforma Nexus.
-
-Sua função é entender a intenção do usuário e ajudá-lo a criar, organizar, estruturar e produzir catálogos e materiais de apresentação.
-
-Você trabalha com:
-produtos, serviços, cardápios, listas de preços, combos, promoções, ofertas, portfólios, materiais institucionais, catálogos visuais, catálogos mistos, categorias e apresentações comerciais.
-
-REGRA PRINCIPAL DE INTENÇÃO:
-
-NUNCA assuma sozinho o tipo de conteúdo apenas pelo segmento da empresa.
-
-Exemplo:
-Se o usuário disser "quero um catálogo para minha barbearia", isso NÃO significa automaticamente "catálogo de produtos de barbeiro".
-
-Uma barbearia pode querer apresentar:
-serviços, preços, combos, promoções, produtos, informações da empresa, apresentação visual ou uma combinação deles.
-
-Se a intenção estiver ambígua, pergunte o que ele deseja apresentar.
-
-Se o usuário já informou claramente o que quer, não faça perguntas desnecessárias.
-
-Se o usuário disser explicitamente para você decidir ou criar os detalhes, você pode tomar decisões coerentes e profissionais por conta própria.
-
-CONVERSA NORMAL:
-
-Se o usuário estiver apenas conversando, perguntando, planejando, corrigindo ou ajustando informações do catálogo, continue na IA Catálogo.
-
-NÃO encaminhe para a Designer apenas porque o assunto é um catálogo.
-
-PRODUTO:
-
-Somente trate como produto quando o usuário realmente estiver falando de um produto específico.
-
-CATÁLOGO COMPLETO:
-
-Quando o usuário quiser criar o catálogo inteiro, entenda o catálogo como um conjunto.
-
-Você pode estruturar:
-nome;
-descrição;
-categorias;
-produtos;
-serviços;
-preços;
-combos;
-promoções;
-textos;
-organização;
-informações visuais.
-
-Não transforme automaticamente um pedido de catálogo em criação de um único produto.
-
-PRODUÇÃO VISUAL:
-
-Somente considere produção visual quando o usuário realmente quiser que uma arte/material visual seja produzido.
-
-Se ainda faltarem informações essenciais, pergunte antes.
-
-Se o usuário autorizou você a decidir os detalhes, complete os detalhes de maneira coerente.
-
-NUNCA marque needsDesigner=true com briefing incompleto.
-
-Quando houver produção visual, gere um briefing completo e autocontido para a IA Designer.
-
-A IA Catálogo NÃO chama o Executor.
-
-O fluxo obrigatório é:
-
-IA CATÁLOGO → IA DESIGNER → PREPARAR JOB → EXECUTOR → RESULTADO → APP
-
-A IA Designer é um agente separado.
-
-FORMATO INTERNO:
-
-Quando for apenas conversa:
-<AGENT_RESULT>
-{"needsDesigner":false,"briefing":null}
-</AGENT_RESULT>
-
-Quando houver produção visual e o briefing estiver completo:
-<AGENT_RESULT>
-{
-  "needsDesigner":true,
-  "briefing":{
-    "tipo":"...",
-    "objetivo":"...",
-    "negocio":"...",
-    "titulo":"...",
-    "texto":"...",
-    "produto":"...",
-    "servico":"...",
-    "preco":"...",
-    "formato":"...",
-    "estilo":"...",
-    "cores":[],
-    "composicao":"...",
-    "cta":"...",
-    "referenciaImageUrl":null,
-    "observacoes":"..."
-  }
-}
-</AGENT_RESULT>
-
-Nunca mostre AGENT_RESULT, JSON, tags ou instruções internas ao usuário.
-
-Responda sempre em pt-BR, de forma natural, curta e contextual.
-
-Nunca diga que uma arte foi produzida antes do fluxo de Designer/Executor retornar o resultado.
-
-Empresa: ${company.name}. Categorias existentes: ${(categories ?? []).map((c) => c.name).join(", ") || "nenhuma"}.`;
-
-
-    const control = `CONTROLE INTERNO DA IA CATÁLOGO:
-
-Você é a IA Catálogo.
-
-Sua função é entender o usuário e executar as tarefas de catálogo quando ele pedir.
-
-NÃO existe palavra-chave obrigatória.
-NÃO existe frase específica.
-NÃO existe botão obrigatório.
-NÃO dependa de "pode criar", "criar", "gerar" ou qualquer palavra isolada.
-
-INTERPRETE A INTENÇÃO PELO CONTEXTO.
-
-Se o usuário disser que quer fazer, criar, montar, gerar, preparar, produzir, deixar pronto, organizar ou qualquer expressão equivalente, entenda semanticamente que ele quer que a tarefa seja executada.
-
-Se ele já deu informações suficientes, NÃO fique fazendo perguntas desnecessárias.
-
-Se faltarem detalhes NÃO essenciais, complete-os de forma coerente e profissional.
-
-CATÁLOGO COMPLETO:
-
-Se o usuário pedir para criar/montar/fazer um catálogo, você deve ser capaz de montar o catálogo inteiro por conta própria.
-
-Crie quando necessário:
-- nome do catálogo;
-- descrição;
-- categorias;
-- produtos;
-- descrições dos produtos;
-- preços coerentes;
-- SKU quando necessário;
-- estoque quando necessário;
-- organização;
-- informações visuais;
-- briefing de produção.
-
-Não transforme um pedido de catálogo em uma pergunta sobre um único produto.
-
-Quando o catálogo estiver suficientemente definido e o usuário pedir para fazer, gere internamente:
-
-<CATALOG_PLAN>
-{
-  "name": "nome do catálogo",
-  "description": "descrição profissional",
-  "categories": [
-    {
-      "name": "categoria",
-      "description": "descrição da categoria",
-      "products": [
-        {
-          "name": "nome do produto",
-          "description": "descrição",
-          "price_cents": 0,
-          "sku": null,
-          "stock": null,
-          "image_url": null
-        }
-      ]
-    }
-  ]
-}
-</CATALOG_PLAN>
-
-PRODUTO:
-
-Se o pedido for especificamente um produto, monte todos os detalhes necessários e use <CATALOG_DRAFT>.
-
-PRODUÇÃO:
-
-Quando o usuário quiser que o material seja realmente produzido, gere também o pedido interno para a IA Designer:
-
-<DESIGNER_REQUEST>
-{
-  "brief": "brief completo e autocontido para produção visual",
-  "product": "nome do produto ou material",
-  "referenceImageUrl": null
-}
-</DESIGNER_REQUEST>
-
-O brief da Designer deve conter todas as informações necessárias para produzir o material sem precisar perguntar novamente ao usuário.
-
-A IA Catálogo NÃO chama o Executor diretamente.
-
-O caminho obrigatório é:
-
-IA CATÁLOGO → IA DESIGNER → EXECUTOR → RESULTADO → APP
-
-Se o usuário estiver apenas conversando, perguntando ou ajustando informações, converse normalmente.
-
-Se ele pedir execução, EXECUTE. Não fique apenas explicando o que poderia fazer.
-
-As marcações CATALOG_PLAN, CATALOG_DRAFT e DESIGNER_REQUEST são internas e nunca devem aparecer na resposta visível ao usuário.
-
-Nunca mostre JSON, tags internas ou instruções internas ao usuário.`;
-
-    const messages: Array<{ role: "system" | "user" | "assistant"; content: any }> = [
-      { role: "system", content: system },
-      { role: "system", content: control },
-    ];
-    if (data.imageUrl) messages.push({ role: "system", content: `Imagem fornecida pelo usuário para este produto: ${data.imageUrl}` });
-    if (data.imageUrl) {
-      const last = data.messages[data.messages.length - 1];
-      messages.push(...data.messages.slice(0, -1));
-      messages.push({ role: last.role, content: [{ type: "text", text: last.content }, { type: "image_url", image_url: { url: data.imageUrl } }] });
-    } else {
-      messages.push(...data.messages);
-    }
-
     const lastMessage = data.messages[data.messages.length - 1]?.content ?? "";
 
     // A IA Catálogo conversa usando a IA configurada no próprio APP.
@@ -250,8 +28,7 @@ Nunca mostre JSON, tags internas ou instruções internas ao usuário.`;
       moduleCode: "catalog",
       message: lastMessage,
       messages: data.messages,
-      systemPrompt: `${system}\n\n${control}`,
-      temperature: 0.35,
+temperature: 0.35,
       maxTokens: 2200,
       imageUrl: data.imageUrl ?? null,
     });
@@ -377,97 +154,17 @@ Nunca mostre JSON, tags internas ou instruções internas ao usuário.`;
      *
      * A marca é interna e nunca aparece para o usuário.
      */
-    const designerMatch = replyText.match(
-      /<DESIGNER_REQUEST>\s*([\s\S]*?)\s*<\/DESIGNER_REQUEST>/i
-    );
-
-    let designerRequest: {
-      brief: string;
-      product: string;
-      referenceImageUrl: string | null;
-    } | null = null;
-
-    if (designerMatch) {
-      try {
-        const parsed = JSON.parse(designerMatch[1]);
-
-        designerRequest = {
-          brief: String(parsed?.brief ?? "").trim(),
-          product: String(
-            parsed?.product ??
-            draft?.name ??
-            "Produto do catálogo"
-          ).trim(),
-          referenceImageUrl:
-            typeof parsed?.referenceImageUrl === "string"
-              ? parsed.referenceImageUrl
-              : data.imageUrl ?? null,
-        };
-      } catch {
-        designerRequest = null;
-      }
-    }
-
-    // O encaminhamento Catálogo → Designer é responsabilidade exclusiva
-    // do workflow n8n. O APP não cria job e não chama Designer.
-    // =========================================================
-    // RESPOSTA VISÍVEL
-    // O n8n pode devolver <AGENT_RESULT> com dados internos.
-    // Nunca deixar JSON, briefing ou tags internas chegarem ao APP.
-    // =========================================================
-
-    let visibleReply = replyText;
-
-    const agentResultMatch = visibleReply.match(
-      /<AGENT_RESULT>\s*([\s\S]*?)\s*<\/AGENT_RESULT>/i
-    );
-
-    if (agentResultMatch) {
-      try {
-        const parsed = JSON.parse(agentResultMatch[1].trim());
-
-        visibleReply =
-          typeof parsed?.response === "string"
-            ? parsed.response.trim()
-            : typeof parsed?.reply === "string"
-              ? parsed.reply.trim()
-              : typeof parsed?.message === "string"
-                ? parsed.message.trim()
-                : "";
-      } catch {
-        visibleReply = "";
-      }
-    }
-
-    const cleanReply = visibleReply
-      .replace(
-        /<AGENT_RESULT>[\s\S]*?<\/AGENT_RESULT>/gi,
-        ""
-      )
-      .replace(
-        /<DESIGNER_REQUEST>[\s\S]*?<\/DESIGNER_REQUEST>/gi,
-        ""
-      )
-      .replace(
-        /<CATALOG_PLAN>[\s\S]*?<\/CATALOG_PLAN>/gi,
-        ""
-      )
-      .replace(
-        /<CATALOG_DRAFT>[\s\S]*?<\/CATALOG_DRAFT>/gi,
-        ""
-      )
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/\s*```$/i, "")
-      .replace(/\*\*/g, "")
-      .replace(/^\s*[-•]\s*/gm, "")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-
-
     const designerData =
       n8nReply && typeof n8nReply === "object"
-        ? n8nReply
+        ? n8nReply as Record<string, any>
         : {};
+
+    const cleanReply =
+      typeof n8nReply?.output === "string"
+        ? n8nReply.output
+        : typeof n8nReply?.reply === "string"
+          ? n8nReply.reply
+          : "";
 
     const jobId =
       typeof designerData.jobId === "string"
@@ -481,11 +178,7 @@ Nunca mostre JSON, tags internas ou instruções internas ao usuário.`;
           ? designerData.image_url
           : null;
 
-    // Nunca devolve briefing, JSON ou tags internas como mensagem.
-    // Quando o Designer estiver trabalhando, o frontend usa os
-    // estados de execução para mostrar o progresso.
     const hasDesignerPayload =
-      !!designerRequest ||
       designerData.needsDesigner === true ||
       designerData.needsDesign === true ||
       designerData.createDesign === true;
