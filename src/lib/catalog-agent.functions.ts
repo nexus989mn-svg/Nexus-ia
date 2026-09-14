@@ -9,7 +9,11 @@ const messageSchema = z.object({ role: z.enum(["user", "assistant"]), content: z
 
 export const catalogAgentChat = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ messages: z.array(messageSchema).min(1).max(30), imageUrl: z.string().url().nullable().optional() }).parse(d))
+  .inputValidator((d) => z.object({
+    messages: z.array(messageSchema).min(1).max(30),
+    conversationId: z.string().min(1).max(200),
+    imageUrl: z.string().url().nullable().optional(),
+  }).parse(d))
   .handler(async ({ context, data }) => {
     const { userId } = context;
     await requireActiveSubscription(userId);
@@ -23,7 +27,7 @@ export const catalogAgentChat = createServerFn({ method: "POST" })
       userId,
       companyId: company.id,
       companyName: company.name,
-      conversationId: `catalog-${userId}`,
+      conversationId: data.conversationId,
       moduleCode: "catalogo",
       message: lastMessage,
       messages: data.messages,
@@ -34,6 +38,7 @@ temperature: 0.35,
 
     const replyText = String(
       n8nReply?.output ??
+      n8nReply?.response ??
       n8nReply?.reply ??
       n8nReply?.message ??
       ""

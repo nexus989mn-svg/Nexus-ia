@@ -158,6 +158,9 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
   // A produção visual não é disparada diretamente pelo APP.
   // A IA Catálogo decide quando encaminhar para a IA Designer.
   const [open, setOpen] = useState(false);
+  const [conversationId] = useState(() =>
+    `catalog:${user?.id ?? "anonymous"}:${crypto.randomUUID()}`
+  );
   const [input, setInput] = useState("");
   type CatalogMessage = {
     role: "user" | "assistant";
@@ -207,6 +210,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
       const result = await runAgent({
         data: {
           messages: next,
+          conversationId,
           imageUrl,
         },
       });
