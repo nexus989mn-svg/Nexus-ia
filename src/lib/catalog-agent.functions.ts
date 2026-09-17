@@ -157,21 +157,21 @@ temperature: 0.35,
         ? n8nReply.output
         : typeof n8nReply?.reply === "string"
           ? n8nReply.reply
-          : "";
+          : typeof n8nReply?.response === "string"
+            ? n8nReply.response
+            : "";
 
-      const jobId =
-        typeof imageData?.jobId === "string"
-          ? imageData.jobId
-          : typeof n8nReply?.jobId === "string"
-            ? n8nReply.jobId
-            : null;
+    const jobId =
+      typeof n8nReply?.jobId === "string"
+        ? n8nReply.jobId
+        : null;
 
-      const producedImageUrl =
-        typeof imageData?.imageUrl === "string"
-          ? imageData.imageUrl
-          : typeof imageData?.image_url === "string"
-            ? imageData.image_url
-            : null;
+    const producedImageUrl =
+      typeof n8nReply?.imageUrl === "string"
+        ? n8nReply.imageUrl
+        : typeof n8nReply?.image_url === "string"
+          ? n8nReply.image_url
+          : null;
 
     return {
       reply: cleanReply,
