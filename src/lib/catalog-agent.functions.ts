@@ -152,17 +152,6 @@ temperature: 0.35,
       }
     }
 
-    /*
-     * A IA Catálogo só encaminha para a IA Designer quando,
-     * dentro do contexto da conversa, houver autorização explícita.
-     *
-     * A marca é interna e nunca aparece para o usuário.
-     */
-    const designerData =
-      n8nReply && typeof n8nReply === "object"
-        ? n8nReply as Record<string, any>
-        : {};
-
     const cleanReply =
       typeof n8nReply?.output === "string"
         ? n8nReply.output
@@ -170,34 +159,26 @@ temperature: 0.35,
           ? n8nReply.reply
           : "";
 
-    const jobId =
-      typeof designerData.jobId === "string"
-        ? designerData.jobId
-        : null;
+      const jobId =
+        typeof imageData?.jobId === "string"
+          ? imageData.jobId
+          : typeof n8nReply?.jobId === "string"
+            ? n8nReply.jobId
+            : null;
 
-    const producedImageUrl =
-      typeof designerData.imageUrl === "string"
-        ? designerData.imageUrl
-        : typeof designerData.image_url === "string"
-          ? designerData.image_url
-          : null;
-
-    const hasDesignerPayload =
-      designerData.needsDesigner === true ||
-      designerData.needsDesign === true ||
-      designerData.createDesign === true;
+      const producedImageUrl =
+        typeof imageData?.imageUrl === "string"
+          ? imageData.imageUrl
+          : typeof imageData?.image_url === "string"
+            ? imageData.image_url
+            : null;
 
     return {
       reply: cleanReply,
       draft,
-      needsDesigner: hasDesignerPayload,
       jobId,
-      result: designerData.result ?? null,
+
       imageUrl: producedImageUrl,
-      execution: designerData.execution ?? null,
-      status:
-        typeof designerData.status === "string"
-          ? designerData.status
-          : null,
+
     };
   });

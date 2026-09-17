@@ -59,7 +59,7 @@ function AgentPage() {
   useEffect(() => {
     const handler = (event: Event) => {
       const code = (event as CustomEvent<string>).detail;
-      if (["atendimento", "sdr", "audio"].includes(code) || (code === "designer" && isAdmin)) setModuleCode(code);
+      if (["atendimento", "sdr", "audio"].includes(code)) setModuleCode(code);
     };
     window.addEventListener("nexus-agent-module", handler);
     return () => window.removeEventListener("nexus-agent-module", handler);
@@ -247,12 +247,11 @@ function ChatWindow({
       <div className="border-b border-border p-3 flex items-center justify-between gap-3 bg-background/50">
         <div>
           <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Agente</div>
-          <div className="text-sm text-foreground">{({atendimento:"IA Atendimento",sdr:"IA SDR",designer:"IA Designer",audio:"IA Áudio"} as Record<string,string>)[moduleCode] ?? "IA Atendimento"}</div>
+          <div className="text-sm text-foreground">{({atendimento:"IA Atendimento",sdr:"IA SDR",audio:"IA Áudio"} as Record<string,string>)[moduleCode] ?? "IA Atendimento"}</div>
         </div>
         <select value={moduleCode} onChange={(e) => window.dispatchEvent(new CustomEvent("nexus-agent-module", { detail: e.target.value }))} className="h-9 rounded-md border border-border bg-background px-3 text-sm" aria-label="Selecionar agente">
           <option value="atendimento">IA Atendimento</option>
           <option value="sdr">IA SDR</option>
-          {isAdmin && <option value="designer">IA Designer (Admin)</option>}
           <option value="audio">IA Áudio</option>
         </select>
       </div>

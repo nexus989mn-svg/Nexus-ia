@@ -62,9 +62,8 @@ export const Route = createFileRoute("/api/chat")({
           const { data: adminRole } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
           const isAdmin = !!adminRole;
           const requestedModule = body.moduleCode ?? "atendimento";
-          const allowedModules = ["atendimento", "sdr", "audio", "designer"];
+          const allowedModules = ["atendimento", "sdr", "audio"];
           const moduleCode = allowedModules.includes(requestedModule) ? requestedModule : "atendimento";
-          if (moduleCode === "designer" && !isAdmin) return new Response("O Designer é uma ferramenta interna da administração.", { status: 403 });
 
           // Authoritative server-side subscription check.
           try {

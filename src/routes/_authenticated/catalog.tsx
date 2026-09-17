@@ -38,7 +38,6 @@ import {
   toggleProductActive,
 } from "@/lib/catalog.functions";
 import { catalogAgentChat } from "@/lib/catalog-agent.functions";
-import { getCatalogExecutionJob } from "@/lib/catalog-design.functions";
 import { getMySubscription } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/_authenticated/catalog")({
@@ -154,9 +153,6 @@ function CatalogPage() {
 function CatalogAIAgent({ categories, products, onSaved }: { categories: Category[]; products: Product[]; onSaved: () => void }) {
   const { user } = useAuth();
   const runAgent = useServerFn(catalogAgentChat);
-  const getExecutionJob = useServerFn(getCatalogExecutionJob);
-  // A produção visual não é disparada diretamente pelo APP.
-  // A IA Catálogo decide quando encaminhar para a IA Designer.
   const [open, setOpen] = useState(false);
   const [conversationId] = useState(() =>
     `catalog:${user?.id ?? "anonymous"}:${crypto.randomUUID()}`
@@ -233,16 +229,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
         setDraft(result.draft);
       }
 
-      if (result.needsDesigner) {
-        setExecutionStatus("Preparando criação visual…");
-      }
-
-      /*
-       * A IA Catálogo decide se existe produção.
-       * O APP não cria job diretamente.
-       *
-       * Se a resposta trouxer um jobId, o APP apenas acompanha
-       * o resultado desse job e entrega o resultado na conversa.
+            /*
        */
       if (result.jobId) {
 
@@ -251,7 +238,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
           const started = Date.now();
           const timeout = 120000;
 
-          setExecutionStatus("Designer preparando a arte…");
+          setExecutionStatus("Preparando a produção…");
 
           while (Date.now() - started < timeout) {
             const execution = await getExecutionJob({
@@ -266,7 +253,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
             if (status === "queued" || status === "pending" || status === "pending_design") {
               setExecutionStatus("Na fila para produção…");
             } else if (status === "running" || status === "processing" || status === "in_progress") {
-              setExecutionStatus("Designer está produzindo a arte…");
+              setExecutionStatus("Produzindo a arte…");
             }
 
             if (

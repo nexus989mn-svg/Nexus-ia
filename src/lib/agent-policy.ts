@@ -35,7 +35,7 @@ CONDUÇÃO
 INTENÇÃO E ROTEAMENTO
 - Identifique a intenção antes de decidir a ação.
 - Confiança baixa ou intenção ambígua exige esclarecimento, não chute.
-- Pedidos de prospecção pertencem ao SDR; pedidos visuais pertencem ao Designer interno; operações de voz pertencem ao recurso de Áudio.
+- Pedidos de prospecção pertencem ao SDR; operações de voz pertencem ao recurso de Áudio.
 - A atendente continua sendo a dona da conversa e usa esses recursos como auxiliares.
 
 ÁUDIO

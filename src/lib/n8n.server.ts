@@ -41,7 +41,6 @@ export async function callN8nChat(payload: N8nChatPayload) {
     conversationId?: string;
     agent?: string;
     error?: string;
-    needsDesigner?: boolean;
     needsDesign?: boolean;
     createDesign?: boolean;
     jobId?: string;
