@@ -183,8 +183,20 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
       const { error } = await supabase.storage.from("catalog-assets").upload(path, file, { contentType: file.type, upsert: false });
       if (error) throw new Error(error.message);
       const { data } = supabase.storage.from("catalog-assets").getPublicUrl(path);
-      setImageUrl(data.publicUrl);
-      toast.success("Imagem adicionada ao produto");
+      const uploadedUrl = data.publicUrl;
+
+      setImageUrl(uploadedUrl);
+
+      setMessages((m) => [
+        ...m,
+        {
+          role: "user",
+          content: "Imagem enviada.",
+          imageUrl: uploadedUrl,
+        },
+      ]);
+
+      toast.success("Imagem adicionada");
     } catch (e) { toast.error(e instanceof Error ? e.message : "Falha no upload"); }
     finally { setUploading(false); }
   };
@@ -232,28 +244,110 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
             /*
        */
       if (result.jobId) {
-
-
         try {
           const started = Date.now();
-          const timeout = 120000;
+          const timeout = 180000;
 
-          setExecutionStatus("Preparando a produção…");
+          /*
+           * O APP acompanha a produção.
+           * Nenhum dado técnico é exibido ao cliente.
+           */
+          setExecutionStatus("Preparando…");
 
-          while (Date.now() - started < timeout) {
-            const execution = await getExecutionJob({
-              data: {
-                jobId: result.jobId,
-              },
-            });
+          const extractImageUrl = (value: unknown): string | null => {
+            if (!value) return null;
 
-            const job = execution.job;
-            const status = String(job.status || "").toLowerCase();
+            if (typeof value === "string") {
+              const valueText = value.trim();
 
-            if (status === "queued" || status === "pending" || status === "pending_design") {
-              setExecutionStatus("Na fila para produção…");
-            } else if (status === "running" || status === "processing" || status === "in_progress") {
-              setExecutionStatus("Produzindo a arte…");
+              if (
+                /^https?:\/\/.+/i.test(valueText) &&
+                /\.(png|jpe?g|webp|gif|avif)(\?.*)?$/i.test(valueText)
+              ) {
+                return valueText;
+              }
+
+              if (/^https?:\/\/.+/i.test(valueText)) {
+                return valueText;
+              }
+
+              return null;
+            }
+
+            if (Array.isArray(value)) {
+              for (const item of value) {
+                const found = extractImageUrl(item);
+                if (found) return found;
+              }
+              return null;
+            }
+
+            if (typeof value === "object") {
+              const obj = value as Record<string, unknown>;
+
+              const directKeys = [
+                "imageUrl",
+                "image_url",
+                "image",
+                "url",
+                "publicUrl",
+                "public_url",
+                "outputUrl",
+                "output_url",
+                "assetUrl",
+                "asset_url",
+              ];
+
+              for (const key of directKeys) {
+                const found = extractImageUrl(obj[key]);
+                if (found) return found;
+              }
+
+              for (const key of [
+                "result",
+                "output",
+                "data",
+                "response",
+                "artifact",
+                "artifacts",
+                "images",
+                "files",
+              ]) {
+                const found = extractImageUrl(obj[key]);
+                if (found) return found;
+              }
+            }
+
+            return null;
+          };
+
+          const normalizeStatus = (value: unknown) => {
+            const status = String(value || "").toLowerCase();
+
+            if (
+              status === "queued" ||
+              status === "pending" ||
+              status === "waiting" ||
+              status === "created"
+            ) {
+              return "Na fila…";
+            }
+
+            if (
+              status === "running" ||
+              status === "processing" ||
+              status === "in_progress" ||
+              status === "started"
+            ) {
+              return "Produzindo…";
+            }
+
+            if (
+              status === "finalizing" ||
+              status === "finishing" ||
+              status === "completed_processing"
+            ) {
+              return "Finalizando…";
             }
 
             if (
@@ -261,25 +355,89 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
               status === "done" ||
               status === "success"
             ) {
-              const resultData = job.result as any;
+              return "Pronto.";
+            }
 
-              const producedImage =
-                resultData?.imageUrl ||
-                resultData?.image_url ||
-                resultData?.url ||
-                resultData?.output?.imageUrl ||
-                resultData?.output?.image_url ||
-                null;
+            return "Preparando…";
+          };
+
+          /*
+           * Consulta a API do próprio APP.
+           * O endpoint existente recebe somente o UUID do job.
+           */
+          const poll = async () => {
+            const response = await fetch(
+              `/api/catalog/production/${encodeURIComponent(result.jobId)}`,
+              {
+                method: "GET",
+                headers: {
+                  Accept: "application/json",
+                },
+                credentials: "include",
+              },
+            );
+
+            if (!response.ok) {
+              throw new Error("Não foi possível consultar a produção.");
+            }
+
+            return (await response.json()) as {
+              job?: {
+                id?: string;
+                status?: string;
+                result?: unknown;
+                error_message?: string | null;
+              };
+            };
+          };
+
+          while (Date.now() - started < timeout) {
+            const execution = await poll();
+            const job = execution.job;
+
+            if (!job) {
+              throw new Error("Produção não encontrada.");
+            }
+
+            const status = String(job.status || "").toLowerCase();
+
+            setExecutionStatus(normalizeStatus(status));
+
+            if (
+              status === "failed" ||
+              status === "error" ||
+              status === "cancelled"
+            ) {
+              setExecutionStatus(null);
+
+              setMessages((m) => [
+                ...m,
+                {
+                  role: "assistant",
+                  content: "Não foi possível concluir a produção. Podemos tentar novamente.",
+                },
+              ]);
+
+              break;
+            }
+
+            if (
+              status === "completed" ||
+              status === "done" ||
+              status === "success"
+            ) {
+              const producedImage = extractImageUrl(job.result);
+
+              setExecutionStatus("Pronto.");
 
               if (producedImage) {
-                setExecutionStatus("Arte concluída.");
                 setImageUrl(producedImage);
 
                 setMessages((m) => [
                   ...m,
                   {
                     role: "assistant",
-                    content: "Pronto. A produção visual foi concluída.",
+                    content: "Pronto! A imagem foi produzida.",
                     imageUrl: producedImage,
                   },
                 ]);
@@ -288,8 +446,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
                   ...m,
                   {
                     role: "assistant",
-                    content:
-                      "A produção foi concluída, mas o resultado visual não ficou disponível.",
+                    content: "A produção foi concluída.",
                   },
                 ]);
               }
@@ -297,40 +454,16 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
               break;
             }
 
-            if (
-              status === "failed" ||
-              status === "error" ||
-              status === "cancelled"
-            ) {
-              setExecutionStatus(null);
-              setMessages((m) => [
-                ...m,
-                {
-                  role: "assistant",
-                  content: job.error_message
-                    ? `A produção não foi concluída: ${job.error_message}`
-                    : "A produção visual não foi concluída.",
-                },
-              ]);
-
-              break;
-            }
-
             await new Promise((resolve) => setTimeout(resolve, 2000));
           }
-        } catch (e) {
-          const message =
-            e instanceof Error
-              ? e.message
-              : "Não foi possível consultar a produção.";
+        } catch {
+          setExecutionStatus(null);
 
           setMessages((m) => [
             ...m,
             {
               role: "assistant",
-              content:
-                `A conversa continua normalmente, mas não consegui ` +
-                `acompanhar a produção: ${message}`,
+              content: "A produção continua, mas não foi possível atualizar o status agora.",
             },
           ]);
         } finally {
@@ -393,21 +526,53 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
           <div className="rounded-2xl border border-border bg-background/45 overflow-hidden">
             <div className="h-[330px] md:h-[390px] overflow-y-auto p-4 space-y-3">
               {messages.map((m, i) => (
-  <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-    <div className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
-      <div>{m.content}</div>
-      {m.imageUrl && (
-        <img
-          src={m.imageUrl}
-          alt="Resultado da produção"
-          className="mt-3 max-w-full rounded-xl border border-border"
-        />
-      )}
-    </div>
-  </div>
-))}
-              {sending && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 py-1">
+                <div
+                  key={i}
+                  className={`flex ${
+                    m.role === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm ${
+                      m.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card border border-border"
+                    }`}
+                  >
+                    {m.content && <div>{m.content}</div>}
+
+                    {m.imageUrl && (
+                      <div className="mt-3 space-y-2">
+                        <a
+                          href={m.imageUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block overflow-hidden rounded-xl border border-border"
+                        >
+                          <img
+                            src={m.imageUrl}
+                            alt="Imagem"
+                            className="block w-full max-h-[420px] object-contain"
+                            loading="lazy"
+                          />
+                        </a>
+
+                        <a
+                          href={m.imageUrl}
+                          download
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-accent transition-colors"
+                        >
+                          Baixar imagem
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {(sending || executionStatus) && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 py-2">
                   <span className="inline-block h-2 w-2 rounded-full bg-primary animate-pulse" />
                   <span>{executionStatus || "Processando…"}</span>
                 </div>
@@ -416,7 +581,20 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
             <div className="p-3 border-t border-border space-y-2">
               <div className="flex items-center gap-2">
                 <label className="h-9 px-3 rounded-lg border border-border inline-flex items-center gap-2 text-xs cursor-pointer hover:bg-accent"><Upload className="h-4 w-4" />{uploading ? "Enviando…" : "Foto"}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.currentTarget.value = ""; }} /></label>
-                {imageUrl && <span className="text-xs text-primary flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" />Imagem anexada</span>}
+                {imageUrl && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-12 w-12 overflow-hidden rounded-lg border border-border bg-background">
+                      <img
+                        src={imageUrl}
+                        alt="Imagem selecionada"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <span className="text-xs text-primary">
+                      Imagem pronta para usar
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="flex gap-2"><Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Ex.: quero criar um catálogo completo para minha barbearia…" /><Button size="icon" onClick={send} disabled={!input.trim() || sending}><Send className="h-4 w-4" /></Button></div>
             </div>
