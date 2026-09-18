@@ -36,13 +36,109 @@ temperature: 0.35,
       imageUrl: data.imageUrl ?? null,
     });
 
-    const replyText = String(
+    function parseEnvelope(value: unknown): Record<string, unknown> | null {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        return value as Record<string, unknown>;
+      }
+
+      if (typeof value !== "string") return null;
+
+      let text = value
+        .trim()
+        .replace(/^```json\\s*/i, "")
+        .replace(/\\s*```$/i, "")
+        .trim();
+
+      if (!text) return null;
+
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return parsed as Record<string, unknown>;
+        }
+      } catch {}
+
+      const match = text.match(/\\{[\\s\\S]*\\}/);
+      if (match) {
+        try {
+          const parsed = JSON.parse(match[0]);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            return parsed as Record<string, unknown>;
+          }
+        } catch {}
+      }
+
+      return null;
+    }
+
+    function extractVisibleReply(value: unknown): string {
+      if (typeof value !== "string") {
+        if (value && typeof value === "object") {
+          const obj = value as Record<string, unknown>;
+          return extractVisibleReply(
+            obj.reply ??
+            obj.response ??
+            obj.output ??
+            obj.message ??
+            ""
+          );
+        }
+
+        return "";
+      }
+
+      const text = value.trim();
+      if (!text) return "";
+
+      const parsed = parseEnvelope(text);
+
+      if (!parsed) {
+        return text;
+      }
+
+      const nested =
+        parsed.reply ??
+        parsed.response ??
+        parsed.output ??
+        parsed.message ??
+        "";
+
+      if (typeof nested !== "string") {
+        return "";
+      }
+
+      const nestedText = nested.trim();
+      if (!nestedText) return "";
+
+      const nestedParsed = parseEnvelope(nestedText);
+
+      if (nestedParsed) {
+        return String(
+          nestedParsed.reply ??
+          nestedParsed.response ??
+          nestedParsed.output ??
+          nestedParsed.message ??
+          ""
+        ).trim();
+      }
+
+      return nestedText;
+    }
+
+    const rawReply =
       n8nReply?.output ??
       n8nReply?.response ??
       n8nReply?.reply ??
       n8nReply?.message ??
-      ""
-    ).trim();
+      "";
+
+    const replyText = extractVisibleReply(rawReply);
+
+    const internalEnvelope =
+      parseEnvelope(rawReply) ??
+      (n8nReply && typeof n8nReply === "object"
+        ? n8nReply as Record<string, unknown>
+        : null);
 
     if (!replyText) {
       throw new Error("A IA do Catálogo não retornou uma resposta.");
@@ -164,7 +260,11 @@ temperature: 0.35,
     const jobId =
       typeof n8nReply?.jobId === "string"
         ? n8nReply.jobId
-        : null;
+        : typeof internalEnvelope?.jobId === "string"
+          ? internalEnvelope.jobId
+          : typeof internalEnvelope?.job_id === "string"
+            ? internalEnvelope.job_id
+            : null;
 
     const producedImageUrl =
       typeof n8nReply?.imageUrl === "string"
