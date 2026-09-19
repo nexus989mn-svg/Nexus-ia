@@ -42,7 +42,11 @@ export function SupportEmailDialog({ open, onOpenChange }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm"
-      onMouseDown={() => onOpenChange(false)}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onOpenChange(false);
+        }
+      }}
     >
       <form
         onSubmit={submit}

@@ -48,22 +48,23 @@ const resources = {
         placeholder: "Digite uma mensagem…",
         thinking: "Pensando…",
       },
-    
-  website: {
-    websiteTitle: "Cadastre seu site",
-    websiteDescription: "Cadastre o site da sua empresa para que sua IA possa enviar o link quando necessário ou usar o site para agendamentos com data e horário, conforme sua configuração.",
-    websiteUrl: "Endereço do site",
-    websiteMode: "Como a IA deve usar o site?",
-    websiteLink: "Enviar link",
-    websiteBooking: "Agendamento",
-    websiteBoth: "Ambos",
-    websiteMessage: "Mensagem para enviar o site",
-    bookingInstructions: "Instruções de agendamento",
-    saveWebsite: "Salvar site",
-    siteSaved: "Site salvo",
-  },
 
-  landing: {
+      website: {
+        websiteTitle: "Cadastre seu site",
+        websiteDescription:
+          "Cadastre o site da sua empresa para que sua IA possa enviar o link quando necessário ou usar o site para agendamentos com data e horário, conforme sua configuração.",
+        websiteUrl: "Endereço do site",
+        websiteMode: "Como a IA deve usar o site?",
+        websiteLink: "Enviar link",
+        websiteBooking: "Agendamento",
+        websiteBoth: "Ambos",
+        websiteMessage: "Mensagem para enviar o site",
+        bookingInstructions: "Instruções de agendamento",
+        saveWebsite: "Salvar site",
+        siteSaved: "Site salvo",
+      },
+
+      landing: {
         badge: "Assistente de IA para WhatsApp",
         heroPre: "AURI IA,",
         heroAccent: "Sua Assistente de Atendimento",
@@ -80,12 +81,30 @@ const resources = {
         subscribe: "Assinar",
         startPlanTrial: "Iniciar teste",
         features: {
-          aiAgent: { t: "Assistente de Atendimento", d: "A Auri IA atende seus clientes pelo WhatsApp de forma natural." },
-          leadCapture: { t: "IA treinável", d: "Treine a Auri IA com as informações, serviços e orientações da sua empresa." },
-          analytics: { t: "Atendimento inteligente", d: "Entende a intenção do cliente e conduz cada conversa com contexto." },
-          autoBlock: { t: "Contexto da empresa", d: "Informe como sua empresa funciona para a IA atender melhor seus clientes." },
-          multi: { t: "WhatsApp conectado", d: "Conecte seu número e deixe a Auri IA cuidar do atendimento." },
-          sdr: { t: "Voz da sua assistente", d: "Escolha a voz que a Auri IA usará nas conversas com seus clientes." },
+          aiAgent: {
+            t: "Assistente de Atendimento",
+            d: "A Auri IA atende seus clientes pelo WhatsApp de forma natural.",
+          },
+          leadCapture: {
+            t: "IA treinável",
+            d: "Treine a Auri IA com as informações, serviços e orientações da sua empresa.",
+          },
+          analytics: {
+            t: "Atendimento inteligente",
+            d: "Entende a intenção do cliente e conduz cada conversa com contexto.",
+          },
+          autoBlock: {
+            t: "Contexto da empresa",
+            d: "Informe como sua empresa funciona para a IA atender melhor seus clientes.",
+          },
+          multi: {
+            t: "WhatsApp conectado",
+            d: "Conecte seu número e deixe a Auri IA cuidar do atendimento.",
+          },
+          sdr: {
+            t: "Voz da sua assistente",
+            d: "Escolha a voz que a Auri IA usará nas conversas com seus clientes.",
+          },
         },
         footer: "Assistente IA para WhatsApp",
       },
@@ -128,7 +147,8 @@ const resources = {
         renews: "Renova em {{date}}",
         em: "—",
         nextSteps: "Próximos passos",
-  nextStepsDescription: "Siga os passos abaixo para deixar sua IA de atendimento pronta para sua empresa.",
+        nextStepsDescription:
+          "Siga os passos abaixo para deixar sua IA de atendimento pronta para sua empresa.",
         steps: {
           plan: "Escolha um plano ou continue o teste",
           whats: "Conecte seu WhatsApp (v2)",
@@ -140,8 +160,7 @@ const resources = {
         title: "Assinatura",
         subtitle: "Gerencie sua assinatura e planos.",
         mockTitle: "Modo de cobrança simulada.",
-        mockDesc:
-          "Stripe não configurado — assinaturas ativam instantaneamente para teste.",
+        mockDesc: "Stripe não configurado — assinaturas ativam instantaneamente para teste.",
         currentPlan: "Plano atual",
         cancelSub: "Cancelar assinatura",
         confirmCancel: "Deseja cancelar sua assinatura?",
@@ -213,12 +232,30 @@ const resources = {
         subscribe: "Subscribe",
         startPlanTrial: "Start trial",
         features: {
-          aiAgent: { t: "Customer Service Assistant", d: "Auri AI serves your customers on WhatsApp naturally." },
-          leadCapture: { t: "Trainable AI", d: "Train Auri AI with your company's information, services and guidelines." },
-          analytics: { t: "Intelligent customer service", d: "Understands customer intent and guides each conversation with context." },
-          autoBlock: { t: "Company context", d: "Tell the AI how your company works so it can serve your customers better." },
-          multi: { t: "Connected WhatsApp", d: "Connect your number and let Auri AI handle customer service." },
-          sdr: { t: "Your assistant's voice", d: "Choose the voice Auri AI will use in conversations with your customers." },
+          aiAgent: {
+            t: "Customer Service Assistant",
+            d: "Auri AI serves your customers on WhatsApp naturally.",
+          },
+          leadCapture: {
+            t: "Trainable AI",
+            d: "Train Auri AI with your company's information, services and guidelines.",
+          },
+          analytics: {
+            t: "Intelligent customer service",
+            d: "Understands customer intent and guides each conversation with context.",
+          },
+          autoBlock: {
+            t: "Company context",
+            d: "Tell the AI how your company works so it can serve your customers better.",
+          },
+          multi: {
+            t: "Connected WhatsApp",
+            d: "Connect your number and let Auri AI handle customer service.",
+          },
+          sdr: {
+            t: "Your assistant's voice",
+            d: "Choose the voice Auri AI will use in conversations with your customers.",
+          },
         },
         footer: "AI WhatsApp Sales Assistant",
       },
@@ -261,7 +298,8 @@ const resources = {
         renews: "Renews {{date}}",
         em: "—",
         nextSteps: "Next steps",
-  nextStepsDescription: "Follow the steps below to get your AI customer service assistant ready for your business.",
+        nextStepsDescription:
+          "Follow the steps below to get your AI customer service assistant ready for your business.",
         steps: {
           plan: "Choose a plan or continue the trial",
           whats: "Connect your WhatsApp number (v2)",
@@ -345,12 +383,30 @@ const resources = {
         subscribe: "Suscribirse",
         startPlanTrial: "Iniciar prueba",
         features: {
-          aiAgent: { t: "Asistente de atención", d: "Auri IA atiende a tus clientes por WhatsApp de forma natural." },
-          leadCapture: { t: "IA entrenable", d: "Entrena Auri IA con la información, servicios y orientaciones de tu empresa." },
-          analytics: { t: "Atención inteligente", d: "Entiende la intención del cliente y guía cada conversación con contexto." },
-          autoBlock: { t: "Contexto de la empresa", d: "Indica cómo funciona tu empresa para que la IA atienda mejor a tus clientes." },
-          multi: { t: "WhatsApp conectado", d: "Conecta tu número y deja que Auri IA se encargue de la atención." },
-          sdr: { t: "Voz de tu asistente", d: "Elige la voz que Auri IA usará en las conversaciones con tus clientes." },
+          aiAgent: {
+            t: "Asistente de atención",
+            d: "Auri IA atiende a tus clientes por WhatsApp de forma natural.",
+          },
+          leadCapture: {
+            t: "IA entrenable",
+            d: "Entrena Auri IA con la información, servicios y orientaciones de tu empresa.",
+          },
+          analytics: {
+            t: "Atención inteligente",
+            d: "Entiende la intención del cliente y guía cada conversación con contexto.",
+          },
+          autoBlock: {
+            t: "Contexto de la empresa",
+            d: "Indica cómo funciona tu empresa para que la IA atienda mejor a tus clientes.",
+          },
+          multi: {
+            t: "WhatsApp conectado",
+            d: "Conecta tu número y deja que Auri IA se encargue de la atención.",
+          },
+          sdr: {
+            t: "Voz de tu asistente",
+            d: "Elige la voz que Auri IA usará en las conversaciones con tus clientes.",
+          },
         },
         footer: "Asistente IA de Ventas WhatsApp",
       },
@@ -393,7 +449,8 @@ const resources = {
         renews: "Renueva el {{date}}",
         em: "—",
         nextSteps: "Próximos pasos",
-  nextStepsDescription: "Sigue los pasos a continuación para preparar tu asistente de atención con IA para tu empresa.",
+        nextStepsDescription:
+          "Sigue los pasos a continuación para preparar tu asistente de atención con IA para tu empresa.",
         steps: {
           plan: "Elige un plan o continúa la prueba",
           whats: "Conecta tu WhatsApp (v2)",
@@ -433,9 +490,7 @@ export const planCopy = {
   trial: {
     name: "Teste grátis",
     interval: "teste",
-    features: [
-      "7 dias de teste gratuito",
-    ],
+    features: ["7 dias de teste gratuito"],
   },
   monthly: {
     name: "Plano mensal",
@@ -449,15 +504,28 @@ export const planCopy = {
   },
 } as const;
 
-export function getPlanCopy(plan: { code?: string | null; name?: string | null; interval?: string | null; features?: unknown }) {
+export function getPlanCopy(plan: {
+  code?: string | null;
+  name?: string | null;
+  interval?: string | null;
+  features?: unknown;
+}) {
   const key = plan.code as keyof typeof planCopy | undefined;
   const translated = key ? planCopy[key] : undefined;
   return {
-    name: translated?.name ? translateText(translated.name) : (plan.name ? translateText(plan.name) : translateText("Plano")),
-    interval: translated?.interval ? translateText(translated.interval) : translateInterval(plan.interval),
+    name: translated?.name
+      ? translateText(translated.name)
+      : plan.name
+        ? translateText(plan.name)
+        : translateText("Plano"),
+    interval: translated?.interval
+      ? translateText(translated.interval)
+      : translateInterval(plan.interval),
     features: translated?.features
       ? translated.features.map((feature) => translateText(feature))
-      : (Array.isArray(plan.features) ? plan.features.map((feature) => translateText(String(feature))) : []),
+      : Array.isArray(plan.features)
+        ? plan.features.map((feature) => translateText(String(feature)))
+        : [],
   };
 }
 
@@ -466,98 +534,379 @@ let savedLanguage: string = "pt-BR";
 try {
   if (typeof window !== "undefined") {
     const saved = window.localStorage.getItem("lang");
-    if (saved && SUPPORTED_LANGUAGES.includes(saved as typeof SUPPORTED_LANGUAGES[number])) savedLanguage = saved;
+    if (saved && SUPPORTED_LANGUAGES.includes(saved as (typeof SUPPORTED_LANGUAGES)[number]))
+      savedLanguage = saved;
   }
 } catch {}
 
-
 const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
-  "Cadastre seu site": { en: 'Register your website', es: 'Registra tu sitio web' },
-  "Cadastre o site da sua empresa para que sua IA possa enviar o link quando necessário ou usar o site para agendamentos com data e horário, conforme sua configuração.": { en: "Register your company's website so your AI can send the link when needed or use the site for appointments with date and time, according to your configuration.", es: 'Registra el sitio web de tu empresa para que tu IA pueda enviar el enlace cuando sea necesario o utilizarlo para reservas con fecha y hora, según tu configuración.' },
-  "Site da empresa": { en: 'Company website', es: 'Sitio web de la empresa' },
-  "Esse site ficará disponível no seu painel.": { en: 'This website will remain available in your dashboard.', es: 'Este sitio web estará disponible en tu panel.' },
-  "Endereço do site": { en: 'Website address', es: 'Dirección del sitio web' },
-  "Como a IA deve usar o site?": { en: 'How should the AI use the website?', es: '¿Cómo debe utilizar la IA el sitio web?' },
-  "Enviar link": { en: 'Send link', es: 'Enviar enlace' },
-  "Catálogo, informações e acesso ao site.": { en: 'Catalog, information, and website access.', es: 'Catálogo, información y acceso al sitio.' },
-  "Agendamento": { en: 'Appointments', es: 'Reservas' },
-  "Data e horário conforme o serviço configurado.": { en: 'Date and time according to the configured service.', es: 'Fecha y hora según el servicio configurado.' },
-  "Ambos": { en: 'Both', es: 'Ambos' },
-  "Link do site e agendamento.": { en: 'Website link and appointments.', es: 'Enlace del sitio y reservas.' },
-  "Mensagem para enviar o site": { en: 'Message to send the website', es: 'Mensaje para enviar el sitio' },
-  "Digite como a IA deve apresentar o site ao cliente.": { en: 'Enter how the AI should present the website to the customer.', es: 'Escribe cómo debe presentar la IA el sitio al cliente.' },
-  "Use para inserir automaticamente o link do site:": { en: 'Use this to automatically insert the website link:', es: 'Usa esto para insertar automáticamente el enlace del sitio:' },
-  "Instruções de agendamento": { en: 'Appointment instructions', es: 'Instrucciones de reserva' },
-  "Informe como a IA deve orientar o cliente sobre data e horário.": { en: 'Explain how the AI should guide the customer about date and time.', es: 'Indica cómo debe orientar la IA al cliente sobre fecha y hora.' },
-  "Salvar site": { en: 'Save website', es: 'Guardar sitio' },
-  "Site salvo": { en: 'Website saved', es: 'Sitio guardado' },
-  "Carregando…": { en: 'Loading…', es: 'Cargando…' },
-  "Salvando…": { en: 'Saving…', es: 'Guardando…' },
-  "Não foi possível carregar o site.": { en: 'Unable to load the website.', es: 'No se pudo cargar el sitio.' },
-  "Não foi possível salvar o site.": { en: 'Unable to save the website.', es: 'No se pudo guardar el sitio.' },
-  "Você pode acessar o site da nossa empresa aqui: {site}": { en: "You can access our company's website here: {site}", es: 'Puedes acceder al sitio web de nuestra empresa aquí: {site}' },
+  "Cadastre seu site": { en: "Register your website", es: "Registra tu sitio web" },
+  "Cadastre o site da sua empresa para que sua IA possa enviar o link quando necessário ou usar o site para agendamentos com data e horário, conforme sua configuração.":
+    {
+      en: "Register your company's website so your AI can send the link when needed or use the site for appointments with date and time, according to your configuration.",
+      es: "Registra el sitio web de tu empresa para que tu IA pueda enviar el enlace cuando sea necesario o utilizarlo para reservas con fecha y hora, según tu configuración.",
+    },
+  "Site da empresa": { en: "Company website", es: "Sitio web de la empresa" },
+  "Esse site ficará disponível no seu painel.": {
+    en: "This website will remain available in your dashboard.",
+    es: "Este sitio web estará disponible en tu panel.",
+  },
+  "Endereço do site": { en: "Website address", es: "Dirección del sitio web" },
+  "Como a IA deve usar o site?": {
+    en: "How should the AI use the website?",
+    es: "¿Cómo debe utilizar la IA el sitio web?",
+  },
+  "Enviar link": { en: "Send link", es: "Enviar enlace" },
+  "Catálogo, informações e acesso ao site.": {
+    en: "Catalog, information, and website access.",
+    es: "Catálogo, información y acceso al sitio.",
+  },
+  Agendamento: { en: "Appointments", es: "Reservas" },
+  "Data e horário conforme o serviço configurado.": {
+    en: "Date and time according to the configured service.",
+    es: "Fecha y hora según el servicio configurado.",
+  },
+  Ambos: { en: "Both", es: "Ambos" },
+  "Link do site e agendamento.": {
+    en: "Website link and appointments.",
+    es: "Enlace del sitio y reservas.",
+  },
+  "Mensagem para enviar o site": {
+    en: "Message to send the website",
+    es: "Mensaje para enviar el sitio",
+  },
+  "Digite como a IA deve apresentar o site ao cliente.": {
+    en: "Enter how the AI should present the website to the customer.",
+    es: "Escribe cómo debe presentar la IA el sitio al cliente.",
+  },
+  "Use para inserir automaticamente o link do site:": {
+    en: "Use this to automatically insert the website link:",
+    es: "Usa esto para insertar automáticamente el enlace del sitio:",
+  },
+  "Instruções de agendamento": { en: "Appointment instructions", es: "Instrucciones de reserva" },
+  "Informe como a IA deve orientar o cliente sobre data e horário.": {
+    en: "Explain how the AI should guide the customer about date and time.",
+    es: "Indica cómo debe orientar la IA al cliente sobre fecha y hora.",
+  },
+  "Salvar site": { en: "Save website", es: "Guardar sitio" },
+  "Site salvo": { en: "Website saved", es: "Sitio guardado" },
+  "Carregando…": { en: "Loading…", es: "Cargando…" },
+  "Salvando…": { en: "Saving…", es: "Guardando…" },
+  "Não foi possível carregar o site.": {
+    en: "Unable to load the website.",
+    es: "No se pudo cargar el sitio.",
+  },
+  "Não foi possível salvar o site.": {
+    en: "Unable to save the website.",
+    es: "No se pudo guardar el sitio.",
+  },
+  "Você pode acessar o site da nossa empresa aqui: {site}": {
+    en: "You can access our company's website here: {site}",
+    es: "Puedes acceder al sitio web de nuestra empresa aquí: {site}",
+  },
   "Esta página não existe.": { en: "This page doesn't exist.", es: "Esta página no existe." },
   "Voltar ao início": { en: "Back to home", es: "Volver al inicio" },
   "Algo deu errado": { en: "Something went wrong", es: "Algo salió mal" },
   "Tentar novamente": { en: "Try again", es: "Intentar de nuevo" },
   "Meu perfil": { en: "My profile", es: "Mi perfil" },
   "Dados pessoais": { en: "Personal information", es: "Datos personales" },
-  "Atualize seu nome e senha de acesso.": { en: "Update your name and login password.", es: "Actualiza tu nombre y contraseña de acceso." },
-  "Identificação": { en: "Identification", es: "Identificación" },
+  "Atualize seu nome e senha de acesso.": {
+    en: "Update your name and login password.",
+    es: "Actualiza tu nombre y contraseña de acceso.",
+  },
+  Identificação: { en: "Identification", es: "Identificación" },
   "Nome completo": { en: "Full name", es: "Nombre completo" },
   "Empresa (legado)": { en: "Company (legacy)", es: "Empresa (legado)" },
-  "Esses dados serão migrados para a aba": { en: "This data will be migrated to the", es: "Estos datos se migrarán a la pestaña" },
-  "Senha": { en: "Password", es: "Contraseña" },
+  "Esses dados serão migrados para a aba": {
+    en: "This data will be migrated to the",
+    es: "Estos datos se migrarán a la pestaña",
+  },
+  Senha: { en: "Password", es: "Contraseña" },
   "Nova senha": { en: "New password", es: "Nueva contraseña" },
-  "Acesso administrativo ativo.": { en: "Administrative access is active.", es: "El acceso administrativo está activo." },
-  "Esta conta administra a plataforma e não precisa de uma assinatura de cliente.": { en: "This account administers the platform and does not need a customer subscription.", es: "Esta cuenta administra la plataforma y no necesita una suscripción de cliente." },
+  "Acesso administrativo ativo.": {
+    en: "Administrative access is active.",
+    es: "El acceso administrativo está activo.",
+  },
+  "Esta conta administra a plataforma e não precisa de uma assinatura de cliente.": {
+    en: "This account administers the platform and does not need a customer subscription.",
+    es: "Esta cuenta administra la plataforma y no necesita una suscripción de cliente.",
+  },
   "Histórico de cobrança": { en: "Billing history", es: "Historial de facturación" },
-  "Nenhum evento registrado ainda.": { en: "No events recorded yet.", es: "Aún no hay eventos registrados." },
-  "Painel administrativo · TW Design Studio": { en: "Admin panel · TW Design Studio", es: "Panel administrativo · TW Design Studio" },
+  "Nenhum evento registrado ainda.": {
+    en: "No events recorded yet.",
+    es: "Aún no hay eventos registrados.",
+  },
+  "Painel administrativo · TW Design Studio": {
+    en: "Admin panel · TW Design Studio",
+    es: "Panel administrativo · TW Design Studio",
+  },
   "Centro operacional": { en: "Operations center", es: "Centro operativo" },
-  "Centro de administração da plataforma — acesso controlado pela função de administrador.": { en: "Platform administration center — access controlled by the administrator role.", es: "Centro de administración de la plataforma — acceso controlado por la función de administrador." },
-  "Executivo": { en: "Executive", es: "Ejecutivo" }, "Clientes": { en: "Customers", es: "Clientes" },
-  "Empresas": { en: "Companies", es: "Empresas" }, "Usuários": { en: "Users", es: "Usuarios" },
-  "Briefings": { en: "Briefings", es: "Briefings" }, "Financeiro": { en: "Finance", es: "Finanzas" },
-  "Módulos de IA": { en: "AI modules", es: "Módulos de IA" }, "Filas": { en: "Queues", es: "Colas" },
-  "Logs": { en: "Logs", es: "Registros" }, "Integrações": { en: "Integrations", es: "Integraciones" },
-  "Configurações": { en: "Settings", es: "Configuración" }, "Segurança": { en: "Security", es: "Seguridad" },
-  "Operacional": { en: "Operational", es: "Operativo" }, "Verificar vencidas": { en: "Check overdue", es: "Verificar vencidas" },
+  "Centro de administração da plataforma — acesso controlado pela função de administrador.": {
+    en: "Platform administration center — access controlled by the administrator role.",
+    es: "Centro de administración de la plataforma — acceso controlado por la función de administrador.",
+  },
+  Executivo: { en: "Executive", es: "Ejecutivo" },
+  Clientes: { en: "Customers", es: "Clientes" },
+  Empresas: { en: "Companies", es: "Empresas" },
+  Usuários: { en: "Users", es: "Usuarios" },
+  Briefings: { en: "Briefings", es: "Briefings" },
+  Financeiro: { en: "Finance", es: "Finanzas" },
+  "Módulos de IA": { en: "AI modules", es: "Módulos de IA" },
+  Filas: { en: "Queues", es: "Colas" },
+  Logs: { en: "Logs", es: "Registros" },
+  Integrações: { en: "Integrations", es: "Integraciones" },
+  Configurações: { en: "Settings", es: "Configuración" },
+  Segurança: { en: "Security", es: "Seguridad" },
+  Operacional: { en: "Operational", es: "Operativo" },
+  "Verificar vencidas": { en: "Check overdue", es: "Verificar vencidas" },
   "Ouvir voz": { en: "Listen to voice", es: "Escuchar voz" },
-"Plano": { en: "Plan", es: "Plan" },
+  Plano: { en: "Plan", es: "Plan" },
   "plano mensal": { en: "monthly plan", es: "plan mensual" },
   "plano anual": { en: "annual plan", es: "plan anual" },
   "Plano mensal": { en: "Monthly plan", es: "Plan mensual" },
   "Plano anual": { en: "Annual plan", es: "Plan anual" },
-  "Passo {{step}} de {{total}}": { en: "Step {{step}} of {{total}}", es: "Paso {{step}} de {{total}}" },
-  "Passo {{current}} de {{total}}": { en: "Step {{current}} of {{total}}", es: "Paso {{current}} de {{total}}" },
+  "Passo {{step}} de {{total}}": {
+    en: "Step {{step}} of {{total}}",
+    es: "Paso {{step}} de {{total}}",
+  },
+  "Passo {{current}} de {{total}}": {
+    en: "Step {{current}} of {{total}}",
+    es: "Paso {{current}} de {{total}}",
+  },
   "Ex.: Auri": { en: "e.g.: Auri", es: "Ej.: Auri" },
-  "Segmento, produtos, serviços, horários, localização, diferenciais...": { en: "Industry, products, services, hours, location, differentiators...", es: "Sector, productos, servicios, horarios, ubicación, diferenciales..." },
-  "Prévia da voz selecionada": { en: "Selected voice preview", es: "Vista previa de la voz seleccionada" },
-  "Quando ativado, a Auri pode decidir que uma resposta longa ou explicativa fica melhor em áudio. Ela não transforma toda mensagem em voz.": { en: "When enabled, Auri may decide that a long or explanatory response is better as audio. It does not turn every message into voice.", es: "Cuando está activado, Auri puede decidir que una respuesta larga o explicativa funciona mejor en audio. No convierte todos los mensajes en voz." },
-  "Configuração por empresa, versão controlada e isolada.": { en: "Per-company configuration, controlled and isolated version.", es: "Configuración por empresa, versión controlada y aislada." },
-  "Ex.: não oferecer desconto; sempre confirmar o endereço antes de finalizar...": { en: "e.g.: do not offer discounts; always confirm the address before finalizing...", es: "Ej.: no ofrecer descuentos; siempre confirmar la dirección antes de finalizar..." },
-  "plano mensal": { en: "monthly plan", es: "plan mensual" },
-  "plano anual": { en: "annual plan", es: "plan anual" },
-  "Plano mensal": { en: "Monthly plan", es: "Plan mensual" },
-  "Plano anual": { en: "Annual plan", es: "Plan anual" }, "Status": { en: "Status", es: "Estado" }, "Expira em": { en: "Expires", es: "Expira el" }, "Ações": { en: "Actions", es: "Acciones" },
-  "Ativar": { en: "Activate", es: "Activar" }, "Bloquear": { en: "Block", es: "Bloquear" }, "Nenhum cliente.": { en: "No customers.", es: "Ningún cliente." },
-  "Dono": { en: "Owner", es: "Propietario" }, "Criada em": { en: "Created", es: "Creada" }, "Nenhuma empresa.": { en: "No companies.", es: "Ninguna empresa." },
-  "Carregando usuários…": { en: "Loading users…", es: "Cargando usuarios…" }, "Administrador": { en: "Administrator", es: "Administrador" },
-  "Nenhum usuário encontrado.": { en: "No users found.", es: "No se encontraron usuarios." }, "Novo briefing": { en: "New briefing", es: "Nuevo briefing" },
-  "Canal": { en: "Channel", es: "Canal" }, "Criado": { en: "Created", es: "Creado" }, "Nenhum briefing ainda. Crie o primeiro.": { en: "No briefings yet. Create the first one.", es: "Aún no hay briefings. Crea el primero." },
-  "Contato": { en: "Contact", es: "Contacto" }, "Instagram": { en: "Instagram", es: "Instagram" }, "E-mail": { en: "Email", es: "Correo electrónico" }, "Site": { en: "Website", es: "Sitio web" },
-  "Pendente": { en: "Pending", es: "Pendiente" }, "Em andamento": { en: "In progress", es: "En progreso" }, "Aprovado": { en: "Approved", es: "Aprobado" }, "Finalizado": { en: "Completed", es: "Finalizado" }, "Resumo": { en: "Summary", es: "Resumen" }, "Salvar": { en: "Save", es: "Guardar" },
-  "Nenhum evento ainda (Stripe está em modo simulado).": { en: "No events yet (Stripe is in simulated mode).", es: "Aún no hay eventos (Stripe está en modo simulado)." },
-  "Última execução": { en: "Last run", es: "Última ejecución" }, "Execuções": { en: "Runs", es: "Ejecuciones" }, "Modelo (Nexus IA)": { en: "Model (Nexus AI)", es: "Modelo (Nexus IA)" }, "Prompt do sistema": { en: "System prompt", es: "Prompt del sistema" }, "Máx. tokens": { en: "Max tokens", es: "Máx. tokens" }, "Salvar configuração": { en: "Save configuration", es: "Guardar configuración" },
-  "Estatísticas em tempo real da fila de atendimento, baseadas nos briefings e conexões WhatsApp ativas. Use a aba": { en: "Real-time service queue statistics based on briefings and active WhatsApp connections. Use the", es: "Estadísticas en tiempo real de la cola de atención basadas en briefings y conexiones de WhatsApp activas. Usa la pestaña" },
-  "para gerenciar individualmente.": { en: "tab to manage them individually.", es: "para gestionarlos individualmente." }, "Nenhum log encontrado.": { en: "No logs found.", es: "No se encontraron registros." },
-  "Conectado": { en: "Connected", es: "Conectado" }, "Falha": { en: "Failed", es: "Falló" }, "Não testado": { en: "Not tested", es: "No probado" }, "Ativo": { en: "Active", es: "Activo" }, "URL base": { en: "Base URL", es: "URL base" }, "Chave de API / token": { en: "API key / token", es: "Clave API / token" },
-  "Nome da marca": { en: "Brand name", es: "Nombre de marca" }, "E-mail de suporte": { en: "Support email", es: "Correo de soporte" }, "Timeout resposta (s)": { en: "Response timeout (s)", es: "Tiempo de espera de respuesta (s)" }, "Tentativas de retry": { en: "Retry attempts", es: "Intentos de reintento" }, "Moeda padrão": { en: "Default currency", es: "Moneda predeterminada" }, "BRL — Real": { en: "BRL — Brazilian Real", es: "BRL — Real brasileño" }, "USD — Dólar": { en: "USD — Dollar", es: "USD — Dólar" }, "EUR — Euro": { en: "EUR — Euro", es: "EUR — Euro" }, "URL do webhook interno (n8n / automações)": { en: "Internal webhook URL (n8n / automations)", es: "URL del webhook interno (n8n / automatizaciones)" },
-  "Minha empresa": { en: "My company", es: "Mi empresa" }, "Dados utilizados pelo atendimento, catálogo e cobrança.": { en: "Data used by customer service, catalog and billing.", es: "Datos utilizados por atención, catálogo y facturación." }, "Dados da empresa": { en: "Company data", es: "Datos de la empresa" }, "Nome / Razão social": { en: "Name / Legal name", es: "Nombre / Razón social" }, "CNPJ / CPF": { en: "Tax ID", es: "CNPJ / CPF" }, "Telefone": { en: "Phone", es: "Teléfono" }, "Fuso horário": { en: "Time zone", es: "Zona horaria" }, "URL do logo": { en: "Logo URL", es: "URL del logo" }, "Identidade": { en: "Identity", es: "Identidad" }, "Sem logo": { en: "No logo", es: "Sin logo" }, "Dica: use uma imagem quadrada (512x512) hospedada em CDN pública. Em breve, upload direto.": { en: "Tip: use a square image (512x512) hosted on a public CDN. Direct upload coming soon.", es: "Consejo: usa una imagen cuadrada (512x512) alojada en una CDN pública. La carga directa llegará pronto." },
-  "Catálogo bloqueado": { en: "Catalog blocked", es: "Catálogo bloqueado" }, "Ative o Trial ou um plano pago para liberar o catálogo e o assistente de criação de produtos.": { en: "Activate the trial or a paid plan to unlock the catalog and product creation assistant.", es: "Activa la prueba o un plan de pago para habilitar el catálogo y el asistente de creación de productos." }, "Catálogo": { en: "Catalog", es: "Catálogo" }, "Gerencie categorias e produtos. O atendimento usa este catálogo para responder seus clientes.": { en: "Manage categories and products. Customer service uses this catalog to answer your customers.", es: "Gestiona categorías y productos. La atención usa este catálogo para responder a tus clientes." }, "Criar catálogo profissional": { en: "Create professional catalog", es: "Crear catálogo profesional" }, "Como você quer o catálogo?": { en: "How do you want the catalog?", es: "¿Cómo quieres el catálogo?" }, "Referências (opcional)": { en: "References (optional)", es: "Referencias (opcional)" }, "O pedido usa os produtos e categorias já cadastrados. A criação visual será processada internamente e entregue pelo fluxo de catálogo/Canva.": { en: "The request uses the products and categories already registered. Visual creation is processed internally and delivered through the catalog/Canva workflow.", es: "El pedido usa los productos y categorías ya registradas. La creación visual se procesa internamente y se entrega mediante el flujo de catálogo/Canva." },
-  "IA Atendimento": { en: "Customer Service AI", es: "IA de Atención" }, "Treine sua IA": { en: "Train your AI", es: "Entrena tu IA" }, "Personalize a Auri com o conhecimento e o jeito da sua empresa. A camada central de qualidade e segurança não pode ser desativada pelo treinamento.": { en: "Customize Auri with your company's knowledge and style. The central quality and safety layer cannot be disabled by training.", es: "Personaliza Auri con el conocimiento y estilo de tu empresa. La capa central de calidad y seguridad no puede desactivarse mediante el entrenamiento." }, "Tutorial rápido": { en: "Quick tutorial", es: "Tutorial rápido" }, "Anterior": { en: "Previous", es: "Anterior" }, "Próximo": { en: "Next", es: "Siguiente" }, "Concluído": { en: "Completed", es: "Completado" }, "Nome de atendimento": { en: "Assistant name", es: "Nombre de atención" }, "Sobre minha empresa": { en: "About my company", es: "Sobre mi empresa" }, "Como quero que o atendimento responda": { en: "How I want customer service to respond", es: "Cómo quiero que responda la atención" }, "Orientações específicas da empresa": { en: "Company-specific instructions", es: "Instrucciones específicas de la empresa" }, "Usar respostas em áudio": { en: "Use audio responses", es: "Usar respuestas de audio" }, "Voz da Auri": { en: "Auri's voice", es: "Voz de Auri" }, "Nenhuma voz está disponível no catálogo do Nexus ainda.": { en: "No voice is available in the Nexus catalog yet.", es: "Aún no hay ninguna voz disponible en el catálogo de Nexus." }, "Suas informações são usadas somente pela sua empresa. Elas personalizam conhecimento e estilo, mas não podem desligar memória, veracidade, segurança, permissões, handoff humano, proteção de credenciais ou outras regras centrais da Auri.": { en: "Your information is used only by your company. It personalizes knowledge and style, but cannot disable memory, truthfulness, safety, permissions, human handoff, credential protection, or other core Auri rules.", es: "Tu información solo la usa tu empresa. Personaliza el conocimiento y el estilo, pero no puede desactivar la memoria, veracidad, seguridad, permisos, traspaso humano, protección de credenciales u otras reglas centrales de Auri." }, "Configuração por empresa, versão controlada e isolada.": { en: "Per-company configuration, controlled and isolated version.", es: "Configuración por empresa, versión controlada y aislada." },
-  "WhatsApp bloqueado": { en: "WhatsApp blocked", es: "WhatsApp bloqueado" }, "Ative o Trial ou um plano pago para liberar a conexão do WhatsApp.": { en: "Activate the trial or a paid plan to unlock WhatsApp connection.", es: "Activa la prueba o un plan de pago para habilitar la conexión de WhatsApp." }, "Ver planos": { en: "View plans", es: "Ver planes" }, "Conectar WhatsApp": { en: "Connect WhatsApp", es: "Conectar WhatsApp" }, "Conecte o número que será utilizado pela sua IA. A conexão é feita diretamente pelo aplicativo.": { en: "Connect the number that will be used by your AI. The connection is made directly through the app.", es: "Conecta el número que utilizará tu IA. La conexión se realiza directamente desde la aplicación." }, "Número": { en: "Number", es: "Número" }, "Nome de exibição": { en: "Display name", es: "Nombre de visualización" }, "Instância": { en: "Instance", es: "Instancia" }, "Conectado em": { en: "Connected at", es: "Conectado el" }, "Desconectar": { en: "Disconnect", es: "Desconectar" }, "1. Dados do número": { en: "1. Number details", es: "1. Datos del número" }, "Informe o número que será conectado ao Assistente IA.": { en: "Enter the number that will be connected to the AI Assistant.", es: "Introduce el número que se conectará al Asistente IA." }, "Número do WhatsApp": { en: "WhatsApp number", es: "Número de WhatsApp" }, "Conectando...": { en: "Connecting…", es: "Conectando…" }, "Atualizar QR": { en: "Refresh QR", es: "Actualizar QR" }, "2. Escaneie o QR no WhatsApp": { en: "2. Scan the QR in WhatsApp", es: "2. Escanea el QR en WhatsApp" }, "Abra o WhatsApp no celular.": { en: "Open WhatsApp on your phone.", es: "Abre WhatsApp en tu teléfono." }, "Aparelhos conectados": { en: "Linked devices", es: "Dispositivos vinculados" }, "Conectar um aparelho": { en: "Link a device", es: "Vincular un dispositivo" }, "Aponte a câmera para o QR abaixo.": { en: "Point the camera at the QR below.", es: "Apunta la cámara al QR de abajo." }, "Verificar conexão": { en: "Check connection", es: "Verificar conexión" }, "Cancelar / trocar número": { en: "Cancel / change number", es: "Cancelar / cambiar número" }, "Depois de escanear, o sistema verifica automaticamente a conexão.": { en: "After scanning, the system automatically checks the connection.", es: "Después de escanear, el sistema verifica automáticamente la conexión." }, "Gerando QR de conexão...": { en: "Generating connection QR…", es: "Generando QR de conexión…" }, "A Evolution está preparando o QR.": { en: "Evolution is preparing the QR.", es: "Evolution está preparando el QR." }, "Atualizar": { en: "Refresh", es: "Actualizar" }, "WhatsApp ativo": { en: "WhatsApp active", es: "WhatsApp activo" }, "Seu número está conectado e pronto para receber e responder mensagens com a IA.": { en: "Your number is connected and ready to receive and reply to messages with AI.", es: "Tu número está conectado y listo para recibir y responder mensajes con IA." }, "Abrir catálogo": { en: "Open catalog", es: "Abrir catálogo" }, "Voltar ao painel": { en: "Back to dashboard", es: "Volver al panel" }, "Tentativa de conexão cancelada.": { en: "Connection attempt canceled.", es: "Intento de conexión cancelado." }, "Não foi possível cancelar a conexão": { en: "Could not cancel the connection", es: "No se pudo cancelar la conexión" }, "Desconectar este WhatsApp?": { en: "Disconnect this WhatsApp?", es: "¿Desconectar este WhatsApp?" }, "WhatsApp desconectado.": { en: "WhatsApp disconnected.", es: "WhatsApp desconectado." },
+  "Segmento, produtos, serviços, horários, localização, diferenciais...": {
+    en: "Industry, products, services, hours, location, differentiators...",
+    es: "Sector, productos, servicios, horarios, ubicación, diferenciales...",
+  },
+  "Prévia da voz selecionada": {
+    en: "Selected voice preview",
+    es: "Vista previa de la voz seleccionada",
+  },
+  "Quando ativado, a Auri pode decidir que uma resposta longa ou explicativa fica melhor em áudio. Ela não transforma toda mensagem em voz.":
+    {
+      en: "When enabled, Auri may decide that a long or explanatory response is better as audio. It does not turn every message into voice.",
+      es: "Cuando está activado, Auri puede decidir que una respuesta larga o explicativa funciona mejor en audio. No convierte todos los mensajes en voz.",
+    },
+  "Configuração por empresa, versão controlada e isolada.": {
+    en: "Per-company configuration, controlled and isolated version.",
+    es: "Configuración por empresa, versión controlada y aislada.",
+  },
+  "Ex.: não oferecer desconto; sempre confirmar o endereço antes de finalizar...": {
+    en: "e.g.: do not offer discounts; always confirm the address before finalizing...",
+    es: "Ej.: no ofrecer descuentos; siempre confirmar la dirección antes de finalizar...",
+  },
+
+  Status: { en: "Status", es: "Estado" },
+  "Expira em": { en: "Expires", es: "Expira el" },
+  Ações: { en: "Actions", es: "Acciones" },
+  Ativar: { en: "Activate", es: "Activar" },
+  Bloquear: { en: "Block", es: "Bloquear" },
+  "Nenhum cliente.": { en: "No customers.", es: "Ningún cliente." },
+  Dono: { en: "Owner", es: "Propietario" },
+  "Criada em": { en: "Created", es: "Creada" },
+  "Nenhuma empresa.": { en: "No companies.", es: "Ninguna empresa." },
+  "Carregando usuários…": { en: "Loading users…", es: "Cargando usuarios…" },
+  Administrador: { en: "Administrator", es: "Administrador" },
+  "Nenhum usuário encontrado.": { en: "No users found.", es: "No se encontraron usuarios." },
+  "Novo briefing": { en: "New briefing", es: "Nuevo briefing" },
+  Canal: { en: "Channel", es: "Canal" },
+  Criado: { en: "Created", es: "Creado" },
+  "Nenhum briefing ainda. Crie o primeiro.": {
+    en: "No briefings yet. Create the first one.",
+    es: "Aún no hay briefings. Crea el primero.",
+  },
+  Contato: { en: "Contact", es: "Contacto" },
+  Instagram: { en: "Instagram", es: "Instagram" },
+  "E-mail": { en: "Email", es: "Correo electrónico" },
+  Site: { en: "Website", es: "Sitio web" },
+  Pendente: { en: "Pending", es: "Pendiente" },
+  "Em andamento": { en: "In progress", es: "En progreso" },
+  Aprovado: { en: "Approved", es: "Aprobado" },
+  Finalizado: { en: "Completed", es: "Finalizado" },
+  Resumo: { en: "Summary", es: "Resumen" },
+  Salvar: { en: "Save", es: "Guardar" },
+  "Nenhum evento ainda (Stripe está em modo simulado).": {
+    en: "No events yet (Stripe is in simulated mode).",
+    es: "Aún no hay eventos (Stripe está en modo simulado).",
+  },
+  "Última execução": { en: "Last run", es: "Última ejecución" },
+  Execuções: { en: "Runs", es: "Ejecuciones" },
+  "Modelo (Nexus IA)": { en: "Model (Nexus AI)", es: "Modelo (Nexus IA)" },
+  "Prompt do sistema": { en: "System prompt", es: "Prompt del sistema" },
+  "Máx. tokens": { en: "Max tokens", es: "Máx. tokens" },
+  "Salvar configuração": { en: "Save configuration", es: "Guardar configuración" },
+  "Estatísticas em tempo real da fila de atendimento, baseadas nos briefings e conexões WhatsApp ativas. Use a aba":
+    {
+      en: "Real-time service queue statistics based on briefings and active WhatsApp connections. Use the",
+      es: "Estadísticas en tiempo real de la cola de atención basadas en briefings y conexiones de WhatsApp activas. Usa la pestaña",
+    },
+  "para gerenciar individualmente.": {
+    en: "tab to manage them individually.",
+    es: "para gestionarlos individualmente.",
+  },
+  "Nenhum log encontrado.": { en: "No logs found.", es: "No se encontraron registros." },
+  Conectado: { en: "Connected", es: "Conectado" },
+  Falha: { en: "Failed", es: "Falló" },
+  "Não testado": { en: "Not tested", es: "No probado" },
+  Ativo: { en: "Active", es: "Activo" },
+  "URL base": { en: "Base URL", es: "URL base" },
+  "Chave de API / token": { en: "API key / token", es: "Clave API / token" },
+  "Nome da marca": { en: "Brand name", es: "Nombre de marca" },
+  "E-mail de suporte": { en: "Support email", es: "Correo de soporte" },
+  "Timeout resposta (s)": { en: "Response timeout (s)", es: "Tiempo de espera de respuesta (s)" },
+  "Tentativas de retry": { en: "Retry attempts", es: "Intentos de reintento" },
+  "Moeda padrão": { en: "Default currency", es: "Moneda predeterminada" },
+  "BRL — Real": { en: "BRL — Brazilian Real", es: "BRL — Real brasileño" },
+  "USD — Dólar": { en: "USD — Dollar", es: "USD — Dólar" },
+  "EUR — Euro": { en: "EUR — Euro", es: "EUR — Euro" },
+  "URL do webhook interno (n8n / automações)": {
+    en: "Internal webhook URL (n8n / automations)",
+    es: "URL del webhook interno (n8n / automatizaciones)",
+  },
+  "Minha empresa": { en: "My company", es: "Mi empresa" },
+  "Dados utilizados pelo atendimento, catálogo e cobrança.": {
+    en: "Data used by customer service, catalog and billing.",
+    es: "Datos utilizados por atención, catálogo y facturación.",
+  },
+  "Dados da empresa": { en: "Company data", es: "Datos de la empresa" },
+  "Nome / Razão social": { en: "Name / Legal name", es: "Nombre / Razón social" },
+  "CNPJ / CPF": { en: "Tax ID", es: "CNPJ / CPF" },
+  Telefone: { en: "Phone", es: "Teléfono" },
+  "Fuso horário": { en: "Time zone", es: "Zona horaria" },
+  "URL do logo": { en: "Logo URL", es: "URL del logo" },
+  Identidade: { en: "Identity", es: "Identidad" },
+  "Sem logo": { en: "No logo", es: "Sin logo" },
+  "Dica: use uma imagem quadrada (512x512) hospedada em CDN pública. Em breve, upload direto.": {
+    en: "Tip: use a square image (512x512) hosted on a public CDN. Direct upload coming soon.",
+    es: "Consejo: usa una imagen cuadrada (512x512) alojada en una CDN pública. La carga directa llegará pronto.",
+  },
+  "Catálogo bloqueado": { en: "Catalog blocked", es: "Catálogo bloqueado" },
+  "Ative o Trial ou um plano pago para liberar o catálogo e o assistente de criação de produtos.": {
+    en: "Activate the trial or a paid plan to unlock the catalog and product creation assistant.",
+    es: "Activa la prueba o un plan de pago para habilitar el catálogo y el asistente de creación de productos.",
+  },
+  Catálogo: { en: "Catalog", es: "Catálogo" },
+  "Gerencie categorias e produtos. O atendimento usa este catálogo para responder seus clientes.": {
+    en: "Manage categories and products. Customer service uses this catalog to answer your customers.",
+    es: "Gestiona categorías y productos. La atención usa este catálogo para responder a tus clientes.",
+  },
+  "Criar catálogo profissional": {
+    en: "Create professional catalog",
+    es: "Crear catálogo profesional",
+  },
+  "Como você quer o catálogo?": {
+    en: "How do you want the catalog?",
+    es: "¿Cómo quieres el catálogo?",
+  },
+  "Referências (opcional)": { en: "References (optional)", es: "Referencias (opcional)" },
+  "O pedido usa os produtos e categorias já cadastrados. A criação visual será processada internamente e entregue pelo fluxo de catálogo/Canva.":
+    {
+      en: "The request uses the products and categories already registered. Visual creation is processed internally and delivered through the catalog/Canva workflow.",
+      es: "El pedido usa los productos y categorías ya registradas. La creación visual se procesa internamente y se entrega mediante el flujo de catálogo/Canva.",
+    },
+  "IA Atendimento": { en: "Customer Service AI", es: "IA de Atención" },
+  "Treine sua IA": { en: "Train your AI", es: "Entrena tu IA" },
+  "Personalize a Auri com o conhecimento e o jeito da sua empresa. A camada central de qualidade e segurança não pode ser desativada pelo treinamento.":
+    {
+      en: "Customize Auri with your company's knowledge and style. The central quality and safety layer cannot be disabled by training.",
+      es: "Personaliza Auri con el conocimiento y estilo de tu empresa. La capa central de calidad y seguridad no puede desactivarse mediante el entrenamiento.",
+    },
+  "Tutorial rápido": { en: "Quick tutorial", es: "Tutorial rápido" },
+  Anterior: { en: "Previous", es: "Anterior" },
+  Próximo: { en: "Next", es: "Siguiente" },
+  Concluído: { en: "Completed", es: "Completado" },
+  "Nome de atendimento": { en: "Assistant name", es: "Nombre de atención" },
+  "Sobre minha empresa": { en: "About my company", es: "Sobre mi empresa" },
+  "Como quero que o atendimento responda": {
+    en: "How I want customer service to respond",
+    es: "Cómo quiero que responda la atención",
+  },
+  "Orientações específicas da empresa": {
+    en: "Company-specific instructions",
+    es: "Instrucciones específicas de la empresa",
+  },
+  "Usar respostas em áudio": { en: "Use audio responses", es: "Usar respuestas de audio" },
+  "Voz da Auri": { en: "Auri's voice", es: "Voz de Auri" },
+  "Nenhuma voz está disponível no catálogo do Nexus ainda.": {
+    en: "No voice is available in the Nexus catalog yet.",
+    es: "Aún no hay ninguna voz disponible en el catálogo de Nexus.",
+  },
+  "Suas informações são usadas somente pela sua empresa. Elas personalizam conhecimento e estilo, mas não podem desligar memória, veracidade, segurança, permissões, handoff humano, proteção de credenciais ou outras regras centrais da Auri.":
+    {
+      en: "Your information is used only by your company. It personalizes knowledge and style, but cannot disable memory, truthfulness, safety, permissions, human handoff, credential protection, or other core Auri rules.",
+      es: "Tu información solo la usa tu empresa. Personaliza el conocimiento y el estilo, pero no puede desactivar la memoria, veracidad, seguridad, permisos, traspaso humano, protección de credenciales u otras reglas centrales de Auri.",
+    },
+  "WhatsApp bloqueado": { en: "WhatsApp blocked", es: "WhatsApp bloqueado" },
+  "Ative o Trial ou um plano pago para liberar a conexão do WhatsApp.": {
+    en: "Activate the trial or a paid plan to unlock WhatsApp connection.",
+    es: "Activa la prueba o un plan de pago para habilitar la conexión de WhatsApp.",
+  },
+  "Ver planos": { en: "View plans", es: "Ver planes" },
+  "Conectar WhatsApp": { en: "Connect WhatsApp", es: "Conectar WhatsApp" },
+  "Conecte o número que será utilizado pela sua IA. A conexão é feita diretamente pelo aplicativo.":
+    {
+      en: "Connect the number that will be used by your AI. The connection is made directly through the app.",
+      es: "Conecta el número que utilizará tu IA. La conexión se realiza directamente desde la aplicación.",
+    },
+  Número: { en: "Number", es: "Número" },
+  "Nome de exibição": { en: "Display name", es: "Nombre de visualización" },
+  Instância: { en: "Instance", es: "Instancia" },
+  "Conectado em": { en: "Connected at", es: "Conectado el" },
+  Desconectar: { en: "Disconnect", es: "Desconectar" },
+  "1. Dados do número": { en: "1. Number details", es: "1. Datos del número" },
+  "Informe o número que será conectado ao Assistente IA.": {
+    en: "Enter the number that will be connected to the AI Assistant.",
+    es: "Introduce el número que se conectará al Asistente IA.",
+  },
+  "Número do WhatsApp": { en: "WhatsApp number", es: "Número de WhatsApp" },
+  "Conectando...": { en: "Connecting…", es: "Conectando…" },
+  "Atualizar QR": { en: "Refresh QR", es: "Actualizar QR" },
+  "2. Escaneie o QR no WhatsApp": {
+    en: "2. Scan the QR in WhatsApp",
+    es: "2. Escanea el QR en WhatsApp",
+  },
+  "Abra o WhatsApp no celular.": {
+    en: "Open WhatsApp on your phone.",
+    es: "Abre WhatsApp en tu teléfono.",
+  },
+  "Aparelhos conectados": { en: "Linked devices", es: "Dispositivos vinculados" },
+  "Conectar um aparelho": { en: "Link a device", es: "Vincular un dispositivo" },
+  "Aponte a câmera para o QR abaixo.": {
+    en: "Point the camera at the QR below.",
+    es: "Apunta la cámara al QR de abajo.",
+  },
+  "Verificar conexão": { en: "Check connection", es: "Verificar conexión" },
+  "Cancelar / trocar número": { en: "Cancel / change number", es: "Cancelar / cambiar número" },
+  "Depois de escanear, o sistema verifica automaticamente a conexão.": {
+    en: "After scanning, the system automatically checks the connection.",
+    es: "Después de escanear, el sistema verifica automáticamente la conexión.",
+  },
+  "Gerando QR de conexão...": { en: "Generating connection QR…", es: "Generando QR de conexión…" },
+  "A Evolution está preparando o QR.": {
+    en: "Evolution is preparing the QR.",
+    es: "Evolution está preparando el QR.",
+  },
+  Atualizar: { en: "Refresh", es: "Actualizar" },
+  "WhatsApp ativo": { en: "WhatsApp active", es: "WhatsApp activo" },
+  "Seu número está conectado e pronto para receber e responder mensagens com a IA.": {
+    en: "Your number is connected and ready to receive and reply to messages with AI.",
+    es: "Tu número está conectado y listo para recibir y responder mensajes con IA.",
+  },
+  "Abrir catálogo": { en: "Open catalog", es: "Abrir catálogo" },
+  "Voltar ao painel": { en: "Back to dashboard", es: "Volver al panel" },
+  "Tentativa de conexão cancelada.": {
+    en: "Connection attempt canceled.",
+    es: "Intento de conexión cancelado.",
+  },
+  "Não foi possível cancelar a conexão": {
+    en: "Could not cancel the connection",
+    es: "No se pudo cancelar la conexión",
+  },
+  "Desconectar este WhatsApp?": {
+    en: "Disconnect this WhatsApp?",
+    es: "¿Desconectar este WhatsApp?",
+  },
+  "WhatsApp desconectado.": { en: "WhatsApp disconnected.", es: "WhatsApp desconectado." },
 
   "Teste grátis": { en: "Free trial", es: "Prueba gratis" },
   "1 instância de WhatsApp": { en: "1 WhatsApp instance", es: "1 instancia de WhatsApp" },
@@ -566,7 +915,10 @@ const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
   "Catálogo básico": { en: "Basic catalog", es: "Catálogo básico" },
   "Pro mensal": { en: "Pro monthly", es: "Pro mensual" },
   "Conversas ilimitadas": { en: "Unlimited conversations", es: "Conversaciones ilimitadas" },
-  "Múltiplas instâncias de WhatsApp": { en: "Multiple WhatsApp instances", es: "Múltiples instancias de WhatsApp" },
+  "Múltiplas instâncias de WhatsApp": {
+    en: "Multiple WhatsApp instances",
+    es: "Múltiples instancias de WhatsApp",
+  },
   "Assistente de vendas com IA": { en: "AI sales assistant", es: "Asistente de ventas con IA" },
   "IA SDR": { en: "AI SDR", es: "IA SDR" },
   "Catálogo de produtos": { en: "Product catalog", es: "Catálogo de productos" },
@@ -576,22 +928,28 @@ const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
   "2 meses grátis": { en: "2 months free", es: "2 meses gratis" },
   "Implantação dedicada": { en: "Dedicated implementation", es: "Implementación dedicada" },
   "Assistente IA para WhatsApp": { en: "AI WhatsApp Assistant", es: "Asistente IA para WhatsApp" },
-  "Planos simples e transparentes": { en: "Simple, transparent pricing", es: "Planes simples y transparentes" },
-  "Cobrado em USD. Cancele quando quiser.": { en: "Billed in USD. Cancel anytime.", es: "Facturado en USD. Cancela cuando quieras." },
+  "Planos simples e transparentes": {
+    en: "Simple, transparent pricing",
+    es: "Planes simples y transparentes",
+  },
+  "Cobrado em USD. Cancele quando quiser.": {
+    en: "Billed in USD. Cancel anytime.",
+    es: "Facturado en USD. Cancela cuando quieras.",
+  },
   "Iniciar teste grátis": { en: "Start free trial", es: "Iniciar prueba gratis" },
-  "Ver planos": { en: "View pricing", es: "Ver planes" },
-  "Assinar": { en: "Subscribe", es: "Suscribirse" },
+
+  Assinar: { en: "Subscribe", es: "Suscribirse" },
   "Iniciar teste": { en: "Start trial", es: "Iniciar prueba" },
-  "anual": { en: "annual", es: "anual" },
-  "mensal": { en: "monthly", es: "mensual" },
-  "teste": { en: "trial", es: "prueba" },
-  "Erro": { en: "Error", es: "Error" },
-  "Foto": { en: "Photo", es: "Foto" },
-  "Editar": { en: "Edit", es: "Editar" },
+  anual: { en: "annual", es: "anual" },
+  mensal: { en: "monthly", es: "mensual" },
+  teste: { en: "trial", es: "prueba" },
+  Erro: { en: "Error", es: "Error" },
+  Foto: { en: "Photo", es: "Foto" },
+  Editar: { en: "Edit", es: "Editar" },
   "Buscar…": { en: "Search…", es: "Buscar…" },
-  "Próximo": { en: "Next", es: "Siguiente" },
-  "Sessões": { en: "Sessions", es: "Sesiones" },
-  "Sistema": { en: "System", es: "Sistema" },
+
+  Sessões: { en: "Sessions", es: "Sesiones" },
+  Sistema: { en: "System", es: "Sistema" },
   "IA Áudio": { en: "AI Audio", es: "IA de audio" },
   "Treinar IA": { en: "Train AI", es: "Entrenar IA" },
   "Já escaneei": { en: "I've scanned it", es: "Ya lo escaneé" },
@@ -600,11 +958,11 @@ const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
   "Loja do João": { en: "João's Store", es: "Tienda de João" },
   "Módulo salvo": { en: "Module saved", es: "Módulo guardado" },
   "Novo produto": { en: "New product", es: "Nuevo producto" },
-  "Novo briefing": { en: "New briefing", es: "Nuevo briefing" },
+
   "Não conectado": { en: "Not connected", es: "No conectado" },
   "Salvar perfil": { en: "Save profile", es: "Guardar perfil" },
   "Sem categoria": { en: "No category", es: "Sin categoría" },
-  "Abrir catálogo": { en: "Open catalog", es: "Abrir catálogo" },
+
   "Briefing salvo": { en: "Briefing saved", es: "Briefing guardado" },
   "Conectar agora": { en: "Connect now", es: "Conectar ahora" },
   "Criar catálogo": { en: "Create catalog", es: "Crear catálogo" },
@@ -664,65 +1022,220 @@ const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
   "Personalizar aparência": { en: "Customize appearance", es: "Personalizar apariencia" },
   "Preencha nome e número": { en: "Enter name and number", es: "Completa nombre y número" },
   "Buscar por nome ou SKU…": { en: "Search by name or SKU…", es: "Buscar por nombre o SKU…" },
-  "Erro ao iniciar conexão": { en: "Error starting connection", es: "Error al iniciar la conexión" },
+  "Erro ao iniciar conexão": {
+    en: "Error starting connection",
+    es: "Error al iniciar la conexión",
+  },
   "Falha ao salvar produto": { en: "Failed to save product", es: "No se pudo guardar el producto" },
   "Auditoria de autenticação": { en: "Authentication audit", es: "Auditoría de autenticación" },
-  "Erro ao atualizar conexão": { en: "Error updating connection", es: "Error al actualizar la conexión" },
-  "Falha ao remover a imagem": { en: "Failed to remove image", es: "No se pudo eliminar la imagen" },
-  "Buscar nome, CNPJ, e-mail…": { en: "Search name, tax ID, email…", es: "Buscar nombre, CNPJ, correo…" },
-  "Configuração da Auri salva": { en: "Auri configuration saved", es: "Configuración de Auri guardada" },
+  "Erro ao atualizar conexão": {
+    en: "Error updating connection",
+    es: "Error al actualizar la conexión",
+  },
+  "Falha ao remover a imagem": {
+    en: "Failed to remove image",
+    es: "No se pudo eliminar la imagen",
+  },
+  "Buscar nome, CNPJ, e-mail…": {
+    en: "Search name, tax ID, email…",
+    es: "Buscar nombre, CNPJ, correo…",
+  },
+  "Configuração da Auri salva": {
+    en: "Auri configuration saved",
+    es: "Configuración de Auri guardada",
+  },
   "Nenhum produto encontrado.": { en: "No products found.", es: "No se encontraron productos." },
-  "Produto criado no catálogo": { en: "Product created in catalog", es: "Producto creado en el catálogo" },
-  "Cadastros — últimos 14 dias": { en: "Sign-ups — last 14 days", es: "Registros — últimos 14 días" },
-  "Erro ao atualizar permissão": { en: "Error updating permission", es: "Error al actualizar el permiso" },
+  "Produto criado no catálogo": {
+    en: "Product created in catalog",
+    es: "Producto creado en el catálogo",
+  },
+  "Cadastros — últimos 14 dias": {
+    en: "Sign-ups — last 14 days",
+    es: "Registros — últimos 14 días",
+  },
+  "Erro ao atualizar permissão": {
+    en: "Error updating permission",
+    es: "Error al actualizar el permiso",
+  },
   "Falha no Agente de Catálogo": { en: "Catalog Agent failed", es: "Error del Agente de Catálogo" },
-  "Buscar e-mail, nome, empresa": { en: "Search email, name, company", es: "Buscar correo, nombre, empresa" },
-  "Imagem adicionada ao produto": { en: "Image added to product", es: "Imagen añadida al producto" },
-  "Prompt específico do agente…": { en: "Agent-specific prompt…", es: "Prompt específico del agente…" },
-  "Nome da empresa é obrigatório": { en: "Company name is required", es: "El nombre de la empresa es obligatorio" },
-  "Conexão iniciada. Aguarde o QR.": { en: "Connection started. Wait for the QR.", es: "Conexión iniciada. Espera el QR." },
-  "Nenhuma categoria criada ainda.": { en: "No categories created yet.", es: "Aún no hay categorías creadas." },
-  "Tentativa de conexão cancelada.": { en: "Connection attempt canceled.", es: "Intento de conexión cancelado." },
-  "Conecte seu WhatsApp para começar": { en: "Connect your WhatsApp to get started", es: "Conecta tu WhatsApp para comenzar" },
-  "Empresa — Assistente IA de Vendas": { en: "Company — AI Sales Assistant", es: "Empresa — Asistente de Ventas IA" },
-  "Não foi possível reproduzir a voz": { en: "Could not play the voice", es: "No se pudo reproducir la voz" },
-  "QR gerado. Escaneie pelo WhatsApp.": { en: "QR generated. Scan it with WhatsApp.", es: "QR generado. Escanéalo con WhatsApp." },
-  "Não foi possível cancelar a conexão": { en: "Could not cancel the connection", es: "No se pudo cancelar la conexión" },
-  "Não foi possível iniciar o catálogo": { en: "Could not start the catalog", es: "No se pudo iniciar el catálogo" },
-  "O WhatsApp ainda não está conectado": { en: "WhatsApp is not connected yet", es: "WhatsApp aún no está conectado" },
-  "QR code real de conexão do WhatsApp": { en: "Real WhatsApp connection QR code", es: "Código QR real de conexión de WhatsApp" },
-  "Meu perfil — Assistente IA de Vendas": { en: "My profile — AI Sales Assistant", es: "Mi perfil — Asistente de Ventas IA" },
-  "Eventos de cobrança (webhooks Stripe)": { en: "Billing events (Stripe webhooks)", es: "Eventos de facturación (webhooks de Stripe)" },
-  "Confirme seu plano e ciclo de cobrança.": { en: "Confirm your plan and billing cycle.", es: "Confirma tu plan y ciclo de facturación." },
-  "Escaneie o QR para finalizar a conexão.": { en: "Scan the QR to finish the connection.", es: "Escanea el QR para finalizar la conexión." },
-  "Catálogo — Assistente de Vendas WhatsApp": { en: "Catalog — WhatsApp Sales Assistant", es: "Catálogo — Asistente de Ventas WhatsApp" },
-  "Painel administrativo — TW Design Studio": { en: "Admin panel — TW Design Studio", es: "Panel administrativo — TW Design Studio" },
-  "Entrar — Assistente IA de Vendas WhatsApp": { en: "Sign in — AI WhatsApp Sales Assistant", es: "Iniciar sesión — Asistente de Ventas IA para WhatsApp" },
-  "Painel — Assistente IA de Vendas WhatsApp": { en: "Dashboard — AI WhatsApp Sales Assistant", es: "Panel — Asistente de Ventas IA para WhatsApp" },
-  "Cadastre o número que receberá as conversas.": { en: "Set up the number that will receive conversations.", es: "Configura el número que recibirá las conversaciones." },
-  "Assinatura — Assistente IA de Vendas WhatsApp": { en: "Subscription — AI WhatsApp Sales Assistant", es: "Suscripción — Asistente de Ventas IA para WhatsApp" },
-  "Escaneie o QR code para finalizar a ativação.": { en: "Scan the QR code to finish activation.", es: "Escanea el código QR para finalizar la activación." },
-  "Criar conta — Assistente IA de Vendas WhatsApp": { en: "Create account — AI WhatsApp Sales Assistant", es: "Crear cuenta — Asistente de Ventas IA para WhatsApp" },
-  "Ex.: quero cadastrar um X-Burger por R$ 29,90…": { en: "E.g.: I want to add an X-Burger for R$ 29.90…", es: "Ej.: quiero registrar un X-Burger por R$ 29,90…" },
-  "API Key do Nexus IA e URL compatível com OpenAI.": { en: "Nexus AI API key and OpenAI-compatible URL.", es: "Clave API de Nexus IA y URL compatible con OpenAI." },
-  "Chave configurada — digite apenas para substituir": { en: "Key configured — type only to replace it", es: "Clave configurada — escribe solo para reemplazarla" },
-  "Adicione produtos para a IA responder com preços reais.": { en: "Add products so AI can answer with real prices.", es: "Añade productos para que la IA responda con precios reales." },
-  "Sua assinatura está pausada. Reative para liberar a IA.": { en: "Your subscription is paused. Reactivate it to unlock AI.", es: "Tu suscripción está pausada. Reactívala para habilitar la IA." },
-  "Sem WhatsApp conectado a IA não consegue atender seus clientes.": { en: "Without connected WhatsApp, AI cannot serve your customers.", es: "Sin WhatsApp conectado, la IA no puede atender a tus clientes." },
-  "Cole uma URL por linha de sites, imagens ou referências visuais.": { en: "Paste one URL per line for websites, images or visual references.", es: "Pega una URL por línea de sitios, imágenes o referencias visuales." },
-  "A tentativa será encerrada automaticamente se não houver conexão.": { en: "The attempt will end automatically if there is no connection.", es: "El intento finalizará automáticamente si no hay conexión." },
-  "Diga segmento, produtos, serviços e informações que a atendente precisa conhecer.": { en: "Tell us your industry, products, services and information the assistant needs to know.", es: "Indica el sector, productos, servicios e información que la asistente debe conocer." },
-  "Tom de voz, forma de responder, como abordar clientes, como apresentar os serviços...": { en: "Tone of voice, response style, how to approach customers, how to present services...", es: "Tono de voz, forma de responder, cómo abordar clientes, cómo presentar los servicios..." },
-  "URL base do seu UAZAPI/Evolution (ex.: https://api.seudominio.com) e token de instância.": { en: "Your UAZAPI/Evolution base URL (e.g. https://api.yourdomain.com) and instance token.", es: "URL base de tu UAZAPI/Evolution (ej.: https://api.tudominio.com) y token de instancia." },
-  "Plataforma SaaS global: conecte o WhatsApp, ative agentes de IA e venda no piloto automático.": { en: "Global SaaS platform: connect WhatsApp, activate AI agents and sell on autopilot.", es: "Plataforma SaaS global: conecta WhatsApp, activa agentes de IA y vende en piloto automático." },
-  "Você está configurando o conhecimento e as preferências que a Auri usa para atender sua empresa.": { en: "You are configuring the knowledge and preferences Auri uses to serve your company.", es: "Estás configurando el conocimiento y las preferencias que Auri usa para atender a tu empresa." },
-  "Ative o áudio somente se quiser e escolha a voz que será usada quando a atendente decidir que falar é melhor.": { en: "Enable audio only if you want it and choose the voice used when the assistant decides speaking is better.", es: "Activa el audio solo si quieres y elige la voz que se usará cuando la asistente decida que hablar es mejor." },
-  "Ex.: catálogo premium para WhatsApp, preto e dourado, 10 páginas, capa, categorias, produtos, combos e contato.": { en: "E.g.: premium WhatsApp catalog, black and gold, 10 pages, cover, categories, products, combos and contact.", es: "Ej.: catálogo premium para WhatsApp, negro y dorado, 10 páginas, portada, categorías, productos, combos y contacto." },
-  "Escolha nome, tom e orientações. As regras centrais de qualidade, segurança e continuidade permanecem protegidas.": { en: "Choose the name, tone and guidelines. Core quality, safety and continuity rules remain protected.", es: "Elige el nombre, tono y orientaciones. Las reglas centrales de calidad, seguridad y continuidad permanecen protegidas." },
+  "Buscar e-mail, nome, empresa": {
+    en: "Search email, name, company",
+    es: "Buscar correo, nombre, empresa",
+  },
+  "Imagem adicionada ao produto": {
+    en: "Image added to product",
+    es: "Imagen añadida al producto",
+  },
+  "Prompt específico do agente…": {
+    en: "Agent-specific prompt…",
+    es: "Prompt específico del agente…",
+  },
+  "Nome da empresa é obrigatório": {
+    en: "Company name is required",
+    es: "El nombre de la empresa es obligatorio",
+  },
+  "Conexão iniciada. Aguarde o QR.": {
+    en: "Connection started. Wait for the QR.",
+    es: "Conexión iniciada. Espera el QR.",
+  },
+  "Nenhuma categoria criada ainda.": {
+    en: "No categories created yet.",
+    es: "Aún no hay categorías creadas.",
+  },
+
+  "Conecte seu WhatsApp para começar": {
+    en: "Connect your WhatsApp to get started",
+    es: "Conecta tu WhatsApp para comenzar",
+  },
+  "Empresa — Assistente IA de Vendas": {
+    en: "Company — AI Sales Assistant",
+    es: "Empresa — Asistente de Ventas IA",
+  },
+  "Não foi possível reproduzir a voz": {
+    en: "Could not play the voice",
+    es: "No se pudo reproducir la voz",
+  },
+  "QR gerado. Escaneie pelo WhatsApp.": {
+    en: "QR generated. Scan it with WhatsApp.",
+    es: "QR generado. Escanéalo con WhatsApp.",
+  },
+
+  "Não foi possível iniciar o catálogo": {
+    en: "Could not start the catalog",
+    es: "No se pudo iniciar el catálogo",
+  },
+  "O WhatsApp ainda não está conectado": {
+    en: "WhatsApp is not connected yet",
+    es: "WhatsApp aún no está conectado",
+  },
+  "QR code real de conexão do WhatsApp": {
+    en: "Real WhatsApp connection QR code",
+    es: "Código QR real de conexión de WhatsApp",
+  },
+  "Meu perfil — Assistente IA de Vendas": {
+    en: "My profile — AI Sales Assistant",
+    es: "Mi perfil — Asistente de Ventas IA",
+  },
+  "Eventos de cobrança (webhooks Stripe)": {
+    en: "Billing events (Stripe webhooks)",
+    es: "Eventos de facturación (webhooks de Stripe)",
+  },
+  "Confirme seu plano e ciclo de cobrança.": {
+    en: "Confirm your plan and billing cycle.",
+    es: "Confirma tu plan y ciclo de facturación.",
+  },
+  "Escaneie o QR para finalizar a conexão.": {
+    en: "Scan the QR to finish the connection.",
+    es: "Escanea el QR para finalizar la conexión.",
+  },
+  "Catálogo — Assistente de Vendas WhatsApp": {
+    en: "Catalog — WhatsApp Sales Assistant",
+    es: "Catálogo — Asistente de Ventas WhatsApp",
+  },
+  "Painel administrativo — TW Design Studio": {
+    en: "Admin panel — TW Design Studio",
+    es: "Panel administrativo — TW Design Studio",
+  },
+  "Entrar — Assistente IA de Vendas WhatsApp": {
+    en: "Sign in — AI WhatsApp Sales Assistant",
+    es: "Iniciar sesión — Asistente de Ventas IA para WhatsApp",
+  },
+  "Painel — Assistente IA de Vendas WhatsApp": {
+    en: "Dashboard — AI WhatsApp Sales Assistant",
+    es: "Panel — Asistente de Ventas IA para WhatsApp",
+  },
+  "Cadastre o número que receberá as conversas.": {
+    en: "Set up the number that will receive conversations.",
+    es: "Configura el número que recibirá las conversaciones.",
+  },
+  "Assinatura — Assistente IA de Vendas WhatsApp": {
+    en: "Subscription — AI WhatsApp Sales Assistant",
+    es: "Suscripción — Asistente de Ventas IA para WhatsApp",
+  },
+  "Escaneie o QR code para finalizar a ativação.": {
+    en: "Scan the QR code to finish activation.",
+    es: "Escanea el código QR para finalizar la activación.",
+  },
+  "Criar conta — Assistente IA de Vendas WhatsApp": {
+    en: "Create account — AI WhatsApp Sales Assistant",
+    es: "Crear cuenta — Asistente de Ventas IA para WhatsApp",
+  },
+  "Ex.: quero cadastrar um X-Burger por R$ 29,90…": {
+    en: "E.g.: I want to add an X-Burger for R$ 29.90…",
+    es: "Ej.: quiero registrar un X-Burger por R$ 29,90…",
+  },
+  "API Key do Nexus IA e URL compatível com OpenAI.": {
+    en: "Nexus AI API key and OpenAI-compatible URL.",
+    es: "Clave API de Nexus IA y URL compatible con OpenAI.",
+  },
+  "Chave configurada — digite apenas para substituir": {
+    en: "Key configured — type only to replace it",
+    es: "Clave configurada — escribe solo para reemplazarla",
+  },
+  "Adicione produtos para a IA responder com preços reais.": {
+    en: "Add products so AI can answer with real prices.",
+    es: "Añade productos para que la IA responda con precios reales.",
+  },
+  "Sua assinatura está pausada. Reative para liberar a IA.": {
+    en: "Your subscription is paused. Reactivate it to unlock AI.",
+    es: "Tu suscripción está pausada. Reactívala para habilitar la IA.",
+  },
+  "Sem WhatsApp conectado a IA não consegue atender seus clientes.": {
+    en: "Without connected WhatsApp, AI cannot serve your customers.",
+    es: "Sin WhatsApp conectado, la IA no puede atender a tus clientes.",
+  },
+  "Cole uma URL por linha de sites, imagens ou referências visuais.": {
+    en: "Paste one URL per line for websites, images or visual references.",
+    es: "Pega una URL por línea de sitios, imágenes o referencias visuales.",
+  },
+  "A tentativa será encerrada automaticamente se não houver conexão.": {
+    en: "The attempt will end automatically if there is no connection.",
+    es: "El intento finalizará automáticamente si no hay conexión.",
+  },
+  "Diga segmento, produtos, serviços e informações que a atendente precisa conhecer.": {
+    en: "Tell us your industry, products, services and information the assistant needs to know.",
+    es: "Indica el sector, productos, servicios e información que la asistente debe conocer.",
+  },
+  "Tom de voz, forma de responder, como abordar clientes, como apresentar os serviços...": {
+    en: "Tone of voice, response style, how to approach customers, how to present services...",
+    es: "Tono de voz, forma de responder, cómo abordar clientes, cómo presentar los servicios...",
+  },
+  "URL base do seu UAZAPI/Evolution (ex.: https://api.seudominio.com) e token de instância.": {
+    en: "Your UAZAPI/Evolution base URL (e.g. https://api.yourdomain.com) and instance token.",
+    es: "URL base de tu UAZAPI/Evolution (ej.: https://api.tudominio.com) y token de instancia.",
+  },
+  "Plataforma SaaS global: conecte o WhatsApp, ative agentes de IA e venda no piloto automático.": {
+    en: "Global SaaS platform: connect WhatsApp, activate AI agents and sell on autopilot.",
+    es: "Plataforma SaaS global: conecta WhatsApp, activa agentes de IA y vende en piloto automático.",
+  },
+  "Você está configurando o conhecimento e as preferências que a Auri usa para atender sua empresa.":
+    {
+      en: "You are configuring the knowledge and preferences Auri uses to serve your company.",
+      es: "Estás configurando el conocimiento y las preferencias que Auri usa para atender a tu empresa.",
+    },
+  "Ative o áudio somente se quiser e escolha a voz que será usada quando a atendente decidir que falar é melhor.":
+    {
+      en: "Enable audio only if you want it and choose the voice used when the assistant decides speaking is better.",
+      es: "Activa el audio solo si quieres y elige la voz que se usará cuando la asistente decida que hablar es mejor.",
+    },
+  "Ex.: catálogo premium para WhatsApp, preto e dourado, 10 páginas, capa, categorias, produtos, combos e contato.":
+    {
+      en: "E.g.: premium WhatsApp catalog, black and gold, 10 pages, cover, categories, products, combos and contact.",
+      es: "Ej.: catálogo premium para WhatsApp, negro y dorado, 10 páginas, portada, categorías, productos, combos y contacto.",
+    },
+  "Escolha nome, tom e orientações. As regras centrais de qualidade, segurança e continuidade permanecem protegidas.":
+    {
+      en: "Choose the name, tone and guidelines. Core quality, safety and continuity rules remain protected.",
+      es: "Elige el nombre, tono y orientaciones. Las reglas centrales de calidad, seguridad y continuidad permanecen protegidas.",
+    },
 };
 
 export function translateText(text: string) {
-  const lang = i18n.language?.startsWith("en") ? "en" : i18n.language?.startsWith("es") ? "es" : "pt-BR";
+  const lang = i18n.language?.startsWith("en")
+    ? "en"
+    : i18n.language?.startsWith("es")
+      ? "es"
+      : "pt-BR";
   if (lang === "pt-BR") return text;
   return DIRECT_TRANSLATIONS[text]?.[lang] ?? text;
 }
@@ -732,7 +1245,8 @@ export function installDomTranslations() {
   const translateNode = (node: Node) => {
     if (node.nodeType !== Node.TEXT_NODE) return;
     const parent = node.parentElement;
-    if (!parent || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA|INPUT|SELECT|OPTION)$/.test(parent.tagName)) return;
+    if (!parent || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA|INPUT|SELECT|OPTION)$/.test(parent.tagName))
+      return;
     const original = node.nodeValue ?? "";
     const leading = original.match(/^\s*/)?.[0] ?? "";
     const trailing = original.match(/\s*$/)?.[0] ?? "";
@@ -752,22 +1266,34 @@ export function installDomTranslations() {
         if (value && DIRECT_TRANSLATIONS[value]) element.setAttribute(attr, translateText(value));
       }
     });
-    const lang = i18n.language?.startsWith("en") ? "en" : i18n.language?.startsWith("es") ? "es" : "pt-BR";
+    const lang = i18n.language?.startsWith("en")
+      ? "en"
+      : i18n.language?.startsWith("es")
+        ? "es"
+        : "pt-BR";
     document.documentElement.lang = lang;
   };
   const observer = new MutationObserver((records) => {
     for (const record of records) {
       record.addedNodes.forEach((n) => {
         if (n.nodeType === Node.TEXT_NODE) translateNode(n);
-        else if (n.nodeType === Node.ELEMENT_NODE) (n as Element).querySelectorAll("*").forEach((el) => el.childNodes.forEach(translateNode));
+        else if (n.nodeType === Node.ELEMENT_NODE)
+          (n as Element)
+            .querySelectorAll("*")
+            .forEach((el) => el.childNodes.forEach(translateNode));
       });
     }
   });
   const run = () => window.requestAnimationFrame(scan);
-  if (document.body) { scan(); observer.observe(document.body, { childList: true, subtree: true, characterData: true }); }
+  if (document.body) {
+    scan();
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
   i18n.on("languageChanged", run);
-  return () => { observer.disconnect(); i18n.off("languageChanged", run); 
-};
+  return () => {
+    observer.disconnect();
+    i18n.off("languageChanged", run);
+  };
 }
 
 export function translateInterval(interval?: string | null) {

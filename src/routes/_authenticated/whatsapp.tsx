@@ -105,12 +105,21 @@ function WhatsappPage() {
    * em "Já escaneei" para o sistema descobrir
    * que o WhatsApp conectou.
    */
+  const pendingStartedAt =
+    conn?.metadata &&
+    typeof conn.metadata === "object" &&
+    !Array.isArray(conn.metadata) &&
+    "pending_started_at" in conn.metadata &&
+    typeof conn.metadata.pending_started_at === "string"
+      ? conn.metadata.pending_started_at
+      : null;
+
   useEffect(() => {
     if (status !== "pending") {
       setPendingSeconds(null);
       return;
     }
-    const started = conn?.metadata?.pending_started_at;
+    const started = pendingStartedAt;
     if (!started) {
       setPendingSeconds(120);
       return;
@@ -123,7 +132,7 @@ function WhatsappPage() {
     update();
     const timer = window.setInterval(update, 1000);
     return () => window.clearInterval(timer);
-  }, [status, conn?.metadata?.pending_started_at]);
+  }, [status, pendingStartedAt]);
 
   useEffect(() => {
     if (status !== "pending" || !conn?.instance_name) return;

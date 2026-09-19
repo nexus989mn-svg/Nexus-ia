@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Database } from "@/integrations/supabase/types";
 
 async function ensureAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -71,7 +72,7 @@ export const adminSetSubscriptionStatus = createServerFn({ method: "POST" })
     await ensureAdmin(context.userId);
 
     const now = new Date();
-    const updates: Record<string, unknown> = {
+    const updates: Database["public"]["Tables"]["subscriptions"]["Update"] = {
       status: data.status,
       updated_at: now.toISOString(),
     };

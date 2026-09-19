@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Brain, Building2, CheckCircle2, MessageSquare, ShieldCheck, Sparkles, Volume2, Play, Loader2 } from "lucide-react";
+import { Brain, Building2, CheckCircle2, MessageSquare, ShieldCheck, Sparkles, Volume2, Play, Loader2, type LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,7 @@ const stepKeys = [
   },
 ];
 
-function Illustration({ icon: Icon }: { icon?: Step["icon"] }) {
+function Illustration({ icon: Icon }: { icon?: LucideIcon }) {
   const CurrentIcon = Icon ?? Sparkles;
   return <div className="h-40 rounded-2xl border border-primary/20 bg-primary/5 flex items-center justify-center"><div className="h-20 w-20 rounded-3xl bg-background border border-border shadow-lg flex items-center justify-center"><CurrentIcon className="h-10 w-10 text-primary" /></div></div>;
 }

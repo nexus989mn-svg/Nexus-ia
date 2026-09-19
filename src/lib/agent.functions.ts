@@ -34,7 +34,7 @@ export const listConversations = createServerFn({ method: "GET" })
     const companyId = await getCompanyId(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("ai_conversations")
-      .select("id, title, module_code, created_at, updated_at")
+      .select("id, title, context, created_at, updated_at")
       .eq("company_id", companyId)
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -60,9 +60,9 @@ export const createConversation = createServerFn({ method: "POST" })
         company_id: companyId,
         user_id: context.userId,
         title: data.title ?? "Nova conversa",
-        module_code: data.moduleCode ?? null,
+        context: { moduleCode: data.moduleCode ?? null },
       })
-      .select("id, title, module_code, created_at, updated_at")
+      .select("id, title, context, created_at, updated_at")
       .single();
     if (error) throw new Error(error.message);
     return { conversation: row };

@@ -36,7 +36,7 @@ function WebsitePage() {
 
         if (website) {
           setUrl(website.url ?? "");
-          setMode(website.usage_mode ?? "link");
+          setMode(website.usage_mode === "booking" || website.usage_mode === "both" ? website.usage_mode : "link");
           setMessage(website.link_message ?? "");
           setBooking(website.booking_instructions ?? "");
         } else {

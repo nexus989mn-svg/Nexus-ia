@@ -1,11 +1,12 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Json } from "@/integrations/supabase/types";
 
 export async function emitOperationalEvent(input: {
   eventType: string;
   severity?: "info" | "warning" | "error" | "critical";
   userId?: string | null;
   companyId?: string | null;
-  payload?: Record<string, unknown>;
+  payload?: Json;
 }) {
   const event = {
     event_type: input.eventType,

@@ -159,7 +159,14 @@ export const getMyWhatsapp = createServerFn({ method: "GET" })
     // Uma tentativa de QR não pode ficar presa indefinidamente.
     // Após 2 minutos, encerra a tentativa e libera a tela para outro número.
     if (data?.status === "pending") {
-      const startedAt = data.metadata?.pending_started_at;
+      const startedAt =
+        data.metadata &&
+        typeof data.metadata === "object" &&
+        !Array.isArray(data.metadata) &&
+        "pending_started_at" in data.metadata &&
+        typeof data.metadata.pending_started_at === "string"
+          ? data.metadata.pending_started_at
+          : null;
       const age = startedAt ? Date.now() - new Date(startedAt).getTime() : 0;
       if (startedAt && age >= 2 * 60 * 1000) {
         if (data.instance_name) {

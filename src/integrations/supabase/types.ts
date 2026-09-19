@@ -53,28 +53,28 @@ export type Database = {
       ai_conversations: {
         Row: {
           company_id: string
+          context: Json
           created_at: string
           id: string
-          module_code: string | null
-          title: string
+          title: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           company_id: string
+          context?: Json
           created_at?: string
           id?: string
-          module_code?: string | null
-          title?: string
+          title?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           company_id?: string
+          context?: Json
           created_at?: string
           id?: string
-          module_code?: string | null
-          title?: string
+          title?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -95,11 +95,8 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
-          model: string | null
-          parts: Json
+          metadata: Json
           role: string
-          tokens_input: number | null
-          tokens_output: number | null
         }
         Insert: {
           company_id: string
@@ -107,11 +104,8 @@ export type Database = {
           conversation_id: string
           created_at?: string
           id?: string
-          model?: string | null
-          parts?: Json
+          metadata?: Json
           role: string
-          tokens_input?: number | null
-          tokens_output?: number | null
         }
         Update: {
           company_id?: string
@@ -119,11 +113,8 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           id?: string
-          model?: string | null
-          parts?: Json
+          metadata?: Json
           role?: string
-          tokens_input?: number | null
-          tokens_output?: number | null
         }
         Relationships: [
           {
@@ -771,11 +762,93 @@ export type Database = {
           },
         ]
       }
+      company_websites: {
+        Row: {
+          id: string
+          company_id: string
+          url: string
+          is_active: boolean
+          usage_mode: string
+          link_message: string | null
+          booking_instructions: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          url: string
+          is_active?: boolean
+          usage_mode?: string
+          link_message?: string | null
+          booking_instructions?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          url?: string
+          is_active?: boolean
+          usage_mode?: string
+          link_message?: string | null
+          booking_instructions?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      operational_events: {
+        Row: {
+          id: string
+          event_type: string
+          severity: string
+          user_id: string | null
+          company_id: string | null
+          payload: Json
+          status: string
+          resolved_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_type: string
+          severity: string
+          user_id?: string | null
+          company_id?: string | null
+          payload?: Json
+          status?: string
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          event_type?: string
+          severity?: string
+          user_id?: string | null
+          company_id?: string | null
+          payload?: Json
+          status?: string
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      claim_trial: {
+        Args: {
+          p_email: string
+          p_period_end: string
+          p_phone: string
+          p_plan_id: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       current_company_id: { Args: never; Returns: string }
       expire_overdue_subscriptions: { Args: never; Returns: number }
       has_role: {

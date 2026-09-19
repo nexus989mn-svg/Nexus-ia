@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Database } from "@/integrations/supabase/types";
 
 async function ensureAdmin(supabase: any, userId: string) {
   const { data } = await supabase
@@ -87,7 +88,7 @@ export const adminSaveIntegration = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existingError) throw new Error(existingError.message);
 
-    const patch: Record<string, unknown> = {
+    const patch: Database["public"]["Tables"]["integration_credentials"]["Insert"] = {
       provider: data.provider,
       label: data.label ?? data.provider,
       base_url: data.base_url ?? null,

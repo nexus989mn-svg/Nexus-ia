@@ -3,9 +3,28 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Package, FolderTree, Search, Sparkles, Send, Wand2, Upload, CheckCircle2 } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Package,
+  FolderTree,
+  Search,
+  Sparkles,
+  Send,
+  Wand2,
+  Upload,
+  CheckCircle2,
+} from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import {
+  createCatalogConversation,
+  listMyCatalogConversations,
+  getMyCatalogConversation,
+  saveCatalogConversation,
+  deleteMyCatalogConversation,
+} from "@/lib/catalog-conversation.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,7 +64,13 @@ export const Route = createFileRoute("/_authenticated/catalog")({
   component: CatalogPage,
 });
 
-type Category = { id: string; name: string; description: string | null; sort_order: number; is_active: boolean };
+type Category = {
+  id: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  is_active: boolean;
+};
 type Product = {
   id: string;
   category_id: string | null;
@@ -103,28 +128,34 @@ function CatalogPage() {
         <div className="max-w-2xl mx-auto mt-10 rounded-3xl border border-border bg-card-glass p-6 md:p-8 text-center">
           <Package className="h-10 w-10 mx-auto text-primary" />
           <h1 className="text-2xl font-bold mt-4">Catálogo bloqueado</h1>
-          <p className="text-muted-foreground mt-2">Ative o Trial ou um plano pago para liberar o catálogo e o assistente de criação de produtos.</p>
-          <Link to="/billing"><Button className="mt-5 bg-gradient-primary">Ver planos</Button></Link>
+          <p className="text-muted-foreground mt-2">
+            Ative o Trial ou um plano pago para liberar o catálogo e o assistente de criação de
+            produtos.
+          </p>
+          <Link to="/billing">
+            <Button className="mt-5 bg-gradient-primary">Ver planos</Button>
+          </Link>
         </div>
       </AppShell>
     );
   }
-
 
   return (
     <AppShell isAdmin={isAdmin}>
       <div className="mb-6 rounded-3xl border border-border bg-card-glass p-5 md:p-6 relative overflow-hidden">
         <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Catálogo</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Crie e organize seu catálogo conversando com o assistente. O atendimento usa este catálogo para responder seus clientes.
-          </p>
-        </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">Catálogo</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Crie e organize seu catálogo conversando com o assistente. O atendimento usa este
+              catálogo para responder seus clientes.
+            </p>
+          </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <div className="flex items-center gap-2 text-xs text-muted-foreground rounded-full border border-border px-3 py-1.5 bg-background/40">
-              <Package className="h-4 w-4" /> {products.length} produtos · {categories.length} categorias
+              <Package className="h-4 w-4" /> {products.length} produtos · {categories.length}{" "}
+              categorias
             </div>
           </div>
         </div>
@@ -134,12 +165,23 @@ function CatalogPage() {
 
       <Tabs defaultValue="products" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="products"><Package className="h-4 w-4 mr-2" />Produtos</TabsTrigger>
-          <TabsTrigger value="categories"><FolderTree className="h-4 w-4 mr-2" />Categorias</TabsTrigger>
+          <TabsTrigger value="products">
+            <Package className="h-4 w-4 mr-2" />
+            Produtos
+          </TabsTrigger>
+          <TabsTrigger value="categories">
+            <FolderTree className="h-4 w-4 mr-2" />
+            Categorias
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="mt-4">
-          <ProductsTab products={products} categories={categories} isLoading={isLoading} onChange={refresh} />
+          <ProductsTab
+            products={products}
+            categories={categories}
+            isLoading={isLoading}
+            onChange={refresh}
+          />
         </TabsContent>
         <TabsContent value="categories" className="mt-4">
           <CategoriesTab categories={categories} onChange={refresh} />
@@ -150,13 +192,27 @@ function CatalogPage() {
 }
 
 /* ---------------- AI Catalog Agent ---------------- */
-function CatalogAIAgent({ categories, products, onSaved }: { categories: Category[]; products: Product[]; onSaved: () => void }) {
+function CatalogAIAgent({
+  categories,
+  products,
+  onSaved,
+}: {
+  categories: Category[];
+  products: Product[];
+  onSaved: () => void;
+}) {
   const { user } = useAuth();
   const runAgent = useServerFn(catalogAgentChat);
   const [open, setOpen] = useState(false);
-  const [conversationId] = useState(() =>
-    `catalog:${user?.id ?? "anonymous"}:${crypto.randomUUID()}`
-  );
+  const createConversationFn = useServerFn(createCatalogConversation);
+  const listConversationsFn = useServerFn(listMyCatalogConversations);
+  const getConversationFn = useServerFn(getMyCatalogConversation);
+  const saveConversationFn = useServerFn(saveCatalogConversation);
+  const deleteConversationFn = useServerFn(deleteMyCatalogConversation);
+
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationList, setConversationList] = useState<any[]>([]);
+  const [showConversations, setShowConversations] = useState(false);
   const [input, setInput] = useState("");
   type CatalogMessage = {
     role: "user" | "assistant";
@@ -164,9 +220,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
     imageUrl?: string | null;
   };
 
-  const [messages, setMessages] = useState<CatalogMessage[]>([
-    { role: "assistant", content: "Olá! O que você quer montar no seu catálogo? Pode me explicar do jeito que quiser. Eu vou entender o que você precisa e conduzir a criação com você." },
-  ]);
+  const [messages, setMessages] = useState<CatalogMessage[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -174,13 +228,139 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
   const [draft, setDraft] = useState<any>(null);
   const [imageMode, setImageMode] = useState<"original" | "reference" | "generate">("original");
 
+  const loadConversations = async () => {
+    if (!user) return;
+
+    try {
+      const result = await listConversationsFn();
+      const list = result.conversations ?? [];
+      setConversationList(list);
+
+      if (list.length > 0) {
+        const first = list[0];
+        const conversation = await getConversationFn({
+          data: { conversationId: first.id },
+        });
+
+        setConversationId(first.id);
+
+        setMessages(
+          (conversation.messages ?? []).map((message: any) => ({
+            role: message.role,
+            content: message.content ?? "",
+            imageUrl: message.metadata?.imageUrl ?? null,
+          })),
+        );
+      } else {
+        const created = await createConversationFn();
+        setConversationId(created.conversation.id);
+        setConversationList([created.conversation]);
+        setMessages([
+          {
+            role: "assistant",
+            content: created.greeting,
+          },
+        ]);
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível carregar as conversas.",
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    void loadConversations();
+  }, [user?.id]);
+
+  const openConversation = async (id: string) => {
+    try {
+      const result = await getConversationFn({
+        data: { conversationId: id },
+      });
+
+      setConversationId(id);
+      setMessages(
+        (result.messages ?? []).map((message: any) => ({
+          role: message.role,
+          content: message.content ?? "",
+          imageUrl: message.metadata?.imageUrl ?? null,
+        })),
+      );
+      setShowConversations(false);
+      setExecutionStatus(null);
+      setImageUrl(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível abrir a conversa.");
+    }
+  };
+
+  const newConversation = async () => {
+    try {
+      const result = await createConversationFn();
+
+      setConversationId(result.conversation.id);
+      setMessages([
+        {
+          role: "assistant",
+          content: result.greeting,
+        },
+      ]);
+      setImageUrl(null);
+      setDraft(null);
+      setExecutionStatus(null);
+
+      setConversationList((current) => [
+        result.conversation,
+        ...current.filter((item) => item.id !== result.conversation.id),
+      ]);
+
+      setShowConversations(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível criar uma nova conversa.",
+      );
+    }
+  };
+
+  const removeConversation = async (id: string) => {
+    if (!window.confirm("Excluir esta conversa e todas as mensagens dela?")) {
+      return;
+    }
+
+    try {
+      await deleteConversationFn({
+        data: { conversationId: id },
+      });
+
+      const remaining = conversationList.filter((item) => item.id !== id);
+
+      setConversationList(remaining);
+
+      if (conversationId === id) {
+        if (remaining.length > 0) {
+          await openConversation(remaining[0].id);
+        } else {
+          await newConversation();
+        }
+      }
+
+      toast.success("Conversa excluída.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível excluir a conversa.");
+    }
+  };
+
   const uploadImage = async (file: File) => {
     if (!user) return;
     setUploading(true);
     try {
       const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("catalog-assets").upload(path, file, { contentType: file.type, upsert: false });
+      const { error } = await supabase.storage
+        .from("catalog-assets")
+        .upload(path, file, { contentType: file.type, upsert: false });
       if (error) throw new Error(error.message);
       const { data } = supabase.storage.from("catalog-assets").getPublicUrl(path);
       const uploadedUrl = data.publicUrl;
@@ -197,18 +377,23 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
       ]);
 
       toast.success("Imagem adicionada");
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Falha no upload"); }
-    finally { setUploading(false); }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha no upload");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const send = async () => {
     const text = input.trim();
     if (!text || sending) return;
 
-    const next = [
-      ...messages,
-      { role: "user" as const, content: text },
-    ];
+    if (!conversationId) {
+      toast.error("Conversa ainda não foi carregada.");
+      return;
+    }
+
+    const next = [...messages, { role: "user" as const, content: text }];
 
     setMessages(next);
     setInput("");
@@ -241,7 +426,20 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
         setDraft(result.draft);
       }
 
-            /*
+      await saveConversationFn({
+        data: {
+          conversationId,
+          messages: next.concat(
+            visibleReply ? [{ role: "assistant" as const, content: visibleReply }] : [],
+          ),
+          title: text.length > 160 ? text.slice(0, 160) : text,
+        },
+      });
+
+      const refreshed = await listConversationsFn();
+      setConversationList(refreshed.conversations ?? []);
+
+      /*
        */
       if (result.jobId) {
         try {
@@ -350,11 +548,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
               return "Finalizando…";
             }
 
-            if (
-              status === "completed" ||
-              status === "done" ||
-              status === "success"
-            ) {
+            if (status === "completed" || status === "done" || status === "success") {
               return "Pronto.";
             }
 
@@ -366,6 +560,10 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
            * O endpoint existente recebe somente o UUID do job.
            */
           const poll = async () => {
+            if (!result.jobId) {
+              throw new Error("A produção não retornou um ID de job.");
+            }
+
             const response = await fetch(
               `/api/catalog/production/${encodeURIComponent(result.jobId)}`,
               {
@@ -403,11 +601,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
 
             setExecutionStatus(normalizeStatus(status));
 
-            if (
-              status === "failed" ||
-              status === "error" ||
-              status === "cancelled"
-            ) {
+            if (status === "failed" || status === "error" || status === "cancelled") {
               setExecutionStatus(null);
 
               setMessages((m) => [
@@ -421,11 +615,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
               break;
             }
 
-            if (
-              status === "completed" ||
-              status === "done" ||
-              status === "success"
-            ) {
+            if (status === "completed" || status === "done" || status === "success") {
               const producedImage = extractImageUrl(job.result);
 
               setExecutionStatus("Pronto.");
@@ -466,16 +656,11 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
               content: "A produção continua, mas não foi possível atualizar o status agora.",
             },
           ]);
-        } finally {
-          setExecutionStatus(null);
         }
       }
     } catch (e) {
       setExecutionStatus(null);
-      const message =
-        e instanceof Error
-          ? e.message
-          : "Falha no Agente de Catálogo";
+      const message = e instanceof Error ? e.message : "Falha no Agente de Catálogo";
 
       setMessages((m) => [
         ...m,
@@ -494,33 +679,142 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
   const saveDraft = async () => {
     if (!draft?.name) return;
     try {
-      const categoryName = String(draft.category || "").trim().toLowerCase();
+      const categoryName = String(draft.category || "")
+        .trim()
+        .toLowerCase();
       const category = categories.find((c) => c.name.toLowerCase() === categoryName);
       let categoryId = category?.id ?? null;
       if (!categoryId && draft.category) {
-        await saveCategory({ data: { name: String(draft.category), description: null, sort_order: categories.length, is_active: true } });
-        const { data: createdCategory } = await supabase.from("catalog_categories").select("id").eq("name", String(draft.category)).maybeSingle();
+        await saveCategory({
+          data: {
+            name: String(draft.category),
+            description: null,
+            sort_order: categories.length,
+            is_active: true,
+          },
+        });
+        const { data: createdCategory } = await supabase
+          .from("catalog_categories")
+          .select("id")
+          .eq("name", String(draft.category))
+          .maybeSingle();
         categoryId = createdCategory?.id ?? null;
         onSaved();
       }
       const price = Number(draft.price_cents ?? 0);
-      await saveProduct({ data: { name: String(draft.name), description: draft.description || null, sku: draft.sku || null, category_id: categoryId, price_cents: Number.isFinite(price) ? Math.max(0, Math.round(price)) : 0, currency: "BRL", image_url: imageUrl || draft.image_url || null, stock: draft.stock == null ? null : Number(draft.stock), is_active: true } });
+      await saveProduct({
+        data: {
+          name: String(draft.name),
+          description: draft.description || null,
+          sku: draft.sku || null,
+          category_id: categoryId,
+          price_cents: Number.isFinite(price) ? Math.max(0, Math.round(price)) : 0,
+          currency: "BRL",
+          image_url: imageUrl || draft.image_url || null,
+          stock: draft.stock == null ? null : Number(draft.stock),
+          is_active: true,
+        },
+      });
       toast.success("Produto criado no catálogo");
       setDraft(null);
-      setMessages((m) => [...m, { role: "assistant", content: "Pronto. O produto foi salvo no catálogo. Se quiser, podemos criar o próximo." }]);
+      setMessages((m) => [
+        ...m,
+        {
+          role: "assistant",
+          content: "Pronto. O produto foi salvo no catálogo. Se quiser, podemos criar o próximo.",
+        },
+      ]);
       onSaved();
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Falha ao salvar produto"); }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar produto");
+    }
   };
 
   return (
     <section className="mb-5 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card-glass to-background overflow-hidden shadow-sm">
       <div className="p-5 md:p-6 flex items-start justify-between gap-4">
         <div className="flex gap-3 min-w-0">
-          <div className="h-11 w-11 shrink-0 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center"><Sparkles className="h-5 w-5 text-primary" /></div>
-          <div><div className="text-xs uppercase tracking-widest text-primary font-semibold">Assistente de catálogo</div><h2 className="text-lg md:text-xl font-bold mt-1">Crie seu catálogo conversando com o assistente</h2><p className="text-sm text-muted-foreground mt-1">Converse com o assistente para montar seu catálogo.</p></div>
+          <div className="h-11 w-11 shrink-0 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center">
+            <Sparkles className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <div className="text-xs uppercase tracking-widest text-primary font-semibold">
+              Assistente de catálogo
+            </div>
+            <h2 className="text-lg md:text-xl font-bold mt-1">
+              Crie seu catálogo conversando com o assistente
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Converse com o assistente para montar seu catálogo.
+            </p>
+          </div>
         </div>
-        <Button onClick={() => setOpen((v) => !v)} className="shrink-0 bg-gradient-primary"><Wand2 className="h-4 w-4 mr-2" />{open ? "Fechar" : "Criar com IA"}</Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" onClick={() => setShowConversations((v) => !v)}>
+            Conversas
+          </Button>
+
+          <Button onClick={() => setOpen((v) => !v)} className="bg-gradient-primary">
+            <Wand2 className="h-4 w-4 mr-2" />
+            {open ? "Fechar" : "Criar com IA"}
+          </Button>
+        </div>
       </div>
+      {showConversations && (
+        <div className="border-t border-primary/15 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold">Conversas</h3>
+            <Button size="sm" onClick={newConversation}>
+              Nova conversa
+            </Button>
+          </div>
+
+          {conversationList.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma conversa encontrada.</p>
+          ) : (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {conversationList.map((conversation) => (
+                <div
+                  key={conversation.id}
+                  className={`flex items-center gap-2 rounded-xl border p-3 ${
+                    conversation.id === conversationId
+                      ? "border-primary/40 bg-primary/10"
+                      : "border-border bg-background/40"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    className="flex-1 min-w-0 text-left"
+                    onClick={() => openConversation(conversation.id)}
+                  >
+                    <div className="font-medium text-sm truncate">
+                      {conversation.title || "Nova conversa"}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-1">
+                      {new Date(conversation.updated_at).toLocaleString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive shrink-0"
+                    onClick={() => removeConversation(conversation.id)}
+                  >
+                    Excluir
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {open && (
         <div className="border-t border-primary/15 p-4 md:p-6 grid lg:grid-cols-[1fr_300px] gap-4">
           <div className="rounded-2xl border border-border bg-background/45 overflow-hidden">
@@ -528,9 +822,7 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
               {messages.map((m, i) => (
                 <div
                   key={i}
-                  className={`flex ${
-                    m.role === "user" ? "justify-end" : "justify-start"
-                  }`}
+                  className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
                     className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm ${
@@ -580,7 +872,21 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
             </div>
             <div className="p-3 border-t border-border space-y-2">
               <div className="flex items-center gap-2">
-                <label className="h-9 px-3 rounded-lg border border-border inline-flex items-center gap-2 text-xs cursor-pointer hover:bg-accent"><Upload className="h-4 w-4" />{uploading ? "Enviando…" : "Foto"}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.currentTarget.value = ""; }} /></label>
+                <label className="h-9 px-3 rounded-lg border border-border inline-flex items-center gap-2 text-xs cursor-pointer hover:bg-accent">
+                  <Upload className="h-4 w-4" />
+                  {uploading ? "Enviando…" : "Foto"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) uploadImage(f);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                </label>
                 {imageUrl && (
                   <div className="flex items-center gap-2">
                     <div className="h-12 w-12 overflow-hidden rounded-lg border border-border bg-background">
@@ -590,13 +896,26 @@ function CatalogAIAgent({ categories, products, onSaved }: { categories: Categor
                         className="h-full w-full object-cover"
                       />
                     </div>
-                    <span className="text-xs text-primary">
-                      Imagem pronta para usar
-                    </span>
+                    <span className="text-xs text-primary">Imagem pronta para usar</span>
                   </div>
                 )}
               </div>
-              <div className="flex gap-2"><Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Ex.: quero criar um catálogo completo para minha barbearia…" /><Button size="icon" onClick={send} disabled={!input.trim() || sending}><Send className="h-4 w-4" /></Button></div>
+              <div className="flex gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      send();
+                    }
+                  }}
+                  placeholder="Ex.: quero criar um catálogo completo para minha barbearia…"
+                />
+                <Button size="icon" onClick={send} disabled={!input.trim() || sending}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -626,7 +945,9 @@ function CategoriesTab({ categories, onChange }: { categories: Category[]; onCha
             >
               <div className="min-w-0">
                 <div className="font-medium truncate">{c.name}</div>
-                {c.description && <div className="text-xs text-muted-foreground truncate">{c.description}</div>}
+                {c.description && (
+                  <div className="text-xs text-muted-foreground truncate">{c.description}</div>
+                )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span
@@ -691,13 +1012,20 @@ function CategoryDialog({ category, onSaved }: { category?: Category; onSaved: (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {category ? (
-          <Button variant="ghost" size="icon" aria-label="Editar"><Pencil className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" aria-label="Editar">
+            <Pencil className="h-4 w-4" />
+          </Button>
         ) : (
-          <Button size="sm" className="bg-gradient-primary"><Plus className="h-4 w-4" />Nova categoria</Button>
+          <Button size="sm" className="bg-gradient-primary">
+            <Plus className="h-4 w-4" />
+            Nova categoria
+          </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>{category ? "Editar categoria" : "Nova categoria"}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{category ? "Editar categoria" : "Nova categoria"}</DialogTitle>
+        </DialogHeader>
         <div className="space-y-3">
           <div>
             <Label>Nome</Label>
@@ -731,8 +1059,14 @@ function CategoryDialog({ category, onSaved }: { category?: Category; onSaved: (
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={submit} disabled={saving || !form.name.trim()} className="bg-gradient-primary">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={submit}
+            disabled={saving || !form.name.trim()}
+            className="bg-gradient-primary"
+          >
             {saving ? "Salvando…" : "Salvar"}
           </Button>
         </DialogFooter>
@@ -758,7 +1092,8 @@ function ProductsTab({
   const [filter, setFilter] = useState<string>("all");
 
   const filtered = products.filter((p) => {
-    const matchQ = !query || p.name.toLowerCase().includes(query.toLowerCase()) || (p.sku ?? "").includes(query);
+    const matchQ =
+      !query || p.name.toLowerCase().includes(query.toLowerCase()) || (p.sku ?? "").includes(query);
     const matchC = filter === "all" || p.category_id === filter;
     return matchQ && matchC;
   });
@@ -777,11 +1112,15 @@ function ProductsTab({
             />
           </div>
           <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-44">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas categorias</SelectItem>
               {categories.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -845,12 +1184,18 @@ function ProductCard({
             }}
           />
         </div>
-        {categoryName && <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{categoryName}</div>}
+        {categoryName && (
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            {categoryName}
+          </div>
+        )}
         {product.description && (
           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
         )}
         <div className="mt-2 flex items-center justify-between">
-          <div className="text-lg font-bold text-primary">{formatBRL(product.price_cents, product.currency)}</div>
+          <div className="text-lg font-bold text-primary">
+            {formatBRL(product.price_cents, product.currency)}
+          </div>
           {product.stock != null && (
             <div className="text-[11px] text-muted-foreground">Estoque: {product.stock}</div>
           )}
@@ -910,17 +1255,14 @@ function ProductDialog({
       const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
 
-      const { error } = await supabase.storage
-        .from("catalog-assets")
-        .upload(path, file, {
-          contentType: file.type || "image/jpeg",
-          upsert: false,
-        });
+      const { error } = await supabase.storage.from("catalog-assets").upload(path, file, {
+        contentType: file.type || "image/jpeg",
+        upsert: false,
+      });
 
       if (error) throw new Error(error.message);
 
-      const { data } =
-        supabase.storage.from("catalog-assets").getPublicUrl(path);
+      const { data } = supabase.storage.from("catalog-assets").getPublicUrl(path);
 
       setForm((f) => ({
         ...f,
@@ -929,11 +1271,7 @@ function ProductDialog({
 
       toast.success("Foto do produto carregada");
     } catch (e) {
-      toast.error(
-        e instanceof Error
-          ? e.message
-          : "Falha ao carregar a foto"
-      );
+      toast.error(e instanceof Error ? e.message : "Falha ao carregar a foto");
     } finally {
       setUploading(false);
     }
@@ -971,13 +1309,20 @@ function ProductDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {product ? (
-          <Button variant="ghost" size="icon" aria-label="Editar"><Pencil className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" aria-label="Editar">
+            <Pencil className="h-4 w-4" />
+          </Button>
         ) : (
-          <Button className="bg-gradient-primary"><Plus className="h-4 w-4" />Novo produto</Button>
+          <Button className="bg-gradient-primary">
+            <Plus className="h-4 w-4" />
+            Novo produto
+          </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>{product ? "Editar produto" : "Novo produto"}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{product ? "Editar produto" : "Novo produto"}</DialogTitle>
+        </DialogHeader>
         <div className="space-y-3">
           <div>
             <Label>Nome</Label>
@@ -985,7 +1330,11 @@ function ProductDialog({
           </div>
           <div>
             <Label>Descrição</Label>
-            <Textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+            <Textarea
+              value={form.description ?? ""}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              rows={3}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -999,8 +1348,13 @@ function ProductDialog({
             </div>
             <div>
               <Label>Moeda</Label>
-              <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={form.currency}
+                onValueChange={(v) => setForm({ ...form, currency: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="BRL">BRL — Real</SelectItem>
                   <SelectItem value="USD">USD — Dólar</SelectItem>
@@ -1012,7 +1366,10 @@ function ProductDialog({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>SKU</Label>
-              <Input value={form.sku ?? ""} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+              <Input
+                value={form.sku ?? ""}
+                onChange={(e) => setForm({ ...form, sku: e.target.value })}
+              />
             </div>
             <div>
               <Label>Estoque</Label>
@@ -1026,12 +1383,19 @@ function ProductDialog({
           </div>
           <div>
             <Label>Categoria</Label>
-            <Select value={form.category_id || "__none"} onValueChange={(v) => setForm({ ...form, category_id: v === "__none" ? "" : v })}>
-              <SelectTrigger><SelectValue placeholder="Sem categoria" /></SelectTrigger>
+            <Select
+              value={form.category_id || "__none"}
+              onValueChange={(v) => setForm({ ...form, category_id: v === "__none" ? "" : v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sem categoria" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none">Sem categoria</SelectItem>
                 {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -1072,13 +1436,9 @@ function ProductDialog({
               <label className="w-full min-h-28 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 flex flex-col items-center justify-center text-center text-sm text-muted-foreground cursor-pointer hover:bg-primary/10 transition-colors p-4">
                 <Upload className="h-7 w-7 mb-2 text-primary" />
 
-                <span className="font-medium text-foreground">
-                  Carregar foto do produto
-                </span>
+                <span className="font-medium text-foreground">Carregar foto do produto</span>
 
-                <span className="text-xs mt-1">
-                  Toque para escolher da galeria ou câmera
-                </span>
+                <span className="text-xs mt-1">Toque para escolher da galeria ou câmera</span>
 
                 <input
                   type="file"
@@ -1110,13 +1470,23 @@ function ProductDialog({
             />
           </div>
           <div className="flex items-center gap-2">
-            <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} id="prod-active" />
+            <Switch
+              checked={form.is_active}
+              onCheckedChange={(v) => setForm({ ...form, is_active: v })}
+              id="prod-active"
+            />
             <Label htmlFor="prod-active">Produto ativo (visível para a IA)</Label>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={submit} disabled={saving || !form.name.trim()} className="bg-gradient-primary">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={submit}
+            disabled={saving || !form.name.trim()}
+            className="bg-gradient-primary"
+          >
             {saving ? "Salvando…" : "Salvar"}
           </Button>
         </DialogFooter>
@@ -1146,8 +1516,13 @@ function DeleteButton({ label, onConfirm }: { label: string; onConfirm: () => Pr
       onClick={async () => {
         if (!confirm("Tem certeza?")) return;
         setLoading(true);
-        try { await onConfirm(); } catch (e) { toast.error(e instanceof Error ? e.message : "Erro"); }
-        finally { setLoading(false); }
+        try {
+          await onConfirm();
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "Erro");
+        } finally {
+          setLoading(false);
+        }
       }}
     >
       <Trash2 className="h-4 w-4 text-destructive" />

@@ -97,7 +97,7 @@ export const Route = createFileRoute("/api/chat")({
                 company_id: companyId,
                 user_id: userId,
                 title: titleText,
-                module_code: body.moduleCode ?? null,
+                context: { moduleCode: body.moduleCode ?? null },
               })
               .select("id")
               .single();
@@ -160,7 +160,6 @@ export const Route = createFileRoute("/api/chat")({
               conversation_id: conversationId,
               company_id: companyId,
               role: "user",
-              parts: (lastUser.parts ?? []) as any,
               content: text,
             });
           }
@@ -217,9 +216,11 @@ export const Route = createFileRoute("/api/chat")({
                 conversation_id: conversationId!,
                 company_id: companyId,
                 role: "assistant",
-                parts: [{ type: "text", text }] as any,
                 content: text,
-                model: `n8n:${n8n.agent ?? moduleCode}`,
+                            metadata: {
+                              source: "n8n",
+                              agent: n8n.agent ?? moduleCode,
+                            },
               });
               await supabase.from("ai_conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId!);
               try {
@@ -274,9 +275,11 @@ export const Route = createFileRoute("/api/chat")({
             conversation_id: conversationId!,
             company_id: companyId,
             role: "assistant",
-            parts: [{ type: "text", text }] as any,
             content: text,
-            model,
+                            metadata: {
+                              source: "nexus",
+                              model,
+                            },
           });
           await supabase.from("ai_conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId!);
           try {

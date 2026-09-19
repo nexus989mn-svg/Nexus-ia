@@ -93,7 +93,7 @@ export const saveMyAgentTraining = createServerFn({ method: "POST" })
       source: "ai_admin",
       event: "company_knowledge.updated",
       severity: "info",
-      metadata: { company_id: cid, modules, audio_enabled: data.audioEnabled, voice_id: data.voiceId ?? null },
+      metadata: { company_id: cid, modules: [...modules], audio_enabled: data.audioEnabled, voice_id: data.voiceId ?? null },
     });
     return { config: saved?.find((r: any) => r.module_code === "atendimento") ?? null };
   });
