@@ -108,7 +108,7 @@ export const getConversationMessages = createServerFn({ method: "GET" })
     const companyId = await getCompanyId(context.supabase, context.userId);
     const { data: rows, error } = await context.supabase
       .from("ai_messages")
-      .select("id, role, parts, content, created_at")
+      .select("id, role, metadata, content, created_at")
       .eq("conversation_id", data.id)
       .eq("company_id", companyId)
       .order("created_at", { ascending: true });

@@ -210,8 +210,15 @@ export const Route = createFileRoute("/api/chat")({
               temperature: Number(mod?.temperature ?? 0.35),
               maxTokens: Number(mod?.max_tokens ?? 1800),
             });
-            if (n8n?.output !== undefined && String(n8n.output).trim()) {
-              const text = String(n8n.output).trim();
+            const n8nText = String(
+              n8n?.output ??
+              n8n?.reply ??
+              n8n?.response ??
+              ""
+            ).trim();
+
+            if (n8nText) {
+              const text = n8nText;
               await supabase.from("ai_messages").insert({
                 conversation_id: conversationId!,
                 company_id: companyId,
@@ -219,7 +226,7 @@ export const Route = createFileRoute("/api/chat")({
                 content: text,
                             metadata: {
                               source: "n8n",
-                              agent: n8n.agent ?? moduleCode,
+                              agent: n8n?.agent ?? moduleCode,
                             },
               });
               await supabase.from("ai_conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId!);
@@ -253,11 +260,23 @@ export const Route = createFileRoute("/api/chat")({
               });
               return createUIMessageStreamResponse({
                 stream,
-                headers: { "X-Conversation-Id": conversationId!, "X-AI-Agent": n8n.agent ?? moduleCode },
+                headers: { "X-Conversation-Id": conversationId!, "X-AI-Agent": n8n?.agent ?? moduleCode },
               });
             }
           } catch (n8nError) {
-            console.error("[chat] n8n integration error; using Nexus fallback:", n8nError);
+            console.error("[chat] n8n integration error:", n8nError);
+
+            if (moduleCode === "atendimento") {
+              const message =
+                n8nError instanceof Error
+                  ? n8nError.message
+                  : "Falha ao chamar o n8n.";
+
+              return new Response(
+                `Atendimento n8n indisponível: ${message}`,
+                { status: 502 },
+              );
+            }
           }
 
           const fallbackMessages = [
