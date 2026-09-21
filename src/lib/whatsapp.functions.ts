@@ -302,7 +302,7 @@ export const requestWhatsappConnection = createServerFn({ method: "POST" })
         method: "POST",
         body: JSON.stringify({
           enabled: true,
-          url: "https://n8nv4.duckdns.org/webhook/tw-whatsapp",
+          url: "https://n8nv4.duckdns.org/webhook/nexus-chat",
           webhook_by_events: false,
           webhook_base64: true,
           events: [
