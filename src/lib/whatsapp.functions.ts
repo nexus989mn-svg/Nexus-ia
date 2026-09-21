@@ -294,6 +294,26 @@ export const requestWhatsappConnection = createServerFn({ method: "POST" })
       });
     }
 
+    // Garante que toda instância do AURI tenha o webhook do Atendimento
+    // configurado automaticamente na Evolution, inclusive instâncias já existentes.
+    await evolutionRequest(
+      `/webhook/set/${encodeURIComponent(instance)}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          enabled: true,
+          url: "https://n8nv4.duckdns.org/webhook/tw-whatsapp",
+          webhook_by_events: false,
+          webhook_base64: true,
+          events: [
+            "QRCODE_UPDATED",
+            "MESSAGES_UPSERT",
+            "CONNECTION_UPDATE",
+          ],
+        }),
+      },
+    );
+
     const connection = await evolutionRequest(
       `/instance/connect/${encodeURIComponent(instance)}`,
     );
