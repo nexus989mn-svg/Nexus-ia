@@ -27,7 +27,7 @@ export async function callN8nChat(payload: N8nChatPayload) {
   if (!integration?.is_enabled || !integration.base_url) return null;
 
   const config = (integration.config ?? {}) as Record<string, unknown>;
-  const path = String(config.webhook_path ?? "/webhook/nexus-chat").replace(/^\//, "");
+  const path = String(config.webhook_path ?? "/webhook/auri-whatsapp").replace(/^\//, "");
   const url = `${String(integration.base_url).replace(/\/$/, "")}/${path}`;
   const secret = String(config.webhook_secret ?? "");
   const headers: Record<string,string> = { "Content-Type": "application/json" };
