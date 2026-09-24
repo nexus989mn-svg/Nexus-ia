@@ -300,6 +300,7 @@ export const requestWhatsappConnection = createServerFn({ method: "POST" })
           : Array.isArray(instances?.data)
             ? instances.data
             : [];
+
       exists = list.some(
         (item: any) =>
           item?.name === instance ||
@@ -307,22 +308,38 @@ export const requestWhatsappConnection = createServerFn({ method: "POST" })
           item?.instance?.instanceName === instance ||
           item?.instance?.name === instance,
       );
-    } catch {
-      // A criação será tentada abaixo.
+    } catch (error) {
+      throw new Error(
+        error instanceof Error
+          ? `Não foi possível consultar a Evolution API: ${error.message}`
+          : "Não foi possível consultar a Evolution API.",
+      );
     }
 
     let createResponse: any = null;
+
     if (!exists) {
       createResponse = await evolutionRequest("/instance/create", {
         method: "POST",
         body: JSON.stringify({
-          instanceName: instance, integration: "WHATSAPP-BAILEYS", qrcode: true,
+          instanceName: instance,
+          integration: "WHATSAPP-BAILEYS",
+          qrcode: true,
+
+          // A instância já nasce ligada ao webhook do AURI.
+          webhook: AURI_WHATSAPP_WEBHOOK,
+          webhookByEvents: false,
+          webhookBase64: true,
+          events: [
+            "QRCODE_UPDATED",
+            "MESSAGES_UPSERT",
+            "CONNECTION_UPDATE",
+          ],
         }),
       });
     }
 
-    // Garante que toda instância do AURI tenha o webhook do Atendimento
-    // configurado automaticamente na Evolution, inclusive instâncias já existentes.
+    // Reforça a configuração para instâncias que já existiam.
     await ensureWhatsappWebhook(instance);
 
     const connection = await evolutionRequest(
