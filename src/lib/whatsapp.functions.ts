@@ -8,6 +8,9 @@ const connectInput = z.object({
   display_name: z.string().min(1).max(120),
 });
 
+const AURI_WHATSAPP_WEBHOOK =
+  "https://n8nv4.duckdns.org/webhook/auri-whatsapp";
+
 async function isAdminUser(userId: string) {
   const { data } = await supabaseAdmin
     .from("user_roles")
@@ -92,6 +95,30 @@ async function evolutionRequest(path: string, options: RequestInit = {}) {
   }
 
   return body;
+}
+
+async function ensureWhatsappWebhook(instance: string) {
+  if (!instance?.trim()) {
+    throw new Error("Instância do WhatsApp não informada");
+  }
+
+  return evolutionRequest(
+    `/webhook/set/${encodeURIComponent(instance)}`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        enabled: true,
+        url: AURI_WHATSAPP_WEBHOOK,
+        webhook_by_events: false,
+        webhook_base64: true,
+        events: [
+          "QRCODE_UPDATED",
+          "MESSAGES_UPSERT",
+          "CONNECTION_UPDATE",
+        ],
+      }),
+    },
+  );
 }
 
 function extractQr(data: any): string | null {
@@ -296,23 +323,7 @@ export const requestWhatsappConnection = createServerFn({ method: "POST" })
 
     // Garante que toda instância do AURI tenha o webhook do Atendimento
     // configurado automaticamente na Evolution, inclusive instâncias já existentes.
-    await evolutionRequest(
-      `/webhook/set/${encodeURIComponent(instance)}`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          enabled: true,
-          url: "https://n8nv4.duckdns.org/webhook/auri-whatsapp",
-          webhook_by_events: false,
-          webhook_base64: true,
-          events: [
-            "QRCODE_UPDATED",
-            "MESSAGES_UPSERT",
-            "CONNECTION_UPDATE",
-          ],
-        }),
-      },
-    );
+    await ensureWhatsappWebhook(instance);
 
     const connection = await evolutionRequest(
       `/instance/connect/${encodeURIComponent(instance)}`,
@@ -374,6 +385,8 @@ export const refreshWhatsappConnection = createServerFn({ method: "POST" })
     if (!connection?.instance_name) {
       throw new Error("WhatsApp ainda não foi configurado");
     }
+
+    await ensureWhatsappWebhook(connection.instance_name);
 
     const state = await getState(connection.instance_name);
 
@@ -442,6 +455,8 @@ export const confirmWhatsappConnected = createServerFn({ method: "POST" })
     if (!connection?.instance_name) {
       throw new Error("WhatsApp não configurado");
     }
+
+    await ensureWhatsappWebhook(connection.instance_name);
 
     const state = await getState(connection.instance_name);
 
