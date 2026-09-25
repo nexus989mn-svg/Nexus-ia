@@ -107,15 +107,17 @@ async function ensureWhatsappWebhook(instance: string) {
     {
       method: "POST",
       body: JSON.stringify({
-        enabled: true,
-        url: AURI_WHATSAPP_WEBHOOK,
-        webhook_by_events: false,
-        webhook_base64: true,
-        events: [
-          "QRCODE_UPDATED",
-          "MESSAGES_UPSERT",
-          "CONNECTION_UPDATE",
-        ],
+        webhook: {
+          enabled: true,
+          url: AURI_WHATSAPP_WEBHOOK,
+          byEvents: false,
+          base64: true,
+          events: [
+            "QRCODE_UPDATED",
+            "MESSAGES_UPSERT",
+            "CONNECTION_UPDATE",
+          ],
+        },
       }),
     },
   );
