@@ -329,14 +329,17 @@ export const requestWhatsappConnection = createServerFn({ method: "POST" })
           qrcode: true,
 
           // A instância já nasce ligada ao webhook do AURI.
-          webhook: AURI_WHATSAPP_WEBHOOK,
-          webhookByEvents: false,
-          webhookBase64: true,
-          events: [
-            "QRCODE_UPDATED",
-            "MESSAGES_UPSERT",
-            "CONNECTION_UPDATE",
-          ],
+          webhook: {
+            enabled: true,
+            url: AURI_WHATSAPP_WEBHOOK,
+            byEvents: false,
+            base64: true,
+            events: [
+              "QRCODE_UPDATED",
+              "MESSAGES_UPSERT",
+              "CONNECTION_UPDATE",
+            ],
+          },
         }),
       });
     }
