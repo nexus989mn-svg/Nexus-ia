@@ -185,38 +185,8 @@ export const getMyWhatsapp = createServerFn({ method: "GET" })
 
     if (error) throw new Error(error.message);
 
-    // Uma tentativa de QR não pode ficar presa indefinidamente.
-    // Após 2 minutos, encerra a tentativa e libera a tela para outro número.
-    if (data?.status === "pending") {
-      const startedAt =
-        data.metadata &&
-        typeof data.metadata === "object" &&
-        !Array.isArray(data.metadata) &&
-        "pending_started_at" in data.metadata &&
-        typeof data.metadata.pending_started_at === "string"
-          ? data.metadata.pending_started_at
-          : null;
-      const age = startedAt ? Date.now() - new Date(startedAt).getTime() : 0;
-      if (startedAt && age >= 2 * 60 * 1000) {
-        if (data.instance_name) {
-          try {
-            await evolutionRequest(
-              `/instance/logout/${encodeURIComponent(data.instance_name)}`,
-              { method: "DELETE" },
-            );
-          } catch {}
-        }
-        const { data: expired, error: expireError } = await supabaseAdmin
-          .from("whatsapp_connections")
-          .update({ status: "disconnected", qr_code: null, connected_at: null, metadata: {} })
-          .eq("user_id", userId)
-          .select()
-          .maybeSingle();
-        if (expireError) throw new Error(expireError.message);
-        return { connection: expired };
-      }
-    }
-
+    // Não deslogar automaticamente uma instância pending.
+    // A sessão da Evolution permanece viva até uma ação explícita.
     return { connection: data };
   });
 
@@ -404,6 +374,7 @@ export const refreshWhatsappConnection = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (error) throw new Error(error.message);
+
     if (!connection?.instance_name) {
       throw new Error("WhatsApp ainda não foi configurado");
     }
@@ -412,6 +383,9 @@ export const refreshWhatsappConnection = createServerFn({ method: "POST" })
 
     const state = await getState(connection.instance_name);
 
+    // A tela consulta o estado periodicamente.
+    // Não devemos chamar /instance/connect a cada polling,
+    // pois isso pode reiniciar uma sessão que ainda está conectando.
     if (state === "open" || state === "connected") {
       const now = new Date().toISOString();
 
@@ -434,31 +408,10 @@ export const refreshWhatsappConnection = createServerFn({ method: "POST" })
       };
     }
 
-    const result = await evolutionRequest(
-      `/instance/connect/${encodeURIComponent(connection.instance_name)}`,
-    );
-
-    const qr = normalizeQr(extractQr(result));
-    const refreshedState = await getState(connection.instance_name);
-    const isConnected = refreshedState === "open" || refreshedState === "connected";
-
-    const { data, error: updateError } = await supabaseAdmin
-      .from("whatsapp_connections")
-      .update({
-        status: isConnected ? "connected" : "pending",
-        qr_code: isConnected ? null : qr,
-        connected_at: isConnected ? (connection.connected_at ?? new Date().toISOString()) : null,
-      })
-      .eq("user_id", userId)
-      .select()
-      .single();
-
-    if (updateError) throw new Error(updateError.message);
-
     return {
-      connection: data,
-      qr_code: qr,
-      evolution_status: refreshedState,
+      connection,
+      evolution_status: state,
+      qr_code: connection.qr_code ?? null,
     };
   });
 
