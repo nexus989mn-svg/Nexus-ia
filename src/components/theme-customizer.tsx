@@ -218,9 +218,26 @@ function paletteTheme(colors: string[], label: string): ThemePreset {
 }
 
 const THEME_BUCKET = "theme-assets";
+const BACKGROUND_CACHE_PREFIX = "auri-background-url:";
 
 function userBackgroundPath(userId: string) {
   return `users/${userId}/background`;
+}
+
+function readCachedBackground(userId: string): string | null {
+  try {
+    return localStorage.getItem(`${BACKGROUND_CACHE_PREFIX}${userId}`);
+  } catch {
+    return null;
+  }
+}
+
+function cacheBackground(userId: string, image: string | null) {
+  try {
+    const key = `${BACKGROUND_CACHE_PREFIX}${userId}`;
+    if (image) localStorage.setItem(key, image);
+    else localStorage.removeItem(key);
+  } catch {}
 }
 
 const sharedImages = new Map<string, string | null | undefined>();
@@ -274,6 +291,7 @@ async function getSharedBackground(userId: string): Promise<string | null> {
 
       const url = `${publicData.publicUrl}?v=${Date.now()}`;
       sharedImages.set(userId, url);
+      cacheBackground(userId, url);
       return url;
     } catch {
       sharedImages.set(userId, null);
@@ -311,6 +329,7 @@ async function saveImage(image: Blob | string, userId: string) {
 
   sharedImages.set(userId, publicUrl);
   sharedImagePromises.delete(userId);
+  cacheBackground(userId, publicUrl);
   broadcastBackground(publicUrl);
 
   return publicUrl;
@@ -327,6 +346,7 @@ async function removeImage(userId: string) {
 
   sharedImages.set(userId, null);
   sharedImagePromises.delete(userId);
+  cacheBackground(userId, null);
   broadcastBackground(null);
 }
 
@@ -619,6 +639,19 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
     supabase.auth.getUser().then(({ data }) => {
       const userId = data.user?.id;
       if (!userId || !alive) return;
+
+      try {
+        localStorage.setItem("auri-current-user-id", userId);
+      } catch {}
+
+      // Usa imediatamente a última imagem conhecida,
+      // sem esperar a consulta ao Supabase.
+      const cached = readCachedBackground(userId);
+
+      if (cached) {
+        imageUrlRef.current = cached;
+        setImage(cached);
+      }
 
       getSharedBackground(userId).then(saved => {
         if (!alive) {
