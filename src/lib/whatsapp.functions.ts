@@ -540,3 +540,25 @@ export const disconnectWhatsapp = createServerFn({ method: "POST" })
 
     return { connection: data };
   });
+
+export const setWhatsappAiEnabled = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { enabled: boolean }) => input)
+  .handler(async ({ context, data }) => {
+    const { userId } = context;
+    const enabled = data.enabled;
+
+    const { data: connection, error } = await supabaseAdmin
+      .from("whatsapp_connections")
+      .update({ ai_enabled: enabled })
+      .eq("user_id", userId)
+      .select("*")
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      connection,
+      ai_enabled: enabled,
+    };
+  });

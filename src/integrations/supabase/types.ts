@@ -709,6 +709,7 @@ export type Database = {
       whatsapp_connections: {
         Row: {
           company_id: string
+          ai_enabled: boolean
           connected_at: string | null
           created_at: string
           display_name: string | null
@@ -739,6 +740,7 @@ export type Database = {
         }
         Update: {
           company_id?: string
+          ai_enabled?: boolean
           connected_at?: string | null
           created_at?: string
           display_name?: string | null

@@ -29,6 +29,7 @@ import {
   confirmWhatsappConnected,
   disconnectWhatsapp,
   cancelWhatsappConnection,
+  setWhatsappAiEnabled,
 } from "@/lib/whatsapp.functions";
 
 export const Route = createFileRoute("/_authenticated/whatsapp")({
@@ -45,6 +46,8 @@ function WhatsappPage() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [pendingSeconds, setPendingSeconds] = useState<number | null>(null);
+  const [aiEnabled, setAiEnabledState] = useState(true);
+  const [aiBusy, setAiBusy] = useState(false);
   const fetchSub = useServerFn(getMySubscription);
   const { data: subData, isLoading: subLoading } = useQuery({
     queryKey: ["my-sub"],
@@ -58,6 +61,7 @@ function WhatsappPage() {
   const confirmConn = useServerFn(confirmWhatsappConnected);
   const disconnectConn = useServerFn(disconnectWhatsapp);
   const cancelConn = useServerFn(cancelWhatsappConnection);
+  const setAiEnabled = useServerFn(setWhatsappAiEnabled);
 
   const {
     data,
@@ -69,6 +73,13 @@ function WhatsappPage() {
   });
 
   const conn = data?.connection;
+
+  useEffect(() => {
+    if (conn) {
+      setAiEnabledState(conn.ai_enabled !== false);
+    }
+  }, [conn?.ai_enabled]);
+
   const status = conn?.status ?? "disconnected";
 
   const statusLabel =
@@ -166,6 +177,28 @@ function WhatsappPage() {
 
     return () => window.clearInterval(timer);
   }, [status, conn?.instance_name, refreshConn, qc]);
+
+  const handleToggleAi = async () => {
+    if (aiBusy || !conn) return;
+
+    const next = !aiEnabled;
+    setAiBusy(true);
+
+    try {
+      const result = await setAiEnabled({ data: { enabled: next } });
+      setAiEnabledState(result.ai_enabled);
+      await qc.invalidateQueries({ queryKey: ["whatsapp"] });
+    } catch (error) {
+      console.error(error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível alterar a IA."
+      );
+    } finally {
+      setAiBusy(false);
+    }
+  };
 
   if (user && !subLoading && !isAdmin && !subData?.hasAccess) {
     return (
@@ -610,6 +643,31 @@ function WhatsappPage() {
                     para receber e responder mensagens
                     com a IA.
                   </p>
+
+                  <div className="mt-5 rounded-xl border bg-background/60 p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-medium">IA do WhatsApp</p>
+                        <p className="text-sm text-muted-foreground">
+                          {aiEnabled
+                            ? "A IA está ativa e pode responder seus clientes."
+                            : "A IA está pausada e não responderá pelo WhatsApp."}
+                        </p>
+                      </div>
+
+                      <Button
+                        variant={aiEnabled ? "default" : "outline"}
+                        onClick={handleToggleAi}
+                        disabled={aiBusy}
+                      >
+                        {aiBusy
+                          ? "Alterando..."
+                          : aiEnabled
+                            ? "Ativa"
+                            : "Pausada"}
+                      </Button>
+                    </div>
+                  </div>
 
                   <div className="flex gap-2 mt-4 flex-wrap">
 

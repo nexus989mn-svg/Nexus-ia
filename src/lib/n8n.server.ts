@@ -15,6 +15,7 @@ export type N8nChatPayload = {
   imageUrl?: string | null;
   isAdmin?: boolean;
   jobId?: string | null;
+  channel?: "app" | "whatsapp";
 };
 
 export async function callN8nChat(payload: N8nChatPayload) {
@@ -25,6 +26,18 @@ export async function callN8nChat(payload: N8nChatPayload) {
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!integration?.is_enabled || !integration.base_url) return null;
+
+  if (payload.channel === "whatsapp") {
+    const { data: connection, error: connectionError } = await supabaseAdmin
+      .from("whatsapp_connections")
+      .select("ai_enabled")
+      .eq("user_id", payload.userId)
+      .maybeSingle();
+
+    if (connectionError) throw new Error(connectionError.message);
+
+    if (connection?.ai_enabled === false) return null;
+  }
 
   const config = (integration.config ?? {}) as Record<string, unknown>;
   const path = String(config.webhook_path ?? "/webhook/auri-whatsapp").replace(/^\//, "");
