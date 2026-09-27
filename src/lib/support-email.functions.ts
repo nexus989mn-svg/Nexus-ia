@@ -41,8 +41,8 @@ export const createSupportEmailRequest = createServerFn({ method: "POST" })
     const { data: thread, error } = await db
       .from("support_email_threads")
       .insert({
-        message_id: `panel:${requestId}`,
-        thread_id: `panel:${requestId}`,
+        message_id: `email:${requestId}`,
+        thread_id: `email:${requestId}`,
         customer_email: customerEmail,
         customer_name: String(profile?.full_name ?? company.name ?? "").trim() || null,
         subject: data.subject,
