@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuriIaRouteImport } from './routes/auri-ia'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated/whatsapp'
 import { Route as AuthenticatedWebsiteRouteImport } from './routes/_authenticated/website'
@@ -52,6 +53,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/website': typeof AuthenticatedWebsiteRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/api/chat': typeof ApiChatRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/api/public/efi-pix-confirm': typeof ApiPublicEfiPixConfirmRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/catalog/production/$jobId': typeof ApiCatalogProductionJobIdRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/website': typeof AuthenticatedWebsiteRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/api/chat': typeof ApiChatRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/api/public/efi-pix-confirm': typeof ApiPublicEfiPixConfirmRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/catalog/production/$jobId': typeof ApiCatalogProductionJobIdRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/_authenticated/website': typeof AuthenticatedWebsiteRoute
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/api/chat': typeof ApiChatRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/api/public/efi-pix-confirm': typeof ApiPublicEfiPixConfirmRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/catalog/production/$jobId': typeof ApiCatalogProductionJobIdRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/website'
     | '/whatsapp'
     | '/api/chat'
+    | '/auth/callback'
     | '/api/public/efi-pix-confirm'
     | '/api/public/stripe-webhook'
     | '/api/catalog/production/$jobId'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/website'
     | '/whatsapp'
     | '/api/chat'
+    | '/auth/callback'
     | '/api/public/efi-pix-confirm'
     | '/api/public/stripe-webhook'
     | '/api/catalog/production/$jobId'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/_authenticated/website'
     | '/_authenticated/whatsapp'
     | '/api/chat'
+    | '/auth/callback'
     | '/api/public/efi-pix-confirm'
     | '/api/public/stripe-webhook'
     | '/api/catalog/production/$jobId'
@@ -270,6 +282,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   ApiChatRoute: typeof ApiChatRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   ApiPublicEfiPixConfirmRoute: typeof ApiPublicEfiPixConfirmRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiCatalogProductionJobIdRoute: typeof ApiCatalogProductionJobIdRoute
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -459,6 +479,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   ApiChatRoute: ApiChatRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   ApiPublicEfiPixConfirmRoute: ApiPublicEfiPixConfirmRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiCatalogProductionJobIdRoute: ApiCatalogProductionJobIdRoute,
