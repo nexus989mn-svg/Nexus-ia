@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/auri-ia",
-      "destination": "/"
+      "destination": "https://auri-ia-vercel-fix-real.vercel.app"
     },
     {
       "source": "/auri-ia/:path*",
-      "destination": "/:path*"
+      "destination": "https://auri-ia-vercel-fix-real.vercel.app/:path*"
     }
   ]
 }
