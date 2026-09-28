@@ -152,6 +152,96 @@ export const adminSaveIntegration = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+
+async function testEfiConnection() {
+  const clientId = process.env.EFI_CLIENT_ID?.trim();
+  const clientSecret = process.env.EFI_CLIENT_SECRET?.trim();
+  const certificateBase64 = process.env.EFI_CERTIFICATE_BASE64?.trim();
+
+  if (!clientId) throw new Error("EFI_CLIENT_ID ausente");
+  if (!clientSecret) throw new Error("EFI_CLIENT_SECRET ausente");
+  if (!certificateBase64) {
+    throw new Error("EFI_CERTIFICATE_BASE64 ausente");
+  }
+
+  const certificate = Buffer.from(
+    certificateBase64.replace(/\s+/g, ""),
+    "base64",
+  );
+
+  const auth = Buffer.from(
+    `${clientId}:${clientSecret}`,
+  ).toString("base64");
+
+  const agent = new https.Agent({
+    pfx: certificate,
+    passphrase: "",
+  });
+
+  return await new Promise<{ ok: boolean; message: string }>(
+    (resolve, reject) => {
+      const req = https.request(
+        "https://pix.api.efipay.com.br/oauth/token",
+        {
+          method: "POST",
+          agent,
+          headers: {
+            Authorization: `Basic ${auth}`,
+            "Content-Type": "application/json",
+          },
+        },
+        (res) => {
+          let body = "";
+
+          res.setEncoding("utf8");
+
+          res.on("data", (chunk) => {
+            body += chunk;
+          });
+
+          res.on("end", () => {
+            let json: any = null;
+
+            try {
+              json = JSON.parse(body);
+            } catch {}
+
+            if (
+              res.statusCode &&
+              res.statusCode >= 200 &&
+              res.statusCode < 300
+            ) {
+              resolve({
+                ok: true,
+                message: "Efí conectado com sucesso",
+              });
+              return;
+            }
+
+            resolve({
+              ok: false,
+              message:
+                json?.error_description ||
+                json?.error ||
+                `Efí HTTP ${res.statusCode}: ${body.slice(0, 300)}`,
+            });
+          });
+        },
+      );
+
+      req.on("error", reject);
+
+      req.write(
+        JSON.stringify({
+          grant_type: "client_credentials",
+        }),
+      );
+
+      req.end();
+    },
+  );
+}
+
 export const adminTestIntegration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
