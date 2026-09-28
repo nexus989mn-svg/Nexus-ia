@@ -35,6 +35,7 @@ export const adminListIntegrations = createServerFn({ method: "GET" })
         { provider: "openrouter", label: "OpenRouter", config: {}, is_enabled: false },
         { provider: "openai", label: "OpenAI", config: {}, is_enabled: false },
         { provider: "nexus", label: "Nexus IA", base_url: "https://intelligent-ai-router.lovable.app/api/public/v1", config: { model: "nexus-auto" }, is_enabled: false },
+        { provider: "efi", label: "Efí Bank (Pix)", config: {}, is_enabled: false },
       ], { onConflict: "provider" });
       const seeded = await supabaseAdmin
         .from("integration_credentials")

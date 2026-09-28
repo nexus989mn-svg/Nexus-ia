@@ -26,6 +26,7 @@ import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAgentRouteImport } from './routes/_authenticated/agent'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
+import { Route as ApiPublicEfiPixConfirmRouteImport } from './routes/api/public/efi-pix-confirm'
 import { Route as ApiCatalogProductionJobIdRouteImport } from './routes/api/catalog/production/$jobId'
 
 const SignupRoute = SignupRouteImport.update({
@@ -112,6 +113,11 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   path: '/api/public/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicEfiPixConfirmRoute = ApiPublicEfiPixConfirmRouteImport.update({
+  id: '/api/public/efi-pix-confirm',
+  path: '/api/public/efi-pix-confirm',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCatalogProductionJobIdRoute =
   ApiCatalogProductionJobIdRouteImport.update({
     id: '/api/catalog/production/$jobId',
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/website': typeof AuthenticatedWebsiteRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/public/efi-pix-confirm': typeof ApiPublicEfiPixConfirmRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/catalog/production/$jobId': typeof ApiCatalogProductionJobIdRoute
 }
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/website': typeof AuthenticatedWebsiteRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/public/efi-pix-confirm': typeof ApiPublicEfiPixConfirmRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/catalog/production/$jobId': typeof ApiCatalogProductionJobIdRoute
 }
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/_authenticated/website': typeof AuthenticatedWebsiteRoute
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/public/efi-pix-confirm': typeof ApiPublicEfiPixConfirmRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/catalog/production/$jobId': typeof ApiCatalogProductionJobIdRoute
 }
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/website'
     | '/whatsapp'
     | '/api/chat'
+    | '/api/public/efi-pix-confirm'
     | '/api/public/stripe-webhook'
     | '/api/catalog/production/$jobId'
   fileRoutesByTo: FileRoutesByTo
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/website'
     | '/whatsapp'
     | '/api/chat'
+    | '/api/public/efi-pix-confirm'
     | '/api/public/stripe-webhook'
     | '/api/catalog/production/$jobId'
   id:
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/_authenticated/website'
     | '/_authenticated/whatsapp'
     | '/api/chat'
+    | '/api/public/efi-pix-confirm'
     | '/api/public/stripe-webhook'
     | '/api/catalog/production/$jobId'
   fileRoutesById: FileRoutesById
@@ -245,6 +257,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiPublicEfiPixConfirmRoute: typeof ApiPublicEfiPixConfirmRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiCatalogProductionJobIdRoute: typeof ApiCatalogProductionJobIdRoute
 }
@@ -370,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/efi-pix-confirm': {
+      id: '/api/public/efi-pix-confirm'
+      path: '/api/public/efi-pix-confirm'
+      fullPath: '/api/public/efi-pix-confirm'
+      preLoaderRoute: typeof ApiPublicEfiPixConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/catalog/production/$jobId': {
       id: '/api/catalog/production/$jobId'
       path: '/api/catalog/production/$jobId'
@@ -418,6 +438,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiPublicEfiPixConfirmRoute: ApiPublicEfiPixConfirmRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiCatalogProductionJobIdRoute: ApiCatalogProductionJobIdRoute,
 }
