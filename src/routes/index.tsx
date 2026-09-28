@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-function Landing() {
+export function Landing() {
   const { t } = useTranslation();
   const fetchPlans = useServerFn(listPlans);
   const { data } = useQuery({ queryKey: ["plans"], queryFn: () => fetchPlans() });

@@ -45,3 +45,5 @@ backup-corrigido-*/
 *.pre_fix_*
 .vercel
 .env*
+.env.local
+*.p12
