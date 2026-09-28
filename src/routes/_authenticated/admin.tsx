@@ -791,6 +791,7 @@ function IntegrationsPanel() {
     openrouter: "Chave OpenRouter (sk-or-…). Obtenha em openrouter.ai/keys.",
     openai: "Chave OpenAI (sk-…). Obtenha em platform.openai.com/api-keys.",
     nexus: "API Key do Nexus IA e URL compatível com OpenAI.",
+    efi: "Credenciais da Efí Bank para pagamentos Pix em produção.",
   };
 
   return (

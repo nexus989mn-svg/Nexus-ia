@@ -20,44 +20,83 @@ export const adminListIntegrations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await ensureAdmin(supabaseAdmin, context.userId);
+
+    const defaults = [
+      { provider: "stripe", label: "Stripe (pagamentos)", config: {}, is_enabled: false },
+      { provider: "whatsapp", label: "WhatsApp (UAZAPI / Evolution)", config: {}, is_enabled: false },
+      { provider: "n8n", label: "n8n (automações)", config: {}, is_enabled: false },
+      { provider: "openrouter", label: "OpenRouter", config: {}, is_enabled: false },
+      { provider: "openai", label: "OpenAI", config: {}, is_enabled: false },
+      {
+        provider: "nexus",
+        label: "Nexus IA",
+        base_url: "https://intelligent-ai-router.lovable.app/api/public/v1",
+        config: { model: "nexus-auto" },
+        is_enabled: false,
+      },
+      {
+        provider: "efi",
+        label: "Efí Bank (Pix)",
+        config: {},
+        is_enabled: false,
+      },
+    ];
+
     const { data, error } = await supabaseAdmin
       .from("integration_credentials")
-      .select("id,provider,label,base_url,config,is_enabled,last_test_at,last_test_status,last_test_message,created_at,updated_at,api_key")
+      .select(
+        "id,provider,label,base_url,config,is_enabled,last_test_at,last_test_status,last_test_message,created_at,updated_at,api_key"
+      )
       .order("label");
+
     if (error) throw new Error(error.message);
 
-    let rows = data ?? [];
-    if (rows.length === 0) {
-      await supabaseAdmin.from("integration_credentials").upsert([
-        { provider: "stripe", label: "Stripe (pagamentos)", config: {}, is_enabled: false },
-        { provider: "whatsapp", label: "WhatsApp (UAZAPI / Evolution)", config: {}, is_enabled: false },
-        { provider: "n8n", label: "n8n (automações)", config: {}, is_enabled: false },
-        { provider: "openrouter", label: "OpenRouter", config: {}, is_enabled: false },
-        { provider: "openai", label: "OpenAI", config: {}, is_enabled: false },
-        { provider: "nexus", label: "Nexus IA", base_url: "https://intelligent-ai-router.lovable.app/api/public/v1", config: { model: "nexus-auto" }, is_enabled: false },
-        { provider: "efi", label: "Efí Bank (Pix)", config: {}, is_enabled: false },
-      ], { onConflict: "provider" });
-      const seeded = await supabaseAdmin
+    const rows = data ?? [];
+    const existingProviders = new Set(rows.map((row) => row.provider));
+
+    const missing = defaults.filter(
+      (integration) => !existingProviders.has(integration.provider)
+    );
+
+    if (missing.length > 0) {
+      const { error: seedError } = await supabaseAdmin
         .from("integration_credentials")
-        .select("id,provider,label,base_url,config,is_enabled,last_test_at,last_test_status,last_test_message,created_at,updated_at,api_key")
-        .order("label");
-      if (seeded.error) throw new Error(seeded.error.message);
-      rows = seeded.data ?? [];
+        .upsert(missing, { onConflict: "provider" });
+
+      if (seedError) throw new Error(seedError.message);
     }
 
+    const { data: refreshed, error: refreshError } = await supabaseAdmin
+      .from("integration_credentials")
+      .select(
+        "id,provider,label,base_url,config,is_enabled,last_test_at,last_test_status,last_test_message,created_at,updated_at,api_key"
+      )
+      .order("label");
+
+    if (refreshError) throw new Error(refreshError.message);
+
     return {
-      integrations: rows.map(({ api_key, ...row }) => {
+      integrations: (refreshed ?? []).map(({ api_key, ...row }) => {
         const envKey =
-          row.provider === "whatsapp" ? process.env.EVOLUTION_API_KEY :
-          row.provider === "n8n" ? process.env.N8N_API_KEY :
-          row.provider === "nexus" ? process.env.NEXUS_API_KEY :
-          row.provider === "stripe" ? process.env.STRIPE_SECRET_KEY :
-          undefined;
+          row.provider === "whatsapp"
+            ? process.env.EVOLUTION_API_KEY
+            : row.provider === "n8n"
+              ? process.env.N8N_API_KEY
+              : row.provider === "nexus"
+                ? process.env.NEXUS_API_KEY
+                : row.provider === "stripe"
+                  ? process.env.STRIPE_SECRET_KEY
+                  : undefined;
+
         const envBaseUrl =
-          row.provider === "whatsapp" ? process.env.EVOLUTION_API_URL :
-          row.provider === "n8n" ? process.env.N8N_BASE_URL :
-          row.provider === "nexus" ? process.env.NEXUS_BASE_URL :
-          undefined;
+          row.provider === "whatsapp"
+            ? process.env.EVOLUTION_API_URL
+            : row.provider === "n8n"
+              ? process.env.N8N_BASE_URL
+              : row.provider === "nexus"
+                ? process.env.NEXUS_BASE_URL
+                : undefined;
+
         return {
           ...row,
           base_url: row.base_url || envBaseUrl || null,
@@ -134,6 +173,7 @@ export const adminTestIntegration = createServerFn({ method: "POST" })
       data.provider === "n8n" ? process.env.N8N_API_KEY :
       data.provider === "nexus" ? process.env.NEXUS_API_KEY :
       data.provider === "stripe" ? process.env.STRIPE_SECRET_KEY :
+      data.provider === "efi" ? process.env.EFI_CLIENT_ID :
       undefined;
     const envBaseUrl =
       data.provider === "whatsapp" ? process.env.EVOLUTION_API_URL :
@@ -242,6 +282,47 @@ export const adminTestIntegration = createServerFn({ method: "POST" })
         message = ok
           ? "Stripe conectado com sucesso"
           : body?.error?.message || `Stripe HTTP ${r.status}`;
+      }
+
+      /* ================= EFI PIX ================= */
+      else if (data.provider === "efi") {
+        const clientId = process.env.EFI_CLIENT_ID?.trim();
+        const clientSecret = process.env.EFI_CLIENT_SECRET?.trim();
+
+        if (!clientId || !clientSecret) {
+          message = "Credenciais da Efí não configuradas (EFI_CLIENT_ID / EFI_CLIENT_SECRET)";
+        } else {
+          const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+
+          const r = await fetch(
+            "https://pix.api.efipay.com.br/oauth/token",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Basic ${auth}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                grant_type: "client_credentials",
+              }),
+            },
+          );
+
+          const text = await r.text();
+
+          let body: any = null;
+          try {
+            body = JSON.parse(text);
+          } catch {}
+
+          ok = r.ok && !!body?.access_token;
+
+          message = ok
+            ? "Efí conectada com sucesso"
+            : body?.error_description ||
+              body?.message ||
+              `Efí HTTP ${r.status}`;
+        }
       }
 
       /* ================= WHATSAPP / N8N ================= */
