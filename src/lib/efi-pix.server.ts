@@ -25,7 +25,7 @@ function request<T>(
         path: `${u.pathname}${u.search}`,
         method,
         headers,
-        pfx: Buffer.from(env("EFI_CERTIFICATE_BASE64"), "base64"),
+        pfx: Buffer.from(env("EFI_CERTIFICATE_BASE64").replace(/\s+/g, ""), "base64"),
         passphrase: process.env.EFI_CERTIFICATE_PASSWORD || "",
       },
       (res) => {
