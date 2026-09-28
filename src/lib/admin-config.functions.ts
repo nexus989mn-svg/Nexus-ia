@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import https from "node:https";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -288,40 +289,87 @@ export const adminTestIntegration = createServerFn({ method: "POST" })
       else if (data.provider === "efi") {
         const clientId = process.env.EFI_CLIENT_ID?.trim();
         const clientSecret = process.env.EFI_CLIENT_SECRET?.trim();
+        const certificateBase64 = process.env.EFI_CERTIFICATE_BASE64?.trim();
 
-        if (!clientId || !clientSecret) {
-          message = "Credenciais da Efí não configuradas (EFI_CLIENT_ID / EFI_CLIENT_SECRET)";
+        if (!clientId || !clientSecret || !certificateBase64) {
+          message =
+            "Credenciais da Efí incompletas. Verifique EFI_CLIENT_ID, EFI_CLIENT_SECRET e EFI_CERTIFICATE_BASE64.";
         } else {
-          const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
-
-          const r = await fetch(
-            "https://pix.api.efipay.com.br/oauth/token",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Basic ${auth}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                grant_type: "client_credentials",
-              }),
-            },
-          );
-
-          const text = await r.text();
-
-          let body: any = null;
           try {
-            body = JSON.parse(text);
-          } catch {}
+            const certificate = Buffer.from(certificateBase64, "base64");
 
-          ok = r.ok && !!body?.access_token;
+            const auth = Buffer.from(
+              `${clientId}:${clientSecret}`,
+              "utf8",
+            ).toString("base64");
 
-          message = ok
-            ? "Efí conectada com sucesso"
-            : body?.error_description ||
-              body?.message ||
-              `Efí HTTP ${r.status}`;
+            const agent = new https.Agent({
+              pfx: certificate,
+              passphrase: "",
+            });
+
+            const response = await new Promise<{
+              status: number;
+              body: string;
+            }>((resolve, reject) => {
+              const req = https.request(
+                "https://pix.api.efipay.com.br/oauth/token",
+                {
+                  method: "POST",
+                  agent,
+                  headers: {
+                    Authorization: `Basic ${auth}`,
+                    "Content-Type": "application/json",
+                  },
+                },
+                (res) => {
+                  let body = "";
+
+                  res.setEncoding("utf8");
+
+                  res.on("data", (chunk) => {
+                    body += chunk;
+                  });
+
+                  res.on("end", () => {
+                    resolve({
+                      status: res.statusCode ?? 0,
+                      body,
+                    });
+                  });
+                },
+              );
+
+              req.on("error", reject);
+
+              req.write(
+                JSON.stringify({
+                  grant_type: "client_credentials",
+                }),
+              );
+
+              req.end();
+            });
+
+            let body: any = null;
+
+            try {
+              body = JSON.parse(response.body);
+            } catch {}
+
+            ok = response.status >= 200 &&
+                 response.status < 300 &&
+                 !!body?.access_token;
+
+            message = ok
+              ? "Efí conectada com sucesso usando certificado."
+              : body?.error_description ||
+                body?.message ||
+                `Efí HTTP ${response.status}`;
+          } catch (e: any) {
+            ok = false;
+            message = e?.message || "Falha ao autenticar na Efí com o certificado.";
+          }
         }
       }
 
