@@ -1,12 +1,4 @@
 {
-  "rewrites": [
-    {
-      "source": "/auri-ia",
-      "destination": "/"
-    },
-    {
-      "source": "/auri-ia/:path*",
-      "destination": "/:path*"
-    }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "tanstack-start"
 }
