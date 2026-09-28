@@ -184,6 +184,7 @@ export async function createEfiPixCharge(params: {
     valor: charge.valor?.original,
     pixCopiaECola: qrCode.qrcode,
     imagemQrcode: qrCode.imagemQrcode,
+    linkVisualizacao: qrCode.linkVisualizacao,
     expiracao: 3600,
   };
 }

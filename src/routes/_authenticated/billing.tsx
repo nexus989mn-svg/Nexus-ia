@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/use-auth";
 import { getMySubscription, createCheckout, listPlans, cancelSubscription } from "@/lib/billing.functions";
+import { createEfiPixCheckout } from "@/lib/efi-billing.functions";
 import { getBillingHistory } from "@/lib/company.functions";
 import { AppShell } from "@/components/app-shell";
 import { SubStatusBadge } from "@/components/sub-status-badge";
@@ -28,6 +29,7 @@ function BillingPage() {
   const fetchSub = useServerFn(getMySubscription);
   const fetchPlans = useServerFn(listPlans);
   const checkout = useServerFn(createCheckout);
+  const efiPixCheckout = useServerFn(createEfiPixCheckout);
   const cancel = useServerFn(cancelSubscription);
   const fetchHistory = useServerFn(getBillingHistory);
 
