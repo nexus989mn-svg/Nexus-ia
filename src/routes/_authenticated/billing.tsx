@@ -48,12 +48,18 @@ function BillingPage() {
     paymentMethod: "card" | "pix" = "card"
   ) => {
     try {
-      const res = await checkout({
-        data: {
-          planCode: code,
-          paymentMethod,
-        },
-      });
+      const res = paymentMethod === "pix"
+        ? await efiPixCheckout({
+            data: {
+              planCode: code as "monthly" | "yearly",
+            },
+          })
+        : await checkout({
+            data: {
+              planCode: code,
+              paymentMethod,
+            },
+          });
 
       toast.success(
         res.mock
