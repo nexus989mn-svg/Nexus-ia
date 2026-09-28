@@ -25,6 +25,12 @@ function BillingPage() {
   const qc = useQueryClient();
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [pixData, setPixData] = useState<{
+    txid: string;
+    amountBrl: number;
+    pixCopiaECola: string;
+    imagemQrcode: string;
+  } | null>(null);
 
   const fetchSub = useServerFn(getMySubscription);
   const fetchPlans = useServerFn(listPlans);
@@ -61,22 +67,61 @@ function BillingPage() {
             },
           });
 
-      toast.success(
-        res.mock
-          ? t("billing.activatedMock")
-          : paymentMethod === "pix"
-            ? "Abrindo pagamento via Pix..."
-            : t("billing.redirecting")
-      );
+      if (paymentMethod === "pix") {
+        const pixRes = res as {
+          mock: false;
+          provider: "efi";
+          paymentMethod: "pix";
+          txid: string;
+          amountBrl: number;
+          pixCopiaECola: string;
+          imagemQrcode: string;
+          url: string;
+        };
 
-      if (res.url.startsWith("http")) {
-        window.location.href = res.url;
+        if (!pixRes.pixCopiaECola || !pixRes.imagemQrcode) {
+          throw new Error("A Efí criou a cobrança, mas não retornou o QR Code.");
+        }
+
+        setPixData({
+          txid: pixRes.txid,
+          amountBrl: pixRes.amountBrl,
+          pixCopiaECola: pixRes.pixCopiaECola,
+          imagemQrcode: pixRes.imagemQrcode,
+        });
+
+        toast.success("QR Code Pix gerado.");
       } else {
-        qc.invalidateQueries({ queryKey: ["my-sub"] });
+        toast.success(
+          res.mock
+            ? t("billing.activatedMock")
+            : t("billing.redirecting")
+        );
+
+        if (res.url.startsWith("http")) {
+          window.location.href = res.url;
+        } else {
+          qc.invalidateQueries({ queryKey: ["my-sub"] });
+        }
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
+  };
+
+  const copyPix = async () => {
+    if (!pixData?.pixCopiaECola) return;
+
+    try {
+      await navigator.clipboard.writeText(pixData.pixCopiaECola);
+      toast.success("Pix Copia e Cola copiado.");
+    } catch {
+      toast.error("Não foi possível copiar automaticamente.");
+    }
+  };
+
+  const closePix = () => {
+    setPixData(null);
   };
 
   const handleCancel = async () => {
@@ -91,6 +136,76 @@ function BillingPage() {
 
   return (
     <AppShell isAdmin={isAdmin}>
+      {pixData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold">Pagamento via Pix</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Escaneie o QR Code ou copie o código abaixo.
+                </p>
+              </div>
+
+              <Button
+                variant="outline"
+                onClick={closePix}
+                type="button"
+              >
+                Fechar
+              </Button>
+            </div>
+
+            <div className="mt-6 flex justify-center rounded-xl bg-white p-4">
+              <img
+                src={pixData.imagemQrcode}
+                alt="QR Code Pix"
+                className="h-64 w-64 object-contain"
+              />
+            </div>
+
+            <div className="mt-5 text-center">
+              <div className="text-sm text-muted-foreground">
+                Valor
+              </div>
+
+              <div className="text-2xl font-bold">
+                R$ {pixData.amountBrl.toFixed(2).replace(".", ",")}
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <div className="text-sm font-medium mb-2">
+                Pix Copia e Cola
+              </div>
+
+              <textarea
+                readOnly
+                value={pixData.pixCopiaECola}
+                className="w-full min-h-28 rounded-xl border border-border bg-muted p-3 text-xs break-all resize-none"
+                onFocus={(event) => event.currentTarget.select()}
+              />
+
+              <Button
+                onClick={copyPix}
+                className="w-full mt-3 bg-gradient-primary shadow-glow"
+                type="button"
+              >
+                Copiar Pix Copia e Cola
+              </Button>
+            </div>
+
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              Após o pagamento, a confirmação será processada automaticamente.
+            </p>
+
+            <div className="mt-2 text-center text-[10px] text-muted-foreground break-all">
+              TXID: {pixData.txid}
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-2xl md:text-3xl font-bold">{t("billing.title")}</h1>
       <p className="text-muted-foreground mt-1">{t("billing.subtitle")}</p>
 
