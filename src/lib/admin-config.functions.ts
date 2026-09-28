@@ -157,6 +157,7 @@ async function testEfiConnection() {
   const clientId = process.env.EFI_CLIENT_ID?.trim();
   const clientSecret = process.env.EFI_CLIENT_SECRET?.trim();
   const certificateBase64 = process.env.EFI_CERTIFICATE_BASE64?.trim();
+  const certificatePassword = process.env.EFI_CERTIFICATE_PASSWORD || "";
 
   if (!clientId) throw new Error("EFI_CLIENT_ID ausente");
   if (!clientSecret) throw new Error("EFI_CLIENT_SECRET ausente");
@@ -175,7 +176,7 @@ async function testEfiConnection() {
 
   const agent = new https.Agent({
     pfx: certificate,
-    passphrase: "",
+    passphrase: certificatePassword,
   });
 
   return await new Promise<{ ok: boolean; message: string }>(
@@ -380,6 +381,8 @@ export const adminTestIntegration = createServerFn({ method: "POST" })
         const clientId = process.env.EFI_CLIENT_ID?.trim();
         const clientSecret = process.env.EFI_CLIENT_SECRET?.trim();
         const certificateBase64 = process.env.EFI_CERTIFICATE_BASE64?.trim();
+        const certificatePassword =
+          process.env.EFI_CERTIFICATE_PASSWORD || "";
 
         if (!clientId || !clientSecret || !certificateBase64) {
           message =
@@ -395,7 +398,7 @@ export const adminTestIntegration = createServerFn({ method: "POST" })
 
             const agent = new https.Agent({
               pfx: certificate,
-              passphrase: "",
+              passphrase: certificatePassword,
             });
 
             const response = await new Promise<{
