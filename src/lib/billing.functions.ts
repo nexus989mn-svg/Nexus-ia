@@ -358,7 +358,7 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
   const r = await fetch("https://api.stripe.com/v1/checkout/sessions",{method:"POST",headers:{Authorization:`Basic ${auth}`,"Content-Type":"application/x-www-form-urlencoded"},body:params});
   const body:any = await r.json().catch(()=>null);
   if (!r.ok || !body?.url) throw new Error(body?.error?.message || `Stripe HTTP ${r.status}`);
-  await emitOperationalEvent({eventType:"CHECKOUT_STARTED",severity:"info",userId,payload:{plan:data.planCode,session_id:body.id}});
+
   return { mock:false, url:body.url as string };
 });
 
