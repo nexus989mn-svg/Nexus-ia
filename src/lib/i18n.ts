@@ -52,14 +52,28 @@ const resources = {
       website: {
         websiteTitle: "Cadastre seu site",
         websiteDescription:
-          "Cadastre o site da sua empresa para que sua IA possa enviar o link quando necessário ou usar o site para agendamentos com data e horário, conforme sua configuração.",
+          "Configure como sua AURI deve usar o site da sua empresa. Ela poderá compartilhar o link quando necessário ou conduzir o cliente durante um agendamento, coletando as informações necessárias conforme as instruções configuradas aqui.",
         websiteUrl: "Endereço do site",
         websiteMode: "Como a IA deve usar o site?",
         websiteLink: "Enviar link",
+        websiteLinkDescription:
+          "A AURI poderá compartilhar o link do site quando o cliente quiser conhecer ou acessar sua empresa.",
         websiteBooking: "Agendamento",
+        websiteBookingDescription:
+          "A AURI identificará quando o cliente quiser agendar e coletará as informações necessárias para conduzir o agendamento.",
         websiteBoth: "Ambos",
+        websiteBothDescription:
+          "A AURI poderá compartilhar o site ou conduzir o cliente em um agendamento, conforme a intenção da conversa.",
         websiteMessage: "Mensagem para enviar o site",
-        bookingInstructions: "Instruções de agendamento",
+        websiteMessageDescription:
+          "Defina o que a AURI deve dizer quando compartilhar o site com o cliente. Use {site} no local onde o endereço do site deve aparecer.",
+        websiteMessagePlaceholder:
+          "Ex.: Claro! Você pode conhecer nossos serviços pelo nosso site: {site}",
+        bookingInstructions: "Instruções para agendamento",
+        bookingInstructionsDescription:
+          "Informe quais dados a AURI deve coletar, quais informações precisam ser confirmadas e quais regras ela deve seguir durante o processo de agendamento.",
+        bookingInstructionsPlaceholder:
+          "Ex.: Solicite nome completo, telefone, serviço desejado, data e horário. Confirme todas as informações antes de concluir o atendimento.",
         saveWebsite: "Salvar site",
         siteSaved: "Site salvo",
       },

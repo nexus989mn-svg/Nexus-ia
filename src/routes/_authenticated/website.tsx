@@ -195,6 +195,10 @@ function WebsitePage() {
             {t("website.websiteMessage")}
           </Label>
 
+          <p className="text-sm text-muted-foreground">
+            {t("website.websiteMessageDescription")}
+          </p>
+
           <Textarea
             id="site-message"
             value={message}
@@ -213,6 +217,10 @@ function WebsitePage() {
             <Label htmlFor="booking-instructions">
               {t("website.bookingInstructions")}
             </Label>
+
+            <p className="text-sm text-muted-foreground">
+              {t("website.bookingInstructionsDescription")}
+            </p>
 
             <Textarea
               id="booking-instructions"
