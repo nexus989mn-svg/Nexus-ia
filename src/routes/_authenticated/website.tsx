@@ -107,11 +107,11 @@ function WebsitePage() {
 
           <div>
             <h2 className="font-medium">
-              {t("website.websiteCompany")}
+              {"Site da empresa"}
             </h2>
 
             <p className="text-sm text-muted-foreground">
-              {t("website.websiteAvailable")}
+              {"Informe o endereço oficial que a AURI poderá utilizar durante o atendimento."}
             </p>
           </div>
         </div>
@@ -124,7 +124,7 @@ function WebsitePage() {
           <Input
             id="website-url"
             type="url"
-            placeholder={t("website.websitePlaceholder")}
+            placeholder={"https://www.suaempresa.com.br"}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
@@ -207,7 +207,7 @@ function WebsitePage() {
           />
 
           <p className="text-xs text-muted-foreground">
-            {t("website.websiteVariableHelp")}{" "}
+            {"Use {site} no local onde o endereço do site deve aparecer."}{" "}
             <code>{"{site}"}</code>
           </p>
         </div>
