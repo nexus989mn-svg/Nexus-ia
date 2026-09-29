@@ -131,9 +131,9 @@ function TrainingPage() {
       </Card>
 
       <Card className="p-5 md:p-6 space-y-5">
-        <div><Label>{t("Nome de atendimento")}</Label><Input value={name === "IA Atendimento" ? t("IA Atendimento") : name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder={t("Ex.: Auri")} /></div>
-        <div><Label>{t("Sobre minha empresa")}</Label><Textarea value={company} onChange={(e) => setCompany(e.target.value)} maxLength={12000} placeholder={t("Segmento, produtos, serviços, horários, localização, diferenciais...")} rows={6}/></div>
-        <div><Label>{t("Como quero que o atendimento responda")}</Label><Textarea value={behavior} onChange={(e) => setBehavior(e.target.value)} maxLength={12000} placeholder={t("Tom de voz, forma de responder, como abordar clientes, como apresentar os serviços...")} rows={7}/></div>
+        <div><Label>{t("Nome da IA")}</Label><Input value={name === "IA Atendimento" ? t("IA Atendimento") : name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder={t("Ex.: Auri")} /></div>
+        <div><Label>{t("Sobre minha empresa")}</Label><Textarea value={company} onChange={(e) => setCompany(e.target.value)} maxLength={12000} placeholder={t("Conte que tipo de empresa você tem, o que oferece, quais serviços ou produtos vende, horários, endereço e outras informações importantes...")} rows={6}/></div>
+        <div><Label>{t("Como quero que a IA atenda")}</Label><Textarea value={behavior} onChange={(e) => setBehavior(e.target.value)} maxLength={12000} placeholder={t("Explique como você quer que a IA converse com seus clientes: como deve falar, apresentar seus serviços ou produtos e conduzir o atendimento...")} rows={7}/></div>
         <div><Label>{t("Orientações específicas da empresa")}</Label><Textarea value={rules} onChange={(e) => setRules(e.target.value)} maxLength={12000} placeholder={
   i18n.language === "en"
     ? "e.g.: do not offer discounts; always confirm the address before finalizing..."
