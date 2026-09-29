@@ -5,42 +5,52 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireActiveSubscription } from "@/lib/security.server";
 
 const websiteInput = z.object({
-  url: z.string().trim().url().refine(
-    (value) => /^https?:\/\//i.test(value),
-    "URL inválida"
-  ),
+  url: z
+    .string()
+    .trim()
+    .url()
+    .refine((value) => /^https?:\/\//i.test(value), "URL inválida"),
   isActive: z.boolean().default(true),
   usageMode: z.enum(["link", "booking", "both"]),
   linkMessage: z.string().max(5000).default(""),
   bookingInstructions: z.string().max(10000).default(""),
 });
 
-async function getCompanyAndInstance(userId: string) {
-  const { data: company, error: companyError } = await supabaseAdmin
+async function getCompanyId(userId: string) {
+  const { data, error } = await supabaseAdmin
     .from("companies")
     .select("id")
     .eq("owner_user_id", userId)
     .maybeSingle();
 
-  if (companyError) throw new Error(companyError.message);
-  if (!company) throw new Error("Empresa não encontrada.");
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Empresa não encontrada.");
 
-  const { data: connection, error: connectionError } = await supabaseAdmin
+  return data.id;
+}
+
+async function getInstanceContext(userId: string) {
+  const companyId = await getCompanyId(userId);
+
+  const { data: connection, error } = await supabaseAdmin
     .from("whatsapp_connections")
-    .select("instance_name, status")
+    .select("company_id, instance_name, status")
     .eq("user_id", userId)
+    .eq("company_id", companyId)
     .maybeSingle();
 
-  if (connectionError) throw new Error(connectionError.message);
+  if (error) throw new Error(error.message);
 
   if (!connection?.instance_name) {
-    throw new Error(
-      "Conecte o WhatsApp da empresa antes de configurar o site."
-    );
+    throw new Error("Nenhuma instância WhatsApp configurada.");
+  }
+
+  if (connection.company_id !== companyId) {
+    throw new Error("Instância WhatsApp não pertence à empresa.");
   }
 
   return {
-    companyId: company.id,
+    companyId,
     instanceName: connection.instance_name,
   };
 }
@@ -50,8 +60,9 @@ export const getMyWebsite = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await requireActiveSubscription(context.userId);
 
-    const { companyId, instanceName } =
-      await getCompanyAndInstance(context.userId);
+    const { companyId, instanceName } = await getInstanceContext(
+      context.userId,
+    );
 
     const { data, error } = await context.supabase
       .from("company_websites")
@@ -62,7 +73,9 @@ export const getMyWebsite = createServerFn({ method: "GET" })
 
     if (error) throw new Error(error.message);
 
-    return { website: data };
+    return {
+      website: data,
+    };
   });
 
 export const saveMyWebsite = createServerFn({ method: "POST" })
@@ -71,8 +84,9 @@ export const saveMyWebsite = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await requireActiveSubscription(context.userId);
 
-    const { companyId, instanceName } =
-      await getCompanyAndInstance(context.userId);
+    const { companyId, instanceName } = await getInstanceContext(
+      context.userId,
+    );
 
     const { data: saved, error } = await context.supabase
       .from("company_websites")
@@ -87,12 +101,16 @@ export const saveMyWebsite = createServerFn({ method: "POST" })
           booking_instructions: data.bookingInstructions,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "company_id,instance_name" }
+        {
+          onConflict: "company_id,instance_name",
+        },
       )
       .select("*")
       .single();
 
     if (error) throw new Error(error.message);
 
-    return { website: saved };
+    return {
+      website: saved,
+    };
   });
