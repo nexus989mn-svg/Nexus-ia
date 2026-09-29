@@ -2,8 +2,30 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { emitOperationalEvent } from "@/lib/ops.server";
 
+const EFI_PIX_WEBHOOK = "https://n8nv4.duckdns.org/webhook/efi-pix-pagamentos";
+
+async function notifyEfiPixWebhook(payload: Record<string, unknown>) {
+  try {
+    const response = await fetch(EFI_PIX_WEBHOOK, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error(
+        "[EFI PIX] webhook n8n retornou",
+        response.status,
+        await response.text().catch(() => "")
+      );
+    }
+  } catch (error) {
+    console.error("[EFI PIX] erro ao chamar webhook n8n:", error);
+  }
+}
 function stripeKey() {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
   if (!key) throw new Error("Stripe não configurado no servidor.");
@@ -97,17 +119,14 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
     if (!eligibility.phone) throw new Error("Conecte e valide seu número de WhatsApp antes de ativar o Trial.");
     if (!eligibility.eligible) {
       await supabaseAdmin.from("subscriptions").update({ status:"blocked", blocked_reason:"Tentativa de reutilização do Trial detectada" }).eq("user_id",userId);
-      await emitOperationalEvent({eventType:"TRIAL_REUSE_BLOCKED",severity:"warning",userId,payload:{email_match:!!eligibility.emailClaim,phone_match:!!eligibility.phoneClaim}});
       throw new Error("O Trial já foi utilizado por este e-mail ou número de WhatsApp.");
     }
     const end = new Date(Date.now() + Math.max(Number(plan.trial_days || 7),7)*86400000);
     const { error: rpcError } = await supabaseAdmin.rpc("claim_trial", { p_user_id:userId, p_plan_id:plan.id, p_email:eligibility.email, p_phone:eligibility.phone, p_period_end:end.toISOString() });
     if (rpcError) {
       await supabaseAdmin.from("subscriptions").update({status:"blocked",blocked_reason:"Tentativa de reutilização do Trial detectada"}).eq("user_id",userId);
-      await emitOperationalEvent({eventType:"TRIAL_REUSE_BLOCKED",severity:"warning",userId,payload:{error:rpcError.message}});
       throw new Error(rpcError.message.includes("WHATSAPP_REQUIRED") ? "Conecte o WhatsApp antes de ativar o Trial." : "O Trial já foi utilizado ou não pôde ser validado com segurança.");
     }
-    await emitOperationalEvent({eventType:"TRIAL_ACTIVATED",severity:"info",userId,payload:{plan:data.planCode}});
     return { mock:false, url:"/billing?trial=activated" };
   }
 
@@ -384,6 +403,5 @@ export const cancelSubscription = createServerFn({method:"POST"}).middleware([re
   const body:any=await r.json().catch(()=>null);
   if(!r.ok) throw new Error(body?.error?.message||`Stripe HTTP ${r.status}`);
   await supabaseAdmin.from("subscriptions").update({cancel_at_period_end:true}).eq("user_id",context.userId);
-  await emitOperationalEvent({eventType:"SUBSCRIPTION_CANCEL_SCHEDULED",severity:"info",userId:context.userId,payload:{subscription_id:sub.stripe_subscription_id}});
   return {ok:true};
 });
