@@ -40,7 +40,7 @@ function WebsitePage() {
           setMessage(website.link_message ?? "");
           setBooking(website.booking_instructions ?? "");
         } else {
-          setMessage(t("website.defaultMessage"));
+          setMessage(t("website.websiteMessagePlaceholder"));
         }
       })
       .catch((err) => {
