@@ -15,17 +15,34 @@ const websiteInput = z.object({
   bookingInstructions: z.string().max(10000).default(""),
 });
 
-async function getCompanyId(userId: string) {
-  const { data, error } = await supabaseAdmin
+async function getCompanyAndInstance(userId: string) {
+  const { data: company, error: companyError } = await supabaseAdmin
     .from("companies")
     .select("id")
     .eq("owner_user_id", userId)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Empresa não encontrada.");
+  if (companyError) throw new Error(companyError.message);
+  if (!company) throw new Error("Empresa não encontrada.");
 
-  return data.id;
+  const { data: connection, error: connectionError } = await supabaseAdmin
+    .from("whatsapp_connections")
+    .select("instance_name, status")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (connectionError) throw new Error(connectionError.message);
+
+  if (!connection?.instance_name) {
+    throw new Error(
+      "Conecte o WhatsApp da empresa antes de configurar o site."
+    );
+  }
+
+  return {
+    companyId: company.id,
+    instanceName: connection.instance_name,
+  };
 }
 
 export const getMyWebsite = createServerFn({ method: "GET" })
@@ -33,12 +50,14 @@ export const getMyWebsite = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await requireActiveSubscription(context.userId);
 
-    const companyId = await getCompanyId(context.userId);
+    const { companyId, instanceName } =
+      await getCompanyAndInstance(context.userId);
 
     const { data, error } = await context.supabase
       .from("company_websites")
       .select("*")
       .eq("company_id", companyId)
+      .eq("instance_name", instanceName)
       .maybeSingle();
 
     if (error) throw new Error(error.message);
@@ -52,13 +71,15 @@ export const saveMyWebsite = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await requireActiveSubscription(context.userId);
 
-    const companyId = await getCompanyId(context.userId);
+    const { companyId, instanceName } =
+      await getCompanyAndInstance(context.userId);
 
     const { data: saved, error } = await context.supabase
       .from("company_websites")
       .upsert(
         {
           company_id: companyId,
+          instance_name: instanceName,
           url: data.url,
           is_active: data.isActive,
           usage_mode: data.usageMode,
@@ -66,7 +87,7 @@ export const saveMyWebsite = createServerFn({ method: "POST" })
           booking_instructions: data.bookingInstructions,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "company_id" }
+        { onConflict: "company_id,instance_name" }
       )
       .select("*")
       .single();

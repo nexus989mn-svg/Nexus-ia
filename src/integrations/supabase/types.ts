@@ -768,6 +768,7 @@ export type Database = {
         Row: {
           id: string
           company_id: string
+          instance_name: string
           url: string
           is_active: boolean
           usage_mode: string
@@ -779,6 +780,7 @@ export type Database = {
         Insert: {
           id?: string
           company_id: string
+          instance_name: string
           url: string
           is_active?: boolean
           usage_mode?: string
@@ -790,6 +792,7 @@ export type Database = {
         Update: {
           id?: string
           company_id?: string
+          instance_name?: string
           url?: string
           is_active?: boolean
           usage_mode?: string
