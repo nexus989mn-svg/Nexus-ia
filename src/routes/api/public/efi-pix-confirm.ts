@@ -158,16 +158,7 @@ export const Route = createFileRoute("/api/public/efi-pix-confirm")({
             processed_at: now.toISOString(),
           });
 
-        await emitOperationalEvent({
-          eventType: "EFI_PIX_PAID",
-          severity: "info",
-          userId,
-          payload: {
-            txid,
-            plan: planCode,
-            amount: pix.valor?.original,
-          },
-        });
+        
 
         return Response.json({
           ok: true,
