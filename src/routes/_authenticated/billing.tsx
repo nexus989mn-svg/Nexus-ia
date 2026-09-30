@@ -83,12 +83,14 @@ function BillingPage() {
           throw new Error("A Efí criou a cobrança, mas não retornou o QR Code.");
         }
 
-        if (!pixRes.url || !pixRes.url.startsWith("http")) {
-          throw new Error("A Efí criou o Pix, mas não retornou a página de pagamento.");
-        }
+        setPixData({
+          txid: pixRes.txid,
+          amountBrl: pixRes.amountBrl,
+          pixCopiaECola: pixRes.pixCopiaECola,
+          imagemQrcode: pixRes.imagemQrcode,
+        });
 
-        toast.success("Abrindo pagamento via Efí...");
-        window.location.href = pixRes.url;
+        toast.success("QR Code Pix gerado.");
         return;
       } else {
         toast.success(
