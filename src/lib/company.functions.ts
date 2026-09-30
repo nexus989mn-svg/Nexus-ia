@@ -128,16 +128,16 @@ export const getBillingHistory = createServerFn({ method: "GET" })
 
     const [{ data: events, error: eventsError }, { data: logs, error: logsError }] =
       await Promise.all([
-        supabaseAdmin
-          .from("billing_events" as any)
+        (supabaseAdmin as any)
+          .from("billing_events")
           .select("id, processed_at, provider, event_type")
           .eq("company_id", companyId)
           .neq("event_type", "EFI_PIX_CREATED")
           .order("processed_at", { ascending: false })
           .limit(50),
 
-        supabaseAdmin
-          .from("system_logs" as any)
+        (supabaseAdmin as any)
+          .from("system_logs")
           .select("id, created_at, severity, event")
           .eq("company_id", companyId)
           .like("event", "subscription.%")
@@ -149,7 +149,7 @@ export const getBillingHistory = createServerFn({ method: "GET" })
     if (logsError) throw new Error(logsError.message);
 
     return {
-      events: (events ?? []) as BillingHistoryEvent[],
-      logs: (logs ?? []) as BillingHistoryLog[],
+      events: (events ?? []) as unknown as BillingHistoryEvent[],
+      logs: (logs ?? []) as unknown as BillingHistoryLog[],
     };
   });
