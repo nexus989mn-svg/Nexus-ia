@@ -94,21 +94,45 @@ export const getBillingHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { userId } = context;
-    const [{ data: events }, { data: logs }] = await Promise.all([
-      supabaseAdmin
-        .from("billing_events")
-        .select("*")
-        .eq("user_id", userId)
-        .neq("event_type", "EFI_PIX_CREATED")
-        .order("processed_at", { ascending: false })
-        .limit(50),
-      supabaseAdmin
-        .from("system_logs")
-        .select("*")
-        .eq("user_id", userId)
-        .like("event", "subscription.%")
-        .order("created_at", { ascending: false })
-        .limit(50),
-    ]);
-    return { events: events ?? [], logs: logs ?? [] };
+
+    const { data: company, error: companyError } = await supabaseAdmin
+      .from("companies")
+      .select("id")
+      .eq("owner_user_id", userId)
+      .maybeSingle();
+
+    if (companyError) throw new Error(companyError.message);
+
+    if (!company?.id) {
+      return { events: [], logs: [] };
+    }
+
+    const companyId = company.id;
+
+    const [{ data: events, error: eventsError }, { data: logs, error: logsError }] =
+      await Promise.all([
+        supabaseAdmin
+          .from("billing_events" as any)
+          .select("*")
+          .eq("company_id", companyId)
+          .neq("event_type", "EFI_PIX_CREATED")
+          .order("processed_at", { ascending: false })
+          .limit(50),
+
+        supabaseAdmin
+          .from("system_logs" as any)
+          .select("*")
+          .eq("company_id", companyId)
+          .like("event", "subscription.%")
+          .order("created_at", { ascending: false })
+          .limit(50),
+      ]);
+
+    if (eventsError) throw new Error(eventsError.message);
+    if (logsError) throw new Error(logsError.message);
+
+    return {
+      events: events ?? [],
+      logs: logs ?? [],
+    };
   });
