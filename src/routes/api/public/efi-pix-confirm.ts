@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { consultarEfiPix } from "@/lib/efi-pix.server";
-import { emitOperationalEvent } from "@/lib/ops.server";
-
 export const Route = createFileRoute("/api/public/efi-pix-confirm")({
   server: {
     handlers: {
