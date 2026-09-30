@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createEfiPixCharge } from "@/lib/efi-pix.server";
-import { emitOperationalEvent } from "@/lib/ops.server";
+
 
 function appUrl() {
   const configured =
@@ -109,17 +109,6 @@ export const createEfiPixCheckout = createServerFn({
         `Pix criado, mas não foi possível registrar a cobrança: ${eventError.message}`
       );
     }
-
-    await emitOperationalEvent({
-      eventType: "EFI_PIX_CREATED",
-      severity: "info",
-      userId,
-      payload: {
-        txid: pix.txid,
-        plan: data.planCode,
-        amount_brl: amountBrl,
-      },
-    });
 
     return {
       mock: false,
