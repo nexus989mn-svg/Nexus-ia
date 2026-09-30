@@ -5,27 +5,6 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const EFI_PIX_WEBHOOK = "https://n8nv4.duckdns.org/webhook/efi-pix-pagamentos";
 
-async function notifyEfiPixWebhook(payload: Record<string, unknown>) {
-  try {
-    const response = await fetch(EFI_PIX_WEBHOOK, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      console.error(
-        "[EFI PIX] webhook n8n retornou",
-        response.status,
-        await response.text().catch(() => "")
-      );
-    }
-  } catch (error) {
-    console.error("[EFI PIX] erro ao chamar webhook n8n:", error);
-  }
-}
 function stripeKey() {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
   if (!key) throw new Error("Stripe não configurado no servidor.");
