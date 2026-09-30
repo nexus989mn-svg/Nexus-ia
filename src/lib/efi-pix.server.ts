@@ -2,6 +2,8 @@ import https from "node:https";
 import { Buffer } from "node:buffer";
 
 const EFI_URL = "https://pix.api.efipay.com.br";
+const EFI_PIX_WEBHOOK =
+  "https://n8nv4.duckdns.org/webhook/efi-pix-pagamentos?ignorar=";
 
 function env(name: string) {
   const value = process.env[name]?.trim();
@@ -141,12 +143,28 @@ export async function efiRequest<T>(
   return response.data;
 }
 
+async function registerEfiPixWebhook() {
+  const key = env("EFI_PIX_KEY");
+
+  return efiRequest<any>(
+    `/v2/webhook/${encodeURIComponent(key)}`,
+    "PUT",
+    {
+      webhookUrl: EFI_PIX_WEBHOOK,
+    }
+  );
+}
+
 export async function createEfiPixCharge(params: {
   amount: number;
   userId: string;
   planCode: string;
   planName: string;
 }) {
+  // Garante que a chave Pix usada pela cobrança esteja
+  // vinculada ao webhook de confirmação da Efí.
+  await registerEfiPixWebhook();
+
   const charge = await efiRequest<any>(
     "/v2/cob",
     "POST",

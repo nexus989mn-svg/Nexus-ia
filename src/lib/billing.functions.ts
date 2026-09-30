@@ -2,8 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { createEfiPixCharge } from "@/lib/efi-pix.server";
 
-const EFI_PIX_WEBHOOK = "https://n8nv4.duckdns.org/webhook/efi-pix-pagamentos";
 
 function stripeKey() {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
@@ -161,6 +161,34 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
       (Number(plan.price_usd_cents) / 100) * usdToBrl * 100
     )
   );
+
+  // =========================================================
+  // PIX = EFÍ
+  // Nunca enviar PIX pelo Stripe.
+  // A Efí registra o webhook e cria a cobrança.
+  // =========================================================
+  if (isPix) {
+    const efiPix = await createEfiPixCharge({
+      amount: brlCents / 100,
+      userId,
+      planCode: data.planCode,
+      planName: plan.name,
+    });
+
+    return {
+      mock: false,
+      provider: "efi",
+      paymentMethod: "pix",
+      txid: efiPix.txid,
+      status: efiPix.status,
+      valor: efiPix.valor,
+      pixCopiaECola: efiPix.pixCopiaECola,
+      imagemQrcode: efiPix.imagemQrcode,
+      linkVisualizacao: efiPix.linkVisualizacao,
+      expiracao: efiPix.expiracao,
+      url: efiPix.linkVisualizacao,
+    };
+  }
 
   if (isPix) {
     // PIX: pagamento avulso em BRL.
