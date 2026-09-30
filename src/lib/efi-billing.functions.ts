@@ -82,6 +82,44 @@ export const createEfiPixCheckout = createServerFn({
       planName: plan.name,
     });
 
+    const { error: orderError } = await supabaseAdmin
+      .from("payment_orders" as any)
+      .insert({
+        user_id: userId,
+        plan_id: plan.id,
+        provider: "efi",
+        payment_method: "pix",
+        status: "pending",
+        amount_cents: Math.round(amountBrl * 100),
+        currency: "BRL",
+        provider_payment_id: pix.txid,
+        provider_customer_id: null,
+        pix_qr_code: pix.pixCopiaECola,
+        pix_qr_code_url: pix.imagemQrcode,
+        pix_expires_at: new Date(
+          Date.now() + pix.expiracao * 1000
+        ).toISOString(),
+        period_start: null,
+        period_end: null,
+        metadata: {
+          txid: pix.txid,
+          plan_code: data.planCode,
+          plan_name: plan.name,
+          amount_brl: amountBrl,
+          link_visualizacao: pix.linkVisualizacao,
+        },
+        paid_at: null,
+        efi_txid: pix.txid,
+        efi_end_to_end_id: null,
+        efi_status: pix.status,
+      });
+
+    if (orderError) {
+      throw new Error(
+        `Pix criado, mas não foi possível registrar o pedido: ${orderError.message}`
+      );
+    }
+
     const { error: eventError } = await supabaseAdmin
       .from("billing_events")
       .insert({
