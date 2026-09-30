@@ -99,6 +99,7 @@ export const getBillingHistory = createServerFn({ method: "GET" })
         .from("billing_events")
         .select("*")
         .eq("user_id", userId)
+        .neq("event_type", "EFI_PIX_CREATED")
         .order("processed_at", { ascending: false })
         .limit(50),
       supabaseAdmin

@@ -20,6 +20,26 @@ export const Route = createFileRoute("/_authenticated/billing")({
   component: BillingPage,
 });
 
+function formatBillingDate(
+  value: string | null | undefined,
+  locale: string
+): string {
+  if (!value) return "Data não disponível";
+
+  const date = new Date(value);
+
+  if (!Number.isFinite(date.getTime())) {
+    return "Data não disponível";
+  }
+
+  // Evita exibir datas inválidas/epoch como 31/12/1969.
+  if (date.getTime() <= 0) {
+    return "Data não disponível";
+  }
+
+  return date.toLocaleString(locale);
+}
+
 function BillingPage() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
@@ -315,16 +335,20 @@ function BillingPage() {
             {(historyData?.events ?? []).map((e) => (
               <div key={`ev-${e.id}`} className="py-2 flex items-center gap-3">
                 <span className="text-xs text-muted-foreground w-40 shrink-0">
-                  {new Date(e.processed_at).toLocaleString(i18n.language)}
+                  {formatBillingDate(e.processed_at, i18n.language)}
                 </span>
                 <span className="text-xs uppercase tracking-widest text-primary w-20 shrink-0">{e.provider}</span>
-                <span className="flex-1 truncate">{e.event_type}</span>
+                <span className="flex-1 truncate">{e.event_type === "pix.payment_confirmed"
+                    ? "Pagamento Pix confirmado"
+                    : e.event_type === "pix.payment_failed"
+                      ? "Pagamento Pix não confirmado"
+                      : e.event_type}</span>
               </div>
             ))}
             {(historyData?.logs ?? []).map((l) => (
               <div key={`log-${l.id}`} className="py-2 flex items-center gap-3">
                 <span className="text-xs text-muted-foreground w-40 shrink-0">
-                  {new Date(l.created_at).toLocaleString(i18n.language)}
+                  {formatBillingDate(l.created_at, i18n.language)}
                 </span>
                 <span className="text-xs uppercase tracking-widest text-muted-foreground w-20 shrink-0">{l.severity}</span>
                 <span className="flex-1 truncate">{l.event}</span>
