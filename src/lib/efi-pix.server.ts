@@ -161,10 +161,8 @@ export async function createEfiPixCharge(params: {
   planCode: string;
   planName: string;
 }) {
-  // Garante que a chave Pix usada pela cobrança esteja
-  // vinculada ao webhook de confirmação da Efí.
-  await registerEfiPixWebhook();
-
+  // Cria a cobrança primeiro.
+  // O webhook NÃO pode impedir a geração do Pix.
   const charge = await efiRequest<any>(
     "/v2/cob",
     "POST",
@@ -195,6 +193,17 @@ export async function createEfiPixCharge(params: {
     `/v2/loc/${charge.loc.id}/qrcode`,
     "GET"
   );
+
+  // O Pix já foi criado. Se o cadastro do webhook falhar,
+  // isso NÃO pode impedir o QR Code de ser entregue ao app.
+  try {
+    await registerEfiPixWebhook();
+  } catch (error) {
+    console.error(
+      "Falha ao registrar webhook Efí; Pix já foi criado:",
+      error
+    );
+  }
 
   return {
     txid: charge.txid,
