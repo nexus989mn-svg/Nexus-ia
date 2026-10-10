@@ -11,6 +11,7 @@ type Commit = {
 
 type Plan = {
   version: string;
+  commitSha: string;
   date: string;
   time: string;
   message: string;
@@ -24,6 +25,7 @@ const KEY = "updates_center";
 
 const emptyPlan: Plan = {
   version: "",
+  commitSha: "",
   date: "",
   time: "",
   message: "",
@@ -115,20 +117,20 @@ export function UpdatesCenter() {
   }
 
   function schedule() {
-    if (!plan.version.trim() || !plan.date || !plan.time) {
-      setError("Informe a versão, a data e o horário.");
+    if (!develop?.sha || !plan.date || !plan.time) {
+      setError("Commit de desenvolvimento indisponível. Atualize as informações do GitHub.");
       return;
     }
     if (new Date(`${plan.date}T${plan.time}`).getTime() <= Date.now()) {
       setError("Escolha uma data e um horário futuros.");
       return;
     }
-    void persist({ ...plan, status: "scheduled", noticeSent: false }, "Agendamento salvo. Nenhum aviso foi enviado e nenhuma publicação foi feita.");
+    void persist({ ...plan, commitSha: develop.sha, status: "scheduled", noticeSent: false }, `Agendamento salvo para o commit ${shortSha(develop.sha)}. Nenhum aviso foi enviado e nenhuma publicação foi feita.`);
   }
 
   function sendNotice() {
-    if (!plan.version || !plan.date || !plan.time) {
-      setError("Prepare e salve o agendamento antes de enviar um aviso.");
+    if (!plan.commitSha || !plan.date || !plan.time) {
+      setError("Prepare e salve o agendamento com um commit antes de enviar um aviso.");
       return;
     }
     if (!window.confirm("Confirmar o envio do aviso aos clientes?")) return;
@@ -185,10 +187,14 @@ export function UpdatesCenter() {
           <h3 className="font-semibold">Preparar e agendar atualização</h3>
           <p className="mt-1 text-sm text-muted-foreground">Salvar o agendamento não envia avisos nem publica o sistema.</p>
         </div>
-        <label className="block text-sm">Versão
-          <input value={plan.version} onChange={(e) => setPlan({ ...plan, version: e.target.value })}
-            placeholder="Ex.: 1.5.0" className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2" />
-        </label>
+        <div className="rounded-lg border border-border bg-background p-3">
+          <p className="text-sm text-muted-foreground">Commit de desenvolvimento selecionado</p>
+          {develop ? <>
+            <p className="mt-2 break-all font-mono text-sm">{develop.sha}</p>
+            <p className="mt-1 text-sm">{develop.commit.message.split("\n")[0]}</p>
+            <a href={develop.html_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm text-primary hover:underline">Ver commit no GitHub</a>
+          </> : <p className="mt-2 text-sm text-muted-foreground">Commit indisponível.</p>}
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">Data
             <input type="date" value={plan.date} onChange={(e) => setPlan({ ...plan, date: e.target.value })}
@@ -204,7 +210,7 @@ export function UpdatesCenter() {
             rows={3} placeholder="Descreva as mudanças e o impacto previsto."
             className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2" />
         </label>
-        <p className="text-sm text-muted-foreground">Status: <strong>{plan.status}</strong> · Aviso enviado: <strong>{plan.noticeSent ? "Sim" : "Não"}</strong></p>
+        <p className="text-sm text-muted-foreground">Commit agendado: <strong className="font-mono">{plan.commitSha ? shortSha(plan.commitSha) : "Nenhum"}</strong> · Status: <strong>{plan.status}</strong> · Aviso enviado: <strong>{plan.noticeSent ? "Sim" : "Não"}</strong></p>
         <div className="flex flex-wrap gap-3">
           <button type="button" disabled={saving} onClick={schedule}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50">
