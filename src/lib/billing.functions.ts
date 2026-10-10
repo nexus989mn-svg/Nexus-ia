@@ -23,7 +23,7 @@ async function getTrialEligibility(userId: string) {
   const phone = wa?.status === "connected" ? (wa.phone_e164?.trim() || null) : null;
   const { data: emailClaim } = await supabaseAdmin.from("trial_claims").select("id,user_id").eq("email_normalized", email).maybeSingle();
   const { data: phoneClaim } = phone ? await supabaseAdmin.from("trial_claims").select("id,user_id").eq("phone_e164", phone).maybeSingle() : { data: null };
-  return { eligible: !!phone && !emailClaim && !phoneClaim, email, phone, emailClaim, phoneClaim, reason: !phone ? "whatsapp_required" : emailClaim || phoneClaim ? "already_used" : null };
+  return { eligible: !emailClaim && !phoneClaim, email, phone, emailClaim, phoneClaim, reason: emailClaim || phoneClaim ? "already_used" : null };
 }
 
 function appUrl(): string {
@@ -78,7 +78,7 @@ export const getMySubscription = createServerFn({ method: "GET" }).middleware([r
 
   const hasAccess = !!sub?.plan && ["trial","active"].includes(sub.status) && (!sub.current_period_end || new Date(sub.current_period_end).getTime() > Date.now());
   const trial = await getTrialEligibility(userId);
-  return { subscription: sub, hasAccess, isAdmin: false, mockMode: false, trialAvailable: !sub && trial.eligible, trialBlockedReason: trial.reason };
+  return { subscription: sub, hasAccess, isAdmin: false, mockMode: false, trialAvailable: !hasAccess && trial.eligible, trialBlockedReason: trial.reason };
 });
 
 export const listPlans = createServerFn({ method: "GET" }).handler(async () => {
@@ -95,7 +95,6 @@ export const createCheckout = createServerFn({ method: "POST" }).middleware([req
   if (data.planCode === "trial") {
     if (await isAdminUser(userId)) throw new Error("Trial não é aplicável à conta administrativa.");
     const eligibility = await getTrialEligibility(userId);
-    if (!eligibility.phone) throw new Error("Conecte e valide seu número de WhatsApp antes de ativar o Trial.");
     if (!eligibility.eligible) {
       await supabaseAdmin.from("subscriptions").update({ status:"blocked", blocked_reason:"Tentativa de reutilização do Trial detectada" }).eq("user_id",userId);
       throw new Error("O Trial já foi utilizado por este e-mail ou número de WhatsApp.");
