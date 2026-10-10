@@ -1,7 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
 import { useCallback, useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { adminGetSettings, adminSaveSetting } from "@/lib/admin-config.functions";
-
 type Commit = {
   sha: string;
   html_url: string;
@@ -47,9 +45,6 @@ function formatDate(date?: string) {
 }
 
 export function UpdatesCenter() {
-  const getSettings = useServerFn(adminGetSettings);
-  const saveSetting = useServerFn(adminSaveSetting);
-
   const [main, setMain] = useState<Commit | null>(null);
   const [develop, setDevelop] = useState<Commit | null>(null);
   const [history, setHistory] = useState<Commit[]>([]);
@@ -64,7 +59,7 @@ export function UpdatesCenter() {
     setError("");
     try {
       const [settings, ...responses] = await Promise.all([
-        getSettings(),
+        supabase.from("platform_settings").select("value").eq("key", KEY).maybeSingle(),
         fetch(`https://api.github.com/repos/${REPOSITORY}/commits/main`, {
           headers: { Accept: "application/vnd.github+json" },
         }),
@@ -76,7 +71,8 @@ export function UpdatesCenter() {
         }),
       ]);
 
-      const stored = settings.settings?.[KEY] as Plan | undefined;
+      if (settings.error) throw new Error(`Erro ao carregar configurações: ${settings.error.message}`);
+      const stored = settings.data?.value as Plan | undefined;
       if (stored) setPlan({ ...emptyPlan, ...stored });
 
       if (responses.some((r) => !r.ok)) {
@@ -92,7 +88,7 @@ export function UpdatesCenter() {
     } finally {
       setLoading(false);
     }
-  }, [getSettings]);
+  }, []);
 
   useEffect(() => {
     void refresh();
@@ -104,7 +100,11 @@ export function UpdatesCenter() {
     setSuccess("");
     try {
       const value = { ...next, updatedAt: new Date().toISOString() };
-      await saveSetting({ data: { key: KEY, value } });
+      const { error: saveError } = await supabase
+        .from("platform_settings")
+        .upsert({ key: KEY, value, updated_at: value.updatedAt });
+
+      if (saveError) throw new Error(`Erro ao salvar configurações: ${saveError.message}`);
       setPlan(value);
       setSuccess(message);
     } catch (e) {
