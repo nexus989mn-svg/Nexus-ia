@@ -68,7 +68,7 @@ export function UpdatesCenter() {
         fetch(`https://api.github.com/repos/${REPOSITORY}/commits/develop`, {
           headers: { Accept: "application/vnd.github+json" },
         }),
-        fetch(`https://api.github.com/repos/${REPOSITORY}/commits?sha=main&per_page=8`, {
+        fetch(`https://api.github.com/repos/${REPOSITORY}/commits?sha=develop&per_page=20`, {
           headers: { Accept: "application/vnd.github+json" },
         }),
       ]);
@@ -125,7 +125,7 @@ export function UpdatesCenter() {
       setError("Escolha uma data e um horário futuros.");
       return;
     }
-    void persist({ ...plan, commitSha: develop.sha, status: "scheduled", noticeSent: false }, `Agendamento salvo para o commit ${shortSha(develop.sha)}. Nenhum aviso foi enviado e nenhuma publicação foi feita.`);
+    void persist({ ...plan, commitSha: plan.commitSha || develop.sha, status: "scheduled", noticeSent: false }, `Agendamento salvo para o commit ${shortSha(plan.commitSha || develop.sha)}. Nenhum aviso foi enviado e nenhuma publicação foi feita.`);
   }
 
   function sendNotice() {
@@ -187,13 +187,32 @@ export function UpdatesCenter() {
           <h3 className="font-semibold">Preparar e agendar atualização</h3>
           <p className="mt-1 text-sm text-muted-foreground">Salvar o agendamento não envia avisos nem publica o sistema.</p>
         </div>
-        <div className="rounded-lg border border-border bg-background p-3">
-          <p className="text-sm text-muted-foreground">Commit de desenvolvimento selecionado</p>
-          {develop ? <>
-            <p className="mt-2 break-all font-mono text-sm">{develop.sha}</p>
-            <p className="mt-1 text-sm">{develop.commit.message.split("\n")[0]}</p>
-            <a href={develop.html_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm text-primary hover:underline">Ver commit no GitHub</a>
-          </> : <p className="mt-2 text-sm text-muted-foreground">Commit indisponível.</p>}
+        <div className="rounded-lg border border-border bg-background p-3 space-y-3">
+          <label className="block text-sm">
+            Commit que será publicado — develop
+            <select
+              value={plan.commitSha || develop?.sha || ""}
+              onChange={(e) => setPlan({ ...plan, commitSha: e.target.value, status: "draft" })}
+              className="mt-2 block w-full rounded-lg border border-border bg-background px-3 py-3"
+            >
+              {history.map((commit) => (
+                <option key={commit.sha} value={commit.sha}>
+                  {shortSha(commit.sha)} — {commit.commit.message.split("\\n")[0]}
+                </option>
+              ))}
+            </select>
+          </label>
+          {history.find((commit) => commit.sha === (plan.commitSha || develop?.sha)) && (
+            <div>
+              <p className="break-all font-mono text-sm">{plan.commitSha || develop?.sha}</p>
+              <a
+                href={history.find((commit) => commit.sha === (plan.commitSha || develop?.sha))!.html_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-block text-sm text-primary hover:underline"
+              >Ver commit no GitHub</a>
+            </div>
+          )}
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">Data
