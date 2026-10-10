@@ -7,7 +7,7 @@ export const getRouter = () => {
 
   const router = createRouter({
     routeTree,
-    basepath: "/auri-ia",
+    basepath: "/",
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
