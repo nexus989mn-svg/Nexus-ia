@@ -146,16 +146,16 @@ export function UpdatesCenter() {
   const comparisonUrl = `https://github.com/${REPOSITORY}/compare/main...develop`;
 
   return (
-    <section className="space-y-6 text-slate-100">
+    <section className="space-y-6 text-foreground">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">Centro de Atualizações</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-muted-foreground">
             Você controla os avisos e autoriza cada publicação.
           </p>
         </div>
         <button type="button" onClick={() => void refresh()} disabled={loading || saving}
-          className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm hover:bg-slate-800 disabled:opacity-50">
+          className="rounded-lg border border-border bg-background px-4 py-2 text-sm hover:bg-muted disabled:opacity-50">
           {loading ? "Carregando..." : "Atualizar informações"}
         </button>
       </div>
@@ -168,78 +168,78 @@ export function UpdatesCenter() {
           { name: "Produção — main", commit: main },
           { name: "Desenvolvimento — develop", commit: develop },
         ].map(({ name, commit }) => (
-          <article key={name} className="rounded-xl border border-slate-800 bg-slate-950/60 p-5">
-            <p className="text-sm text-slate-400">{name}</p>
+          <article key={name} className="rounded-xl border border-border bg-card/80 backdrop-blur-sm p-5">
+            <p className="text-sm text-muted-foreground">{name}</p>
             {commit ? <>
               <p className="mt-3 font-mono text-lg">{shortSha(commit.sha)}</p>
-              <p className="mt-2 break-words text-sm text-slate-300">{commit.commit.message.split("\n")[0]}</p>
-              <p className="mt-3 text-xs text-slate-500">{formatDate(commit.commit.author?.date)}</p>
-              <a href={commit.html_url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm text-sky-400 hover:underline">Ver commit no GitHub</a>
-            </> : <p className="mt-3 text-sm text-slate-500">{loading ? "Carregando..." : "Informação indisponível."}</p>}
+              <p className="mt-2 break-words text-sm text-card-foreground">{commit.commit.message.split("\n")[0]}</p>
+              <p className="mt-3 text-xs text-muted-foreground">{formatDate(commit.commit.author?.date)}</p>
+              <a href={commit.html_url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm text-primary hover:underline">Ver commit no GitHub</a>
+            </> : <p className="mt-3 text-sm text-muted-foreground">{loading ? "Carregando..." : "Informação indisponível."}</p>}
           </article>
         ))}
       </div>
 
-      <article className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-5">
+      <article className="space-y-4 rounded-xl border border-border bg-card/80 backdrop-blur-sm p-5">
         <div>
           <h3 className="font-semibold">Preparar e agendar atualização</h3>
-          <p className="mt-1 text-sm text-slate-400">Salvar o agendamento não envia avisos nem publica o sistema.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Salvar o agendamento não envia avisos nem publica o sistema.</p>
         </div>
         <label className="block text-sm">Versão
           <input value={plan.version} onChange={(e) => setPlan({ ...plan, version: e.target.value })}
-            placeholder="Ex.: 1.5.0" className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2" />
+            placeholder="Ex.: 1.5.0" className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2" />
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">Data
             <input type="date" value={plan.date} onChange={(e) => setPlan({ ...plan, date: e.target.value })}
-              className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2" />
+              className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2" />
           </label>
           <label className="block text-sm">Horário
             <input type="time" value={plan.time} onChange={(e) => setPlan({ ...plan, time: e.target.value })}
-              className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2" />
+              className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2" />
           </label>
         </div>
         <label className="block text-sm">Mensagem para os clientes
           <textarea value={plan.message} onChange={(e) => setPlan({ ...plan, message: e.target.value })}
             rows={3} placeholder="Descreva as mudanças e o impacto previsto."
-            className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2" />
+            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2" />
         </label>
-        <p className="text-sm text-slate-400">Status: <strong>{plan.status}</strong> · Aviso enviado: <strong>{plan.noticeSent ? "Sim" : "Não"}</strong></p>
+        <p className="text-sm text-muted-foreground">Status: <strong>{plan.status}</strong> · Aviso enviado: <strong>{plan.noticeSent ? "Sim" : "Não"}</strong></p>
         <div className="flex flex-wrap gap-3">
           <button type="button" disabled={saving} onClick={schedule}
-            className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium hover:bg-sky-500 disabled:opacity-50">
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50">
             {saving ? "Salvando..." : "Salvar agendamento"}
           </button>
           <button type="button" disabled={saving} onClick={() => void persist({ ...plan, status: "cancelled" }, "Agendamento cancelado. Nenhuma publicação foi realizada.")}
-            className="rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800 disabled:opacity-50">
+            className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50">
             Cancelar agendamento
           </button>
           <button type="button" disabled={saving} onClick={sendNotice}
-            className="rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800 disabled:opacity-50">
+            className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50">
             Enviar aviso aos clientes
           </button>
           <button type="button" disabled={saving} onClick={publish}
-            className="rounded-lg border border-amber-500/40 px-4 py-2 text-sm text-amber-300 hover:bg-amber-500/10 disabled:opacity-50">
+            className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50">
             Autorizar publicação agora
           </button>
         </div>
-        <p className="text-xs text-slate-500">Avisos e deploy ainda precisam de integrações reais. Os botões informam quando a ação não está conectada; não simulam sucesso.</p>
+        <p className="text-xs text-muted-foreground">Avisos e deploy ainda precisam de integrações reais. Os botões informam quando a ação não está conectada; não simulam sucesso.</p>
       </article>
 
-      <article className="rounded-xl border border-slate-800 bg-slate-950/60 p-5">
+      <article className="rounded-xl border border-border bg-card/80 backdrop-blur-sm p-5">
         <h3 className="font-semibold">Comparação de versões</h3>
-        <p className="mt-2 text-sm text-slate-400">Compare as alterações antes de decidir publicar.</p>
-        <a href={comparisonUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800">Comparar main e develop</a>
+        <p className="mt-2 text-sm text-muted-foreground">Compare as alterações antes de decidir publicar.</p>
+        <a href={comparisonUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted">Comparar main e develop</a>
       </article>
 
-      <article className="rounded-xl border border-slate-800 bg-slate-950/60 p-5">
+      <article className="rounded-xl border border-border bg-card/80 backdrop-blur-sm p-5">
         <h3 className="font-semibold">Histórico de produção</h3>
-        {history.length === 0 && !loading ? <p className="mt-3 text-sm text-slate-500">Nenhum commit disponível.</p> : (
+        {history.length === 0 && !loading ? <p className="mt-3 text-sm text-muted-foreground">Nenhum commit disponível.</p> : (
           <div className="mt-4 divide-y divide-slate-800">
             {history.map((commit) => <a key={commit.sha} href={commit.html_url} target="_blank" rel="noreferrer"
               className="flex flex-wrap items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
-              <span className="min-w-0 flex-1 break-words text-sm text-slate-300">{commit.commit.message.split("\n")[0]}</span>
-              <span className="font-mono text-xs text-sky-400">{shortSha(commit.sha)}</span>
+              <span className="min-w-0 flex-1 break-words text-sm text-card-foreground">{commit.commit.message.split("\n")[0]}</span>
+              <span className="font-mono text-xs text-primary">{shortSha(commit.sha)}</span>
             </a>)}
           </div>
         )}
