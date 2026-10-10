@@ -140,9 +140,51 @@ export function UpdatesCenter() {
     setError("Envio não realizado: ainda falta conectar um canal de notificação aos clientes. Nenhuma mensagem foi enviada.");
   }
 
-  function publish() {
-    if (!window.confirm("Você autoriza publicar esta versão em produção agora?")) return;
-    setError("Publicação bloqueada: o mecanismo de deploy ainda não está conectado. Nenhuma alteração foi publicada.");
+  async function publish() {
+    const sha = plan.commitSha || develop?.sha;
+    if (!sha || !/^[0-9a-f]{40}$/i.test(sha)) {
+      setError("Selecione um commit válido antes de publicar.");
+      return;
+    }
+
+    if (!window.confirm(`Autorizar a publicação do commit ${shortSha(sha)} em main?`)) return;
+
+    setSaving(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
+
+      const response = await fetch("/api/admin/publish-commit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ commitSha: sha }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Não foi possível publicar o commit.");
+
+      const nextPlan = {
+        ...plan,
+        commitSha: sha,
+        status: "published" as const,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await persist(nextPlan, result.message || `Commit ${shortSha(sha)} promovido para main.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Falha ao publicar.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const comparisonUrl = `https://github.com/${REPOSITORY}/compare/main...develop`;
