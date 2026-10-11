@@ -151,9 +151,17 @@ export const Route = createFileRoute("/api/admin/publish-commit")({
           }
 
           if (!mergeResponse.ok) {
+            const detail =
+              typeof merge.message === "string"
+                ? merge.message
+                : "sem mensagem";
+            console.error("[publish-commit] GitHub merge recusado:", {
+              status: mergeResponse.status,
+              message: detail,
+              documentation_url: merge.documentation_url,
+            });
             throw new Error(
-              merge.message ||
-                `GitHub recusou a mesclagem (HTTP ${mergeResponse.status}).`,
+              `GitHub recusou a mesclagem (HTTP ${mergeResponse.status}): ${detail}`,
             );
           }
 
