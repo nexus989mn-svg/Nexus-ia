@@ -30,13 +30,13 @@ export const Route = createFileRoute("/api/admin/publish-commit")({
             process.env.SUPABASE_PUBLISHABLE_KEY ||
             process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-          const vercelToken = process.env.VERCEL_TOKEN?.trim();
+          const githubToken = process.env.GITHUB_TOKEN?.trim();
 
-          if (!supabaseUrl || !supabaseKey || !vercelToken) {
+          if (!supabaseUrl || !supabaseKey || !githubToken) {
             return Response.json(
               {
                 error:
-                  "Configuração ausente: confira as variáveis Supabase e VERCEL_TOKEN no ambiente Preview.",
+                  "Configuração ausente: confira as variáveis Supabase e GITHUB_TOKEN no ambiente Preview.",
               },
               { status: 500 },
             );
@@ -121,55 +121,48 @@ export const Route = createFileRoute("/api/admin/publish-commit")({
             );
           }
 
-          // Cria um Preview diretamente na Vercel.
-          // Não modifica main nem qualquer referência do GitHub.
-          const deployResponse = await fetch(
-            `https://api.vercel.com/v13/deployments?teamId=${TEAM_ID}`,
+          // Promove o commit aprovado de develop para main.
+          // A Vercel fará o deploy de produção automaticamente.
+          const mergeResponse = await fetch(
+            `https://api.github.com/repos/${REPO}/merges`,
             {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${vercelToken}`,
+                Authorization: `Bearer ${githubToken}`,
+                Accept: "application/vnd.github+json",
                 "Content-Type": "application/json",
+                "X-GitHub-Api-Version": "2022-11-28",
               },
               body: JSON.stringify({
-                name: "auri-ia-vercel-fix-real",
-                project: PROJECT_ID,
-                gitSource: {
-                  type: "github",
-                  org: "nexus989mn-svg",
-                  repo: "Nexus-ia",
-                  ref: "develop",
-                  sha,
-                },
+                base: "main",
+                head: sha,
+                commit_message: "chore: promote approved develop commit to production",
               }),
             },
           );
 
-          const deployment = await deployResponse
-            .json()
-            .catch(() => ({}));
+          const merge = await mergeResponse.json().catch(() => ({}));
 
-          if (!deployResponse.ok) {
-            console.error("[publish-commit] Vercel API:", {
-              status: deployResponse.status,
-              error: deployment.error?.message,
-            });
+          if (mergeResponse.status === 409) {
+            return Response.json(
+              { error: "Conflito ao mesclar o commit na main." },
+              { status: 409 },
+            );
+          }
 
+          if (!mergeResponse.ok) {
             throw new Error(
-              deployment.error?.message ||
-                `A Vercel recusou o deployment (HTTP ${deployResponse.status}).`,
+              merge.message ||
+                `GitHub recusou a mesclagem (HTTP ${mergeResponse.status}).`,
             );
           }
 
           return Response.json({
             ok: true,
-            message: "Deployment de Preview solicitado à Vercel.",
+            message: "Commit mesclado na main; a Vercel fará o deploy de produção.",
             commitSha: sha,
-            deploymentId: deployment.id,
-            deploymentUrl: deployment.url
-              ? `https://${deployment.url}`
-              : undefined,
-            deploymentState: deployment.readyState || deployment.status,
+            mergeCommitSha: merge.sha ?? null,
+            productionUrl: "https://www.tmwstudio.com.br",
           });
         } catch (error) {
           console.error("[publish-commit]", error);
