@@ -3,135 +3,187 @@ import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const REPO = "nexus989mn-svg/Nexus-ia";
-const API = `https://api.github.com/repos/${REPO}`;
+const PROJECT_ID = "prj_2dwX4rxmIrdhsSSioKQMOCzeasva";
+const TEAM_ID = "team_AcHFtDvzKW6iDwwt9zEyhLCh";
 
 export const Route = createFileRoute("/api/admin/publish-commit")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const token = request.headers
+          const sessionToken = request.headers
             .get("authorization")
             ?.replace(/^Bearer\s+/i, "");
 
-          if (!token) {
-            return Response.json({ error: "Sessão obrigatória." }, { status: 401 });
+          if (!sessionToken) {
+            return Response.json(
+              { error: "Sessão obrigatória." },
+              { status: 401 },
+            );
           }
 
-          const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-          const key =
+          const supabaseUrl =
+            process.env.SUPABASE_URL ||
+            process.env.VITE_SUPABASE_URL;
+
+          const supabaseKey =
             process.env.SUPABASE_PUBLISHABLE_KEY ||
             process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-          const githubToken = process.env.GITHUB_TOKEN?.trim();
 
-          if (!url || !key || !githubToken) {
-            return Response.json({
-              error: "Servidor sem configuração Supabase ou GITHUB_TOKEN."
-            }, { status: 500 });
+          const vercelToken = process.env.VERCEL_TOKEN?.trim();
+
+          if (!supabaseUrl || !supabaseKey || !vercelToken) {
+            return Response.json(
+              {
+                error:
+                  "Configuração ausente: confira as variáveis Supabase e VERCEL_TOKEN no ambiente Preview.",
+              },
+              { status: 500 },
+            );
           }
 
-          const authClient = createClient(url, key, {
-            auth: { persistSession: false, autoRefreshToken: false },
+          const authClient = createClient(supabaseUrl, supabaseKey, {
+            auth: {
+              persistSession: false,
+              autoRefreshToken: false,
+            },
           });
 
-          const { data: claims, error: authError } =
-            await authClient.auth.getClaims(token);
+          const { data, error: authError } =
+            await authClient.auth.getClaims(sessionToken);
 
-          const userId = claims?.claims?.sub as string | undefined;
+          const userId = data?.claims?.sub as string | undefined;
 
           if (authError || !userId) {
-            return Response.json({ error: "Sessão inválida." }, { status: 401 });
+            return Response.json(
+              { error: "Sessão inválida." },
+              { status: 401 },
+            );
           }
 
-          const { data: role } = await supabaseAdmin
+          const { data: role, error: roleError } = await supabaseAdmin
             .from("user_roles")
             .select("role")
             .eq("user_id", userId)
             .eq("role", "admin")
             .maybeSingle();
 
+          if (roleError) {
+            throw new Error("Não foi possível verificar a permissão de administrador.");
+          }
+
           if (!role) {
-            return Response.json({ error: "Apenas administradores podem publicar." }, { status: 403 });
+            return Response.json(
+              { error: "Apenas administradores podem publicar." },
+              { status: 403 },
+            );
           }
 
           const body = await request.json().catch(() => null);
-          const sha = typeof body?.commitSha === "string"
-            ? body.commitSha.trim()
-            : "";
+          const sha =
+            typeof body?.commitSha === "string"
+              ? body.commitSha.trim()
+              : "";
 
           if (!/^[0-9a-f]{40}$/i.test(sha)) {
-            return Response.json({ error: "Selecione um commit válido." }, { status: 400 });
+            return Response.json(
+              { error: "Selecione um commit válido." },
+              { status: 400 },
+            );
           }
 
-          const gh = async (path: string, init: RequestInit = {}) => {
-            const response = await fetch(`${API}${path}`, {
-              ...init,
+          // Confirma que o commit pertence ao histórico de develop.
+          const compareResponse = await fetch(
+            `https://api.github.com/repos/${REPO}/compare/${sha}...develop`,
+            {
               headers: {
                 Accept: "application/vnd.github+json",
-                Authorization: `Bearer ${githubToken}`,
                 "X-GitHub-Api-Version": "2022-11-28",
-                ...(init.body ? { "Content-Type": "application/json" } : {}),
-                ...init.headers,
               },
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(
-                typeof data.message === "string"
-                  ? data.message
-                  : `GitHub respondeu HTTP ${response.status}.`
-              );
-            }
-            return data;
-          };
-
-          // Confirma que o commit escolhido pertence ao histórico de develop.
-          const inDevelop = await gh(
-            `/compare/${sha}...develop`
+            },
           );
 
-          if (!["ahead", "identical"].includes(inDevelop.status)) {
-            return Response.json({
-              error: "O commit selecionado não pertence ao histórico atual de develop."
-            }, { status: 409 });
+          const comparison = await compareResponse.json().catch(() => ({}));
+
+          if (!compareResponse.ok) {
+            throw new Error(
+              `Não foi possível validar o commit no GitHub (HTTP ${compareResponse.status}).`,
+            );
           }
 
-          // Impede regressão ou atualização não linear de main.
-          const comparison = await gh(`/compare/main...${sha}`);
+          if (!["ahead", "identical"].includes(comparison.status)) {
+            return Response.json(
+              {
+                error:
+                  "O commit selecionado não pertence ao histórico atual de develop.",
+              },
+              { status: 409 },
+            );
+          }
 
-          if (comparison.status === "identical") {
-            return Response.json({
-              ok: true,
-              message: "Esse commit já está em produção.",
-              commitSha: sha,
-              alreadyPublished: true,
+          // Cria um Preview diretamente na Vercel.
+          // Não modifica main nem qualquer referência do GitHub.
+          const deployResponse = await fetch(
+            `https://api.vercel.com/v13/deployments?teamId=${TEAM_ID}`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${vercelToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: "auri-ia-vercel-fix-real",
+                project: PROJECT_ID,
+                target: "preview",
+                gitSource: {
+                  type: "github",
+                  org: "nexus989mn-svg",
+                  repo: "Nexus-ia",
+                  ref: "develop",
+                  sha,
+                },
+              }),
+            },
+          );
+
+          const deployment = await deployResponse
+            .json()
+            .catch(() => ({}));
+
+          if (!deployResponse.ok) {
+            console.error("[publish-commit] Vercel API:", {
+              status: deployResponse.status,
+              error: deployment.error?.message,
             });
-          }
 
-          if (comparison.status !== "ahead" || !(comparison.ahead_by > 0)) {
-            return Response.json({
-              error: "Esse commit não é um avanço linear de main. Nenhuma publicação foi feita."
-            }, { status: 409 });
+            throw new Error(
+              deployment.error?.message ||
+                `A Vercel recusou o deployment (HTTP ${deployResponse.status}).`,
+            );
           }
-
-          // Atualiza main sem force push. GitHub rejeita atualizações não fast-forward.
-          await gh("/git/refs/heads/main", {
-            method: "PATCH",
-            body: JSON.stringify({ sha, force: false }),
-          });
 
           return Response.json({
             ok: true,
-            message: "Commit promovido para main. A Vercel deverá iniciar o deploy conforme a configuração do projeto.",
+            message: "Deployment de Preview solicitado à Vercel.",
             commitSha: sha,
+            deploymentId: deployment.id,
+            deploymentUrl: deployment.url
+              ? `https://${deployment.url}`
+              : undefined,
+            deploymentState: deployment.readyState || deployment.status,
           });
         } catch (error) {
           console.error("[publish-commit]", error);
-          return Response.json({
-            error: error instanceof Error
-              ? error.message
-              : "Falha ao publicar o commit."
-          }, { status: 502 });
+
+          return Response.json(
+            {
+              error:
+                error instanceof Error
+                  ? error.message
+                  : "Falha ao solicitar deployment à Vercel.",
+            },
+            { status: 502 },
+          );
         }
       },
     },
