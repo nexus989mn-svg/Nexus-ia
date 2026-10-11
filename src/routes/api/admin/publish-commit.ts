@@ -134,7 +134,6 @@ export const Route = createFileRoute("/api/admin/publish-commit")({
               body: JSON.stringify({
                 name: "auri-ia-vercel-fix-real",
                 project: PROJECT_ID,
-                target: "preview",
                 gitSource: {
                   type: "github",
                   org: "nexus989mn-svg",
