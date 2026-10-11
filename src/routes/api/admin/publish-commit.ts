@@ -30,7 +30,10 @@ export const Route = createFileRoute("/api/admin/publish-commit")({
             process.env.SUPABASE_PUBLISHABLE_KEY ||
             process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-          const githubToken = process.env.GITHUB_TOKEN?.trim();
+          const githubToken = process.env.GITHUB_TOKEN
+            ?.trim()
+            .replace(/^Bearer\\s+/i, "")
+            .replace(/^["']|["']$/g, "");
 
           if (!supabaseUrl || !supabaseKey || !githubToken) {
             return Response.json(
@@ -123,6 +126,20 @@ export const Route = createFileRoute("/api/admin/publish-commit")({
 
           // Promove o commit aprovado de develop para main.
           // A Vercel fará o deploy de produção automaticamente.
+          const authCheck = await fetch("https://api.github.com/user", {
+            headers: {
+              Authorization: `Bearer ${githubToken}`,
+              Accept: "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+            },
+          });
+
+          if (!authCheck.ok) {
+            throw new Error(
+              `O GitHub rejeitou GITHUB_TOKEN na autenticação (HTTP ${authCheck.status}).`
+            );
+          }
+
           const mergeResponse = await fetch(
             `https://api.github.com/repos/${REPO}/merges`,
             {
