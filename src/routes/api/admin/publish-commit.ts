@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/admin/publish-commit")({
 
           const githubToken = process.env.GITHUB_TOKEN
             ?.trim()
-            .replace(/^Bearer\\s+/i, "")
+            .replace(/^Bearer\s+/i, "")
             .replace(/^["']|["']$/g, "");
 
           if (!supabaseUrl || !supabaseKey || !githubToken) {
