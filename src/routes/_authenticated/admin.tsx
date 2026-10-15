@@ -1,3 +1,4 @@
+import { UpdatesCenter } from "@/components/admin/updates-center";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -92,6 +93,7 @@ function AdminPage() {
           <TabsTrigger value="integrations"><Plug className="h-3.5 w-3.5 mr-1" />Integrações</TabsTrigger>
           <TabsTrigger value="settings"><SettingsIcon className="h-3.5 w-3.5 mr-1" />Configurações</TabsTrigger>
           <TabsTrigger value="security"><Lock className="h-3.5 w-3.5 mr-1" />Segurança</TabsTrigger>
+          <TabsTrigger value="updates">Atualizações</TabsTrigger>
         </TabsList>
 
         <TabsContent value="executive" className="mt-6"><ExecutivePanel /></TabsContent>
@@ -106,6 +108,7 @@ function AdminPage() {
         <TabsContent value="integrations" className="mt-6"><IntegrationsPanel /></TabsContent>
         <TabsContent value="settings" className="mt-6"><SettingsPanel /></TabsContent>
         <TabsContent value="security" className="mt-6"><SecurityPanel /></TabsContent>
+        <TabsContent value="updates" className="mt-6"><UpdatesCenter /></TabsContent>
       </Tabs>
     </AppShell>
   );

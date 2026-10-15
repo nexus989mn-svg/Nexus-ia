@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import appCss from "../styles.css?url";
+import "../styles.css";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
@@ -29,16 +29,17 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
+  const normalizedError = error instanceof Error ? error : new Error(String(error));
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    reportLovableError(normalizedError, { boundary: "tanstack_root_error_component" });
 
     // Recupera abas que ficaram com chunks de um deployment anterior.
     // Os chunks do Vercel são imutáveis e possuem hash no nome.
     if (
       typeof window !== "undefined" &&
-      error.message.includes("Failed to fetch dynamically imported module")
+      normalizedError.message.includes("Failed to fetch dynamically imported module")
     ) {
       const key = "auri-dynamic-import-recovery";
       const now = Date.now();
@@ -53,12 +54,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         window.location.replace(url.toString());
       }
     }
-  }, [error]);
+  }, [normalizedError]);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 text-center">
       <div className="max-w-md">
         <h1 className="text-xl font-semibold">Algo deu errado</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{normalizedError.message}</p>
         <button
           onClick={() => { router.invalidate(); reset(); }}
           className="mt-6 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
@@ -84,7 +85,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Conecte o WhatsApp, ative agentes de IA e venda 24/7." },
     ],
     links: [
-      { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" },
