@@ -104,7 +104,7 @@ export function UpdatesCenter() {
       const value = { ...next, updatedAt: new Date().toISOString() };
       const { error: saveError } = await supabase
         .from("platform_settings")
-        .upsert({ key: KEY, value, updated_at: value.updatedAt });
+        .upsert({ key: KEY, value, updated_at: value.updatedAt }, { onConflict: "key" });
 
       if (saveError) throw new Error(`Erro ao salvar configurações: ${saveError.message}`);
       setPlan(value);
