@@ -11,6 +11,7 @@ type Commit = {
 
 type Plan = {
   version: string;
+  commitSha: string;
   date: string;
   time: string;
   message: string;
@@ -24,6 +25,7 @@ const KEY = "updates_center";
 
 const emptyPlan: Plan = {
   version: "",
+  commitSha: "",
   date: "",
   time: "",
   message: "",
@@ -66,7 +68,7 @@ export function UpdatesCenter() {
         fetch(`https://api.github.com/repos/${REPOSITORY}/commits/develop`, {
           headers: { Accept: "application/vnd.github+json" },
         }),
-        fetch(`https://api.github.com/repos/${REPOSITORY}/commits?sha=main&per_page=8`, {
+        fetch(`https://api.github.com/repos/${REPOSITORY}/commits?sha=develop&per_page=20`, {
           headers: { Accept: "application/vnd.github+json" },
         }),
       ]);
@@ -102,7 +104,7 @@ export function UpdatesCenter() {
       const value = { ...next, updatedAt: new Date().toISOString() };
       const { error: saveError } = await supabase
         .from("platform_settings")
-        .upsert({ key: KEY, value, updated_at: value.updatedAt });
+        .upsert({ key: KEY, value, updated_at: value.updatedAt }, { onConflict: "key" });
 
       if (saveError) throw new Error(`Erro ao salvar configurações: ${saveError.message}`);
       setPlan(value);
@@ -115,20 +117,20 @@ export function UpdatesCenter() {
   }
 
   function schedule() {
-    if (!plan.version.trim() || !plan.date || !plan.time) {
-      setError("Informe a versão, a data e o horário.");
+    if (!develop?.sha || !plan.date || !plan.time) {
+      setError("Commit de desenvolvimento indisponível. Atualize as informações do GitHub.");
       return;
     }
     if (new Date(`${plan.date}T${plan.time}`).getTime() <= Date.now()) {
       setError("Escolha uma data e um horário futuros.");
       return;
     }
-    void persist({ ...plan, status: "scheduled", noticeSent: false }, "Agendamento salvo. Nenhum aviso foi enviado e nenhuma publicação foi feita.");
+    void persist({ ...plan, commitSha: plan.commitSha || develop.sha, status: "scheduled", noticeSent: false }, `Agendamento salvo para o commit ${shortSha(plan.commitSha || develop.sha)}. Nenhum aviso foi enviado e nenhuma publicação foi feita.`);
   }
 
   function sendNotice() {
-    if (!plan.version || !plan.date || !plan.time) {
-      setError("Prepare e salve o agendamento antes de enviar um aviso.");
+    if (!plan.commitSha || !plan.date || !plan.time) {
+      setError("Prepare e salve o agendamento com um commit antes de enviar um aviso.");
       return;
     }
     if (!window.confirm("Confirmar o envio do aviso aos clientes?")) return;
@@ -138,9 +140,51 @@ export function UpdatesCenter() {
     setError("Envio não realizado: ainda falta conectar um canal de notificação aos clientes. Nenhuma mensagem foi enviada.");
   }
 
-  function publish() {
-    if (!window.confirm("Você autoriza publicar esta versão em produção agora?")) return;
-    setError("Publicação bloqueada: o mecanismo de deploy ainda não está conectado. Nenhuma alteração foi publicada.");
+  async function publish() {
+    const sha = plan.commitSha || develop?.sha;
+    if (!sha || !/^[0-9a-f]{40}$/i.test(sha)) {
+      setError("Selecione um commit válido antes de publicar.");
+      return;
+    }
+
+    if (!window.confirm(`Autorizar a publicação do commit ${shortSha(sha)} em main?`)) return;
+
+    setSaving(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
+
+      const response = await fetch("/api/admin/publish-commit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ commitSha: sha }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Não foi possível publicar o commit.");
+
+      const nextPlan = {
+        ...plan,
+        commitSha: sha,
+        status: "published" as const,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await persist(nextPlan, result.message || `Commit ${shortSha(sha)} promovido para main.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Falha ao publicar.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const comparisonUrl = `https://github.com/${REPOSITORY}/compare/main...develop`;
@@ -185,10 +229,33 @@ export function UpdatesCenter() {
           <h3 className="font-semibold">Preparar e agendar atualização</h3>
           <p className="mt-1 text-sm text-muted-foreground">Salvar o agendamento não envia avisos nem publica o sistema.</p>
         </div>
-        <label className="block text-sm">Versão
-          <input value={plan.version} onChange={(e) => setPlan({ ...plan, version: e.target.value })}
-            placeholder="Ex.: 1.5.0" className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2" />
-        </label>
+        <div className="rounded-lg border border-border bg-background p-3 space-y-3">
+          <label className="block text-sm">
+            Commit que será publicado — develop
+            <select
+              value={plan.commitSha || develop?.sha || ""}
+              onChange={(e) => setPlan({ ...plan, commitSha: e.target.value, status: "draft" })}
+              className="mt-2 block w-full rounded-lg border border-border bg-background px-3 py-3"
+            >
+              {history.map((commit) => (
+                <option key={commit.sha} value={commit.sha}>
+                  {shortSha(commit.sha)} — {commit.commit.message.split("\\n")[0]}
+                </option>
+              ))}
+            </select>
+          </label>
+          {history.find((commit) => commit.sha === (plan.commitSha || develop?.sha)) && (
+            <div>
+              <p className="break-all font-mono text-sm">{plan.commitSha || develop?.sha}</p>
+              <a
+                href={history.find((commit) => commit.sha === (plan.commitSha || develop?.sha))!.html_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-block text-sm text-primary hover:underline"
+              >Ver commit no GitHub</a>
+            </div>
+          )}
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">Data
             <input type="date" value={plan.date} onChange={(e) => setPlan({ ...plan, date: e.target.value })}
@@ -204,7 +271,7 @@ export function UpdatesCenter() {
             rows={3} placeholder="Descreva as mudanças e o impacto previsto."
             className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2" />
         </label>
-        <p className="text-sm text-muted-foreground">Status: <strong>{plan.status}</strong> · Aviso enviado: <strong>{plan.noticeSent ? "Sim" : "Não"}</strong></p>
+        <p className="text-sm text-muted-foreground">Commit agendado: <strong className="font-mono">{plan.commitSha ? shortSha(plan.commitSha) : "Nenhum"}</strong> · Status: <strong>{plan.status}</strong> · Aviso enviado: <strong>{plan.noticeSent ? "Sim" : "Não"}</strong></p>
         <div className="flex flex-wrap gap-3">
           <button type="button" disabled={saving} onClick={schedule}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50">

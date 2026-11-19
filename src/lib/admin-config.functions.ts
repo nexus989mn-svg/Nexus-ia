@@ -634,7 +634,7 @@ export const adminSaveSetting = createServerFn({ method: "POST" })
     await ensureAdmin(context.supabase, context.userId);
     const { error } = await context.supabase
       .from("platform_settings")
-      .upsert({ key: data.key, value: data.value, updated_at: new Date().toISOString() });
+      .upsert({ key: data.key, value: data.value, updated_at: new Date().toISOString() }, { onConflict: "key" });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
