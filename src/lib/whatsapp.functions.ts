@@ -33,7 +33,16 @@ async function hasWhatsappAccess(userId: string) {
   const hasAccess = !!sub && ["trial", "active"].includes(sub.status) &&
     (!sub.current_period_end || new Date(sub.current_period_end).getTime() > Date.now());
 
-  return { hasAccess, isAdmin: false };
+  // Permite conectar o WhatsApp antes de iniciar o Trial.
+  // O Trial continua sendo validado atomicamente no checkout, incluindo o telefone.
+  const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+  const email = (authUser.user?.email ?? "").trim().toLowerCase();
+  const { data: emailClaim } = email
+    ? await supabaseAdmin.from("trial_claims").select("id").eq("email_normalized", email).maybeSingle()
+    : { data: null };
+  const trialEligible = !!email && !emailClaim;
+
+  return { hasAccess: hasAccess || trialEligible, isAdmin: false, trialEligible };
 }
 
 function normalizePhone(raw: string) {
@@ -202,6 +211,20 @@ export const requestWhatsappConnection = createServerFn({ method: "POST" })
     }
 
     const phone = normalizePhone(data.phone_e164);
+
+    // Antes do Trial, impedir que um telefone que já reivindicou teste seja conectado
+    // para tentar contornar a regra de um Trial por número.
+    if (!access.isAdmin) {
+      const { data: phoneClaim } = await supabaseAdmin
+        .from("trial_claims")
+        .select("user_id")
+        .eq("phone_e164", phone)
+        .maybeSingle();
+
+      if (phoneClaim && phoneClaim.user_id !== userId) {
+        throw new Error("Este número de WhatsApp já utilizou o Trial anteriormente.");
+      }
+    }
 
     // If this account is on Trial, bind the Trial to the WhatsApp number.
     // A number that already consumed a Trial blocks the account immediately.
