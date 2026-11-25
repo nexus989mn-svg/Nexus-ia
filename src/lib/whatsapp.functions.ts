@@ -33,16 +33,7 @@ async function hasWhatsappAccess(userId: string) {
   const hasAccess = !!sub && ["trial", "active"].includes(sub.status) &&
     (!sub.current_period_end || new Date(sub.current_period_end).getTime() > Date.now());
 
-  // Permite conectar o WhatsApp antes de iniciar o Trial.
-  // O Trial continua sendo validado atomicamente no checkout, incluindo o telefone.
-  const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
-  const email = (authUser.user?.email ?? "").trim().toLowerCase();
-  const { data: emailClaim } = email
-    ? await supabaseAdmin.from("trial_claims").select("id").eq("email_normalized", email).maybeSingle()
-    : { data: null };
-  const trialEligible = !!email && !emailClaim;
-
-  return { hasAccess: hasAccess || trialEligible, isAdmin: false, trialEligible };
+  return { hasAccess, isAdmin: false };
 }
 
 function normalizePhone(raw: string) {
