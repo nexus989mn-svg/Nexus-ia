@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { Building2, Image as ImageIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/company")({
-  head: () => ({ meta: [{ title: "Empresa — Assistente IA de Vendas" }] }),
+  head: () => ({ meta: [{ title: "Empresa — Assistente Ecommerce IA" }] }),
   component: CompanyPage,
 });
 
