@@ -1101,9 +1101,9 @@ const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
     en: "Connect your WhatsApp to get started",
     es: "Conecta tu WhatsApp para comenzar",
   },
-  "Empresa — Assistente IA de Vendas": {
-    en: "Company — AI Sales Assistant",
-    es: "Empresa — Asistente de Ventas IA",
+  "Empresa — Assistente Ecommerce IA": {
+    en: "Company — Ecommerce AI Assistant",
+    es: "Empresa — Asistente Ecommerce IA",
   },
   "Não foi possível reproduzir a voz": {
     en: "Could not play the voice",
@@ -1126,9 +1126,9 @@ const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
     en: "Real WhatsApp connection QR code",
     es: "Código QR real de conexión de WhatsApp",
   },
-  "Meu perfil — Assistente IA de Vendas": {
-    en: "My profile — AI Sales Assistant",
-    es: "Mi perfil — Asistente de Ventas IA",
+  "Meu perfil — Assistente Ecommerce IA": {
+    en: "My profile — Ecommerce AI Assistant",
+    es: "Mi perfil — Asistente Ecommerce IA",
   },
   "Eventos de cobrança (webhooks Stripe)": {
     en: "Billing events (Stripe webhooks)",
@@ -1142,37 +1142,37 @@ const DIRECT_TRANSLATIONS: Record<string, { en: string; es: string }> = {
     en: "Scan the QR to finish the connection.",
     es: "Escanea el QR para finalizar la conexión.",
   },
-  "Catálogo — Assistente de Vendas WhatsApp": {
-    en: "Catalog — WhatsApp Sales Assistant",
-    es: "Catálogo — Asistente de Ventas WhatsApp",
+  "Catálogo — Assistente Ecommerce IA": {
+    en: "Catalog — Ecommerce AI Assistant",
+    es: "Catálogo — Asistente Ecommerce IA",
   },
   "Painel administrativo — TW Design Studio": {
     en: "Admin panel — TW Design Studio",
     es: "Panel administrativo — TW Design Studio",
   },
-  "Entrar — Assistente IA de Vendas WhatsApp": {
-    en: "Sign in — AI WhatsApp Sales Assistant",
-    es: "Iniciar sesión — Asistente de Ventas IA para WhatsApp",
+  "Entrar — Assistente Ecommerce IA": {
+    en: "Sign in — Ecommerce AI Assistant",
+    es: "Iniciar sesión — Asistente Ecommerce IA",
   },
-  "Painel — Assistente IA de Vendas WhatsApp": {
-    en: "Dashboard — AI WhatsApp Sales Assistant",
-    es: "Panel — Asistente de Ventas IA para WhatsApp",
+  "Painel — Assistente Ecommerce IA": {
+    en: "Dashboard — Ecommerce AI Assistant",
+    es: "Panel — Asistente Ecommerce IA",
   },
   "Cadastre o número que receberá as conversas.": {
     en: "Set up the number that will receive conversations.",
     es: "Configura el número que recibirá las conversaciones.",
   },
-  "Assinatura — Assistente IA de Vendas WhatsApp": {
-    en: "Subscription — AI WhatsApp Sales Assistant",
-    es: "Suscripción — Asistente de Ventas IA para WhatsApp",
+  "Assinatura — Assistente Ecommerce IA": {
+    en: "Subscription — Ecommerce AI Assistant",
+    es: "Suscripción — Asistente Ecommerce IA",
   },
   "Escaneie o QR code para finalizar a ativação.": {
     en: "Scan the QR code to finish activation.",
     es: "Escanea el código QR para finalizar la activación.",
   },
-  "Criar conta — Assistente IA de Vendas WhatsApp": {
-    en: "Create account — AI WhatsApp Sales Assistant",
-    es: "Crear cuenta — Asistente de Ventas IA para WhatsApp",
+  "Criar conta — Assistente Ecommerce IA": {
+    en: "Create account — Ecommerce AI Assistant",
+    es: "Crear cuenta — Asistente Ecommerce IA",
   },
   "Ex.: quero cadastrar um X-Burger por R$ 29,90…": {
     en: "E.g.: I want to add an X-Burger for R$ 29.90…",
