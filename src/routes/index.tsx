@@ -12,7 +12,7 @@ import { getPlanCopy } from "@/lib/i18n";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Assistente IA de Vendas WhatsApp — Automatize vendas com IA" },
+      { title: "Assistente Ecommerce IA" },
       { name: "description", content: "Conecte o WhatsApp, ative agentes de IA e converta leads 24/7." },
     ],
   }),
