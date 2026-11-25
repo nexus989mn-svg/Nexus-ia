@@ -178,3 +178,15 @@ body[data-custom-theme="image"] .bg-hero {
 /* WhatsApp QR: always stays inside the mobile viewport. */
 .auri-qr { width: min(100%, 320px); aspect-ratio: 1 / 1; overflow: hidden; }
 .auri-qr img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+
+/* Em telas de computador, mostra a foto de fundo inteira sem recortar.
+   Celular e tablet mantêm o comportamento atual (cover). */
+@media (min-width: 1024px) {
+  body[data-custom-theme="image"] {
+    background-size: contain !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-color: #080808;
+  }
+}
