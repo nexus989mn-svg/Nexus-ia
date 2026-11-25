@@ -200,7 +200,7 @@ function WhatsappPage() {
     }
   };
 
-  if (user && !subLoading && !isAdmin && !subData?.hasAccess && !subData?.trialAvailable) {
+  if (user && !subLoading && !isAdmin && !subData?.hasAccess) {
     return (
       <AppShell isAdmin={isAdmin}>
         <div className="max-w-2xl mx-auto mt-10 rounded-3xl border border-border bg-card-glass p-6 md:p-8 text-center">
