@@ -28,7 +28,7 @@ import { useEffect, useState } from "react";
 import { getPlanCopy } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Painel — Assistente IA de Vendas WhatsApp" }] }),
+  head: () => ({ meta: [{ title: "Painel — Assistente Ecommerce IA" }] }),
   component: Dashboard,
 });
 
