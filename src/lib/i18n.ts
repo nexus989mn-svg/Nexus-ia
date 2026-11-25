@@ -31,8 +31,8 @@ const resources = {
         profile: "Perfil",
         admin: "Administração",
         signOut: "Sair",
-        brand: "Assistente IA",
-        tagline: "Vendas no WhatsApp",
+        brand: "Assistente Ecommerce IA",
+        tagline: "Assistente de Ecommerce",
         menu: "Menu",
       },
       agent: {
@@ -79,7 +79,7 @@ const resources = {
       },
 
       landing: {
-        badge: "Assistente de IA para WhatsApp",
+        badge: "Assistente Ecommerce IA",
         heroPre: "AURI IA,",
         heroAccent: "Sua Assistente de Atendimento",
         heroDesc:
@@ -120,7 +120,7 @@ const resources = {
             d: "Escolha a voz que a Auri IA usará nas conversas com seus clientes.",
           },
         },
-        footer: "Assistente IA para WhatsApp",
+        footer: "Assistente Ecommerce IA",
       },
       auth: {
         welcomeBack: "Bem-vindo de volta",
@@ -225,12 +225,12 @@ const resources = {
         profile: "Profile",
         admin: "Admin",
         signOut: "Sign out",
-        brand: "AI Assistant",
-        tagline: "WhatsApp Sales",
+        brand: "Assistente Ecommerce IA",
+        tagline: "Ecommerce Assistant",
         menu: "Menu",
       },
       landing: {
-        badge: "AI Customer Service Assistant for WhatsApp",
+        badge: "Assistente Ecommerce IA",
         heroPre: "AURI IA,",
         heroAccent: "Your Customer Service Assistant",
         heroDesc:
@@ -271,7 +271,7 @@ const resources = {
             d: "Choose the voice Auri AI will use in conversations with your customers.",
           },
         },
-        footer: "AI WhatsApp Sales Assistant",
+        footer: "Assistente Ecommerce IA",
       },
       auth: {
         welcomeBack: "Welcome back",
@@ -376,12 +376,12 @@ const resources = {
         profile: "Perfil",
         admin: "Administración",
         signOut: "Salir",
-        brand: "Asistente IA",
-        tagline: "Ventas en WhatsApp",
+        brand: "Assistente Ecommerce IA",
+        tagline: "Asistente de comercio electrónico",
         menu: "Menú",
       },
       landing: {
-        badge: "Asistente de atención con IA para WhatsApp",
+        badge: "Assistente Ecommerce IA",
         heroPre: "AURI IA,",
         heroAccent: "Tu Asistente de Atención",
         heroDesc:
@@ -422,7 +422,7 @@ const resources = {
             d: "Elige la voz que Auri IA usará en las conversaciones con tus clientes.",
           },
         },
-        footer: "Asistente IA de Ventas WhatsApp",
+        footer: "Assistente Ecommerce IA",
       },
       auth: {
         welcomeBack: "Bienvenido de nuevo",
