@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Entrar — Assistente IA de Vendas WhatsApp" }] }),
+  head: () => ({ meta: [{ title: "Entrar — Assistente Ecommerce IA" }] }),
   component: LoginPage,
 });
 
