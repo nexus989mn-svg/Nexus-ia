@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getPlanCopy } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/billing")({
-  head: () => ({ meta: [{ title: "Assinatura — Assistente IA de Vendas WhatsApp" }] }),
+  head: () => ({ meta: [{ title: "Assinatura — Assistente Ecommerce IA" }] }),
   component: BillingPage,
 });
 
