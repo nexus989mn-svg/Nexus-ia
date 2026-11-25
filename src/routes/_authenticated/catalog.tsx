@@ -60,7 +60,7 @@ import { catalogAgentChat } from "@/lib/catalog-agent.functions";
 import { getMySubscription } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/_authenticated/catalog")({
-  head: () => ({ meta: [{ title: "Catálogo — Assistente de Vendas WhatsApp" }] }),
+  head: () => ({ meta: [{ title: "Catálogo — Assistente Ecommerce IA" }] }),
   component: CatalogPage,
 });
 
