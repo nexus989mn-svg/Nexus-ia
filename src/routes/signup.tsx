@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/signup")({
-  head: () => ({ meta: [{ title: "Criar conta — Assistente IA de Vendas WhatsApp" }] }),
+  head: () => ({ meta: [{ title: "Criar conta — Assistente Ecommerce IA" }] }),
   component: SignupPage,
 });
 
