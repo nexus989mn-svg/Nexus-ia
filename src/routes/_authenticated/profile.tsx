@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { User as UserIcon, KeyRound, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "Meu perfil — Assistente IA de Vendas" }] }),
+  head: () => ({ meta: [{ title: "Meu perfil — Assistente Ecommerce IA" }] }),
   component: ProfilePage,
 });
 
