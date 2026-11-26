@@ -180,15 +180,14 @@ body[data-custom-theme="image"] .bg-hero {
 .auri-qr img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 
-/* Em telas de computador, mostra a foto de fundo inteira sem recortar.
-   Celular e tablet mantêm o comportamento atual (cover). */
-@media (min-width: 1024px) {
-  body[data-custom-theme="image"] {
-    background-size: contain !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-color: #080808;
-  }
+/* Em qualquer tamanho de tela, a imagem preenche toda a área disponível
+   mantendo a proporção original (sem esticar ou deformar). */
+body[data-custom-theme="image"] {
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed;
+  background-color: #080808;
 }
 
 
