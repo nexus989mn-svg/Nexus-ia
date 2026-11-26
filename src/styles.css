@@ -190,3 +190,10 @@ body[data-custom-theme="image"] .bg-hero {
     background-color: #080808;
   }
 }
+
+
+/* Combinações personalizadas: aplica as duas cores nos elementos primários.
+   Presets e temas por imagem continuam com o comportamento original. */
+html[data-custom-combination="true"] .bg-primary {
+  background-image: var(--gradient-primary) !important;
+}
