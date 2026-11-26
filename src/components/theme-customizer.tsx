@@ -560,6 +560,8 @@ function createImageTheme(
 function applyTheme(theme: ThemePreset, image?: string | null) {
   const root = document.documentElement;
   const dark = luminance(theme.background) < 0.45;
+  // Gradiente somente para combinações personalizadas; presets existentes permanecem intactos.
+  root.dataset.customCombination = theme.id.startsWith("custom-") ? "true" : "false";
   root.style.setProperty("--primary", theme.primary);
   root.style.setProperty("--primary-glow", theme.secondary);
   root.style.setProperty("--background", theme.background);
