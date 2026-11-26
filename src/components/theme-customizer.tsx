@@ -1163,6 +1163,12 @@ export function ThemeCustomizer({ compact = false }: { compact?: boolean }) {
           </label>
         </DropdownMenuItem>
 
+        <div className="px-3 pb-2 pt-1 text-[10px] leading-relaxed text-muted-foreground">
+          💻🖥️ Vai usar o painel no computador? Para a imagem aparecer inteira e
+          com boa proporção, escolha uma imagem no formato adequado à tela ou
+          adapte o tamanho dela antes de enviar.
+        </div>
+
         {/* ======================================================
             ESCOLHER COR DA FOTO
             ====================================================== */}
