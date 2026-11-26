@@ -180,31 +180,15 @@ body[data-custom-theme="image"] .bg-hero {
 .auri-qr img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 
-/* Fundo responsivo sem cortar a imagem original:
-   - camada principal em contain: mostra a imagem inteira, sem deformar;
-   - camada de apoio desfocada em cover: preenche as sobras do viewport. */
+/* Exibe a imagem personalizada inteira, sem cortes nem deformação.
+   Em telas com proporções diferentes podem sobrar áreas livres; a imagem
+   mantém sua proporção original em vez de ser ampliada ou esticada. */
 body[data-custom-theme="image"] {
-  position: relative;
-  isolation: isolate;
   background-size: contain !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
   background-attachment: fixed;
   background-color: #080808;
-}
-
-body[data-custom-theme="image"]::before {
-  content: "";
-  position: fixed;
-  inset: -22px;
-  z-index: -1;
-  pointer-events: none;
-  background-image: inherit;
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  filter: blur(22px) brightness(0.58);
-  transform: scale(1.03);
 }
 
 
